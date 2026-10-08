@@ -1,0 +1,23 @@
+{
+  "entities": {
+    "notifications": {
+      "title": "Notifications",
+      "description": "User specific notification records for AMECO citizen journalism portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "recipientRole": { "type": "string" },
+        "type": { "type": "string", "enum": ["submission", "assignment", "message", "status_update", "verification", "publication", "system"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "relatedTipId": { "type": "string" },
+        "relatedMessageId": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "readAt": { "type": "string" }
+      },
+      "required": ["id", "recipientId", "type", "title", "message", "createdAt"]
+    }
+  }
+}

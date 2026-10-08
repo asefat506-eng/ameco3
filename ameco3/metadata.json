@@ -1,0 +1,6 @@
+{
+  "name": "AMECO Citizen Journalism & Tip-Off System",
+  "description": "AI-Powered Citizen Journalism and Secure Tip-Off Management System for Amhara Media Corporation (AMECO). Features secure report & tip-off submission, RBAC identity protection, AI content moderation & classification, investigation workbench, secure messaging, and administrative analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

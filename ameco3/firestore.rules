@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Authentication helpers
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'Administrator' || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrator'));
+    }
+
+    function isInvestigator() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'ResponsiblePerson' || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ResponsiblePerson'));
+    }
+
+    // ----------------------------------------------------
+    // NOTIFICATIONS COLLECTION RULES
+    // ----------------------------------------------------
+    // - Each notification must belong to a specific user (recipientId / userId)
+    // - Users can read only their own notifications
+    // - Users can mark only their own notifications as read
+    // - Public / Unauthenticated / Guest users cannot access private notifications
+    // - Admins can view notifications per RBAC permissions
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      allow create: if isAuthenticated() || isAdmin();
+      
+      allow update: if isAuthenticated() && (
+        ((resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'read', 'readAt'])) ||
+        isAdmin()
+      );
+      
+      allow delete: if isAuthenticated() && (
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // ----------------------------------------------------
+    // USERS COLLECTION
+    // ----------------------------------------------------
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // REPORTS / TIPS COLLECTION
+    // ----------------------------------------------------
+    match /reports/{reportId} {
+      allow read: if resource.data.status == 'Published' || 
+                     (isAuthenticated() && (
+                       resource.data.citizenId == request.auth.uid ||
+                       isAdmin() ||
+                       isInvestigator()
+                     ));
+      allow create: if true; // Public submission supported (including anonymous guests)
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        isInvestigator() ||
+        resource.data.citizenId == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // MESSAGES COLLECTION
+    // ----------------------------------------------------
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ----------------------------------------------------
+    // AUDIT LOGS (IMMUTABLE)
+    // ----------------------------------------------------
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() || true;
+      allow update, delete: if false; // Append-only audit trail
+    }
+
+    // ----------------------------------------------------
+    // TRENDING NEWS / DEPARTMENTS
+    // ----------------------------------------------------
+    match /trending_news/{newsId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /departments/{deptId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
