@@ -494,7 +494,6 @@ export const AddPublicationModal: React.FC<AddPublicationModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={Boolean(urlError) || !url.trim()}
               className="px-5 py-2.5 bg-[#005BAC] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
