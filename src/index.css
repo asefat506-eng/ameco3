@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  html.dark body,
+  body.dark {
+    background-color: #09090b;
+    color: #ffffff;
+  }
+}
+
+/* Global Top Margin & Modal Overflow Protection:
+   Prevents any top content, header, or dialog from being cut off */
+html {
+  scroll-padding-top: 6rem;
+}
+
+/* Prevent flexbox-centered modals from cutting off top headers/close buttons on smaller screens */
+.fixed.inset-0.overflow-y-auto {
+  align-items: flex-start !important;
+  padding-top: max(2rem, env(safe-area-inset-top, 2rem)) !important;
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 2.5rem)) !important;
+}
+
+.fixed.inset-0.overflow-y-auto > div {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+/* Ensure all modal bodies have clear top breathing room */
+dialog, [role="dialog"] {
+  max-height: calc(100vh - 4rem);
+}
+
+/* Global Dark Mode High-Contrast Form Inputs & Placeholders:
+   Ensures all input boxes, placeholders, selects, and options are razor-sharp readable */
+.dark input,
+.dark textarea,
+.dark select {
+  color: #f8fafc;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important; /* Clearly readable slate-400 */
+  opacity: 1 !important;
+}
+
+.dark select option {
+  background-color: #18181b;
+  color: #f8fafc;
+}
+
+/* Clear contrast for form labels in dark mode */
+.dark label {
+  color: #e2e8f0;
+}
+
+/* Reusable card hover lift & interactivity animation */
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08), 0 8px 12px -6px rgba(0, 0, 0, 0.04);
+}
+
+.dark .card-hover-lift:hover {
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.45), 0 8px 12px -6px rgba(0, 0, 0, 0.25);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
