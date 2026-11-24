@@ -52,6 +52,7 @@ import {
   validateStrongPassword,
   validatePasswordMatch,
 } from '../../utils/passwordHelper';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface CitizenProfileProps {
   currentUser: UserProfile;
@@ -74,6 +75,9 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
   onNavigateTab,
   onDeleteAccount,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   // Modal & Tab States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<ReportItem | null>(null);
@@ -404,31 +408,33 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
           <Shield className="w-8 h-8" />
         </div>
         <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
-          Guest User / Anonymous Session
+          {isAm ? 'እንግዳ ተጠቃሚ / ማንነቱ ያልታወቀ ክፍለ-ጊዜ' : 'Guest User / Anonymous Session'}
         </span>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-3">
-          Account Profile Unavailable for Guests
+          {isAm ? 'የመለያ መገለጫ ለእንግዶች አይገኝም' : 'Account Profile Unavailable for Guests'}
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-lg mx-auto mt-2 leading-relaxed">
-          Guest users browse anonymously and do not have an account profile, personal credentials, or notification inbox. To track your anonymous submission, please use your secure <strong>Tracking Code</strong>.
+          {isAm
+            ? 'እንግዳ ተጠቃሚዎች ማንነታቸው ሳይታወቅ የሚጎበኙ ሲሆን የመለያ መገለጫ፣ የግል ምስክርነቶች ወይም የማሳወቂያ ሳጥን የላቸውም። ማንነቱ ያልታወቀ ጥቆማዎን ለመከታተል፣ እባክዎ ደህንነቱ የተጠበቀ የመከታተያ ኮድዎን ይጠቀሙ።'
+            : 'Guest users browse anonymously and do not have an account profile, personal credentials, or notification inbox. To track your anonymous submission, please use your secure Tracking Code.'}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
           {onNavigateTab && (
             <button
               onClick={() => onNavigateTab('track')}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm border border-slate-200 dark:border-slate-700 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
             >
-              Track Anonymous Tip
+              {isAm ? 'ስም-አልባ ጥቆማን ተከታተል' : 'Track Anonymous Tip'}
             </button>
           )}
 
           {onLogout && (
             <button
               onClick={onLogout}
-              className="px-5 py-2.5 rounded-xl bg-[#005BAC] hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all"
+              className="px-5 py-2.5 rounded-xl bg-[#005BAC] hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
             >
-              Login / Sign Up
+              {isAm ? 'ግባ / ተመዝገብ' : 'Login / Sign Up'}
             </button>
           )}
         </div>
@@ -444,52 +450,72 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {isAdministrator
-                ? 'Administrator Profile'
+                ? (isAm ? 'የአስተዳዳሪ መገለጫ' : 'Administrator Profile')
                 : isInstitution
-                ? currentUser.role === 'Publisher' ? 'Publisher Profile' : 'Institution Profile'
+                ? currentUser.role === 'Publisher'
+                  ? (isAm ? 'የአሳታሚ መገለጫ' : 'Publisher Profile')
+                  : (isAm ? 'የተቋም መገለጫ' : 'Institution Profile')
                 : isInvestigator
-                ? 'Investigator Profile'
-                : 'Citizen Profile'}
+                ? (isAm ? 'የመርማሪ መገለጫ' : 'Investigator Profile')
+                : (isAm ? 'የዜጋ መገለጫ' : 'Citizen Profile')}
             </h1>
             <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[#005BAC]/10 text-[#005BAC] dark:bg-blue-950 dark:text-blue-300 border border-[#005BAC]/20">
               {isAdministrator
-                ? 'AMECO Central Administration'
+                ? (isAm ? 'የአሚኮ ማዕከላዊ አስተዳደር' : 'AMECO Central Administration')
                 : isInstitution
-                ? currentUser.role === 'Publisher' ? currentUser.fullName : (currentUser.institutionName || 'Verified Institution')
+                ? currentUser.role === 'Publisher'
+                  ? currentUser.fullName
+                  : (currentUser.institutionName || (isAm ? 'የተረጋገጠ ተቋም' : 'Verified Institution'))
                 : isInvestigator
-                ? 'AMECO Investigative Desk'
-                : 'AMECO Citizen Journalism'}
+                ? (isAm ? 'የአሚኮ ምርመራ ዴስክ' : 'AMECO Investigative Desk')
+                : (isAm ? 'የአሚኮ ዜጎች ጋዜጠኝነት' : 'AMECO Citizen Journalism')}
             </span>
             {currentUser.verified || isAdministrator || isInvestigator || (isInstitution && currentUser.approved) ? (
               <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>
                   {isAdministrator
-                    ? 'Security Clearance L1'
+                    ? (isAm ? 'የደህንነት ፈቃድ L1' : 'Security Clearance L1')
                     : isInstitution
-                    ? 'Approved News Publisher'
+                    ? (isAm ? 'የተፈቀደለት የዜና አሳታሚ' : 'Approved News Publisher')
                     : isInvestigator
-                    ? 'Authorized Investigator'
-                    : 'Verified Citizen'}
+                    ? (isAm ? 'ፈቃድ ያለው መርማሪ' : 'Authorized Investigator')
+                    : (isAm ? 'የተረጋገጠ ዜጋ' : 'Verified Citizen')}
                 </span>
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
                 <Shield className="w-3.5 h-3.5 text-[#005BAC]" />
                 <span>
-                  {isInstitution ? (currentUser.role === 'Publisher' ? 'Pending Publisher Approval' : 'Pending Institutional Approval') : 'Registered Account'}
+                  {isInstitution
+                    ? currentUser.role === 'Publisher'
+                      ? (isAm ? 'የአሳታሚ ማረጋገጫ በመጠባበቅ ላይ' : 'Pending Publisher Approval')
+                      : (isAm ? 'የተቋም ማረጋገጫ በመጠባበቅ ላይ' : 'Pending Institutional Approval')
+                    : (isAm ? 'የተመዘገበ አካውንት' : 'Registered Account')}
                 </span>
               </span>
             )}
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
             {isAdministrator
-              ? 'Manage your central administrative credentials, update your secure authentication password, configure contact details, and review audit trail compliance.'
+              ? (isAm
+                  ? 'የማዕከላዊ አስተዳደር መረጃዎን ያስተዳድሩ፣ የይለፍ ቃልዎን ያዘምኑ፣ የመገናኛ አድራሻዎችን ያዋቅሩ እና የኦዲት መዝገቦችን ይገምግሙ።'
+                  : 'Manage your central administrative credentials, update your secure authentication password, configure contact details, and review audit trail compliance.')
               : isInstitution
-              ? currentUser.role === 'Publisher' ? 'Manage Publisher credentials, update your secure access password, configure contact channels, and review publication status.' : 'Manage institutional profile credentials, update authorized access password, configure institutional contact channels, and review publication status.'
+              ? currentUser.role === 'Publisher'
+                ? (isAm
+                    ? 'የአሳታሚ መረጃዎችን ያስተዳድሩ፣ የይለፍ ቃል ያዘምኑ፣ የመገናኛ መስመሮችን ያዋቅሩ እና የህትመት ሁኔታን ይገምግሙ።'
+                    : 'Manage Publisher credentials, update your secure access password, configure contact channels, and review publication status.')
+                : (isAm
+                    ? 'የተቋም መረጃዎችን ያስተዳድሩ፣ የተፈቀደ የይለፍ ቃል ያዘምኑ፣ የመገናኛ መስመሮችን ያዋቅሩ እና የህትመት ሁኔታን ይገምግሙ።'
+                    : 'Manage institutional profile credentials, update authorized access password, configure institutional contact channels, and review publication status.')
               : isInvestigator
-              ? 'Manage investigator credentials, update your secure access password, configure field contact details, and review case verification clearance.'
-              : 'Manage your personal credentials, review your submitted investigative tips, monitor case progress, and configure account security settings.'}
+              ? (isAm
+                  ? 'የመርማሪ መረጃዎችን ያስተዳድሩ፣ የይለፍ ቃል ያዘምኑ፣ የመስክ አድራሻዎችን ያዋቅሩ እና የምርመራ ፈቃዶችን ይገምግሙ።'
+                  : 'Manage investigator credentials, update your secure access password, configure field contact details, and review case verification clearance.')
+              : (isAm
+                  ? 'የግል መረጃዎችን ያስተዳድሩ፣ ያቀረቧቸውን ጥቆማዎች ይገምግሙ፣ የጉዳዮችን ሂደት ይከታተሉ እና የአካውንት ደህንነትን ያዋቅሩ።'
+                  : 'Manage your personal credentials, review your submitted investigative tips, monitor case progress, and configure account security settings.')}
           </p>
         </div>
 
@@ -513,7 +539,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             className="px-4 py-2.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm flex items-center space-x-2 cursor-pointer transition-all active:scale-95"
           >
             <Edit2 className="w-4 h-4" />
-            <span>Edit Profile</span>
+            <span>{isAm ? 'መገለጫ አርትዕ' : 'Edit Profile'}</span>
           </button>
 
           {onLogout && (
@@ -523,7 +549,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs sm:text-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-2 cursor-pointer transition-all active:scale-95"
             >
               <LogOut className="w-4 h-4" />
-              <span>Logout</span>
+              <span>{isAm ? 'ውጣ' : 'Logout'}</span>
             </button>
           )}
         </div>
@@ -533,7 +559,11 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
       {savedSuccess && (
         <div className="p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-xl text-sm flex items-center space-x-2">
           <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span className="font-semibold">Profile updated successfully! All changes have been securely saved to the database.</span>
+          <span className="font-semibold">
+            {isAm
+              ? 'መገለጫዎ በተሳካ ሁኔታ ተዘምኗል! ሁሉም ለውጦች በዳታቤዝ ውስጥ በደህንነት ተቀምጠዋል።'
+              : 'Profile updated successfully! All changes have been securely saved to the database.'}
+          </span>
         </div>
       )}
 
@@ -549,19 +579,23 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               <div>
                 <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
                   {isInstitution
-                    ? currentUser.role === 'Publisher' ? 'Publisher Details' : 'Institutional Details'
+                    ? currentUser.role === 'Publisher'
+                      ? (isAm ? 'የአሳታሚ ዝርዝር' : 'Publisher Details')
+                      : (isAm ? 'የተቋም ዝርዝር' : 'Institutional Details')
                     : isAdministrator
-                    ? 'Administrator Details'
+                    ? (isAm ? 'የአስተዳዳሪ ዝርዝር' : 'Administrator Details')
                     : isInvestigator
-                    ? 'Investigator Details'
-                    : 'Personal Information'}
+                    ? (isAm ? 'የመርማሪ ዝርዝር' : 'Investigator Details')
+                    : (isAm ? 'የግል መረጃ' : 'Personal Information')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isInstitution
-                    ? currentUser.role === 'Publisher' ? 'Publisher identification' : 'Organization identification'
+                    ? currentUser.role === 'Publisher'
+                      ? (isAm ? 'የአሳታሚ ማንነት ማረጋገጫ' : 'Publisher identification')
+                      : (isAm ? 'የተቋም ማንነት ማረጋገጫ' : 'Organization identification')
                     : isAdministrator || isInvestigator
-                    ? 'Staff identity credentials'
-                    : 'Citizen identification'}
+                    ? (isAm ? 'የባለሙያ መለያ ማስረጃዎች' : 'Staff identity credentials')
+                    : (isAm ? 'የዜጋ መለያ' : 'Citizen identification')}
                 </p>
               </div>
             </div>
@@ -571,38 +605,38 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      {currentUser.role === 'Publisher' ? 'Publisher Name' : 'Institution Name'}
+                      {currentUser.role === 'Publisher' ? (isAm ? 'የአሳታሚ ስም' : 'Publisher Name') : (isAm ? 'የተቋም ስም' : 'Institution Name')}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">
-                      {currentUser.role === 'Publisher' ? currentUser.fullName : (currentUser.institutionName || currentUser.fullName || 'Regional Institution')}
+                      {currentUser.role === 'Publisher' ? currentUser.fullName : (currentUser.institutionName || currentUser.fullName || (isAm ? 'የክልል ተቋም' : 'Regional Institution'))}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Category / Sector
+                      {isAm ? 'ምድብ / ዘርፍ' : 'Category / Sector'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200">
-                      {currentUser.institutionCategory || 'Public Health & Healthcare'}
+                      {currentUser.institutionCategory || (isAm ? 'የህዝብ ጤና እና ህክምና' : 'Public Health & Healthcare')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Representative Officer
+                      {isAm ? 'ተወካይ መኮንን' : 'Representative Officer'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200">
-                      {currentUser.fullName || 'Official Representative'}
+                      {currentUser.fullName || (isAm ? 'ኦፊሴላዊ ተወካይ' : 'Official Representative')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Publishing Status
+                      {isAm ? 'የህትመት ሁኔታ' : 'Publishing Status'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1 mt-0.5">
                       <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>{currentUser.approved ? 'Verified Partner' : 'Verification In Progress'}</span>
+                      <span>{currentUser.approved ? (isAm ? 'የተረጋገጠ አጋር' : 'Verified Partner') : (isAm ? 'ማረጋገጫ በሂደት ላይ' : 'Verification In Progress')}</span>
                     </span>
                   </div>
                 </>
@@ -610,16 +644,18 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Full Name
+                      {isAm ? 'ሙሉ ስም' : 'Full Name'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">
-                      {currentUser.fullName || 'System Administrator'}
+                      {(currentUser.fullName === 'Admin' || currentUser.fullName === 'Administrator')
+                        ? (isAm ? 'ዋና አስተዳዳሪ' : 'Administrator')
+                        : currentUser.fullName}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Username
+                      {isAm ? 'የተጠቃሚ ስም' : 'Username'}
                     </span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">
                       {currentUser.username ? `@${currentUser.username}` : '@admin'}
@@ -628,20 +664,20 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Department / Desk
+                      {isAm ? 'ዲፓርትመንት / ዴስክ' : 'Department / Desk'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200">
-                      {currentUser.department || 'Central Editorial & Security Administration'}
+                      {currentUser.department || (isAm ? 'ማዕከላዊ ኤዲቶሪያል እና የደህንነት አስተዳደር' : 'Central Editorial & Security Administration')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Access Role
+                      {isAm ? 'የመዳረሻ ሚና' : 'Access Role'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1 mt-0.5">
                       <Shield className="w-3.5 h-3.5 text-[#005BAC]" />
-                      <span>Central Editorial Administrator</span>
+                      <span>{isAm ? 'ማዕከላዊ ኤዲቶሪያል አስተዳዳሪ' : 'Central Editorial Administrator'}</span>
                     </span>
                   </div>
                 </>
@@ -649,16 +685,16 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Officer Name
+                      {isAm ? 'የመኮንኑ ስም' : 'Officer Name'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">
-                      {currentUser.fullName || 'Staff Investigator'}
+                      {currentUser.fullName || (isAm ? 'መርማሪ ባለሙያ' : 'Staff Investigator')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Username
+                      {isAm ? 'የተጠቃሚ ስም' : 'Username'}
                     </span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">
                       {currentUser.username ? `@${currentUser.username}` : '@investigator'}
@@ -667,20 +703,20 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Investigation Desk
+                      {isAm ? 'የምርመራ ዴስክ' : 'Investigation Desk'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200">
-                      {currentUser.department || 'AMECO Investigation Desk'}
+                      {currentUser.department || (isAm ? 'የአሚኮ ምርመራ ዴስክ' : 'AMECO Investigation Desk')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Clearance Level
+                      {isAm ? 'የፈቃድ ደረጃ' : 'Clearance Level'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1 mt-0.5">
                       <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Field Verification Officer</span>
+                      <span>{isAm ? 'የመስክ ማረጋገጫ መኮንን' : 'Field Verification Officer'}</span>
                     </span>
                   </div>
                 </>
@@ -688,38 +724,38 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Full Name
+                      {isAm ? 'ሙሉ ስም' : 'Full Name'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">
-                      {currentUser.fullName || 'Unspecified'}
+                      {currentUser.fullName || (isAm ? 'ያልተገለጸ' : 'Unspecified')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Username
+                      {isAm ? 'የተጠቃሚ ስም' : 'Username'}
                     </span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">
-                      {currentUser.username ? `@${currentUser.username}` : 'Not configured'}
+                      {currentUser.username ? `@${currentUser.username}` : (isAm ? 'ያልተዋቀረ' : 'Not configured')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Gender
+                      {isAm ? 'ጾታ' : 'Gender'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200">
-                      {currentUser.gender || 'Prefer not to say'}
+                      {currentUser.gender || (isAm ? 'መግለጽ አልፈልግም' : 'Prefer not to say')}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                      Date of Birth
+                      {isAm ? 'የትውልድ ቀን' : 'Date of Birth'}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1 mt-0.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{currentUser.dateOfBirth || 'Unspecified'}</span>
+                      <span>{currentUser.dateOfBirth || (isAm ? 'ያልተገለጸ' : 'Unspecified')}</span>
                     </span>
                   </div>
                 </>
@@ -729,7 +765,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-              Editable via profile settings
+              {isAm ? 'በመገለጫ ቅንብሮች ሊስተካከል የሚችል' : 'Editable via profile settings'}
             </span>
           </div>
         </div>
@@ -743,10 +779,10 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               </div>
               <div>
                 <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                  Contact Information
+                  {isAm ? 'የመገናኛ መረጃ' : 'Contact Information'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Communication channels
+                  {isAm ? 'የመገናኛ መስመሮች' : 'Communication channels'}
                 </p>
               </div>
             </div>
@@ -754,40 +790,44 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             <div className="space-y-3 text-xs sm:text-sm">
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Phone Number
+                  {isAm ? 'የስልክ ቁጥር' : 'Phone Number'}
                 </span>
                 <span className="font-mono text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 mt-0.5">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{currentUser.phone || currentUser.phoneNumber || 'Not provided'}</span>
+                  <span>{currentUser.phone || currentUser.phoneNumber || (isAm ? 'አልተሰጠም' : 'Not provided')}</span>
                 </span>
               </div>
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Email Address
+                  {isAm ? 'የኢሜይል አድራሻ' : 'Email Address'}
                 </span>
                 <span className="font-mono text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 mt-0.5 break-all">
                   <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{currentUser.email || 'Not provided'}</span>
+                  <span>{currentUser.email || (isAm ? 'አልተሰጠም' : 'Not provided')}</span>
                 </span>
               </div>
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  City / Region Zone
+                  {isAm ? 'ከተማ / የክልል ዞን' : 'City / Region Zone'}
                 </span>
                 <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{currentUser.city || currentUser.zone || 'Bahir Dar City'}</span>
+                  <span>
+                    {currentUser.city || currentUser.zone || (isAm ? 'ባሕር ዳር ልዩ ዞን' : 'Bahir Dar Special Zone')}
+                  </span>
                 </span>
               </div>
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Sub-city / Woreda
+                  {isAm ? 'ክፍለ ከተማ / ወረዳ' : 'Sub-city / Woreda'}
                 </span>
                 <span className="text-slate-800 dark:text-slate-200">
-                  {currentUser.subCity || currentUser.woreda || 'Unspecified'}
+                  {currentUser.subCity === 'Headquarters' || currentUser.woreda === 'Headquarters'
+                    ? (isAm ? 'ዋና መስሪያ ቤት' : 'Headquarters')
+                    : (currentUser.subCity || currentUser.woreda || (isAdministrator ? (isAm ? 'ዋና መስሪያ ቤት' : 'Headquarters') : (isAm ? 'ያልተገለጸ' : 'Unspecified')))}
                 </span>
               </div>
             </div>
@@ -795,7 +835,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-              Encrypted in database
+              {isAm ? 'በዳታቤዝ ውስጥ የተመሰጠረ' : 'Encrypted in database'}
             </span>
           </div>
         </div>
@@ -809,10 +849,10 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               </div>
               <div>
                 <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                  Account Information
+                  {isAm ? 'የአካውንት መረጃ' : 'Account Information'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  System security & audit logs
+                  {isAm ? 'የስርዓት ደህንነት እና የኦዲት መዝገቦች' : 'System security & audit logs'}
                 </p>
               </div>
             </div>
@@ -821,12 +861,12 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
                   {isAdministrator
-                    ? 'Admin ID'
+                    ? (isAm ? 'የአስተዳዳሪ መለያ' : 'Admin ID')
                     : isInstitution
-                    ? 'Institution ID'
+                    ? (isAm ? 'የተቋም መለያ' : 'Institution ID')
                     : isInvestigator
-                    ? 'Officer ID'
-                    : 'Citizen ID'}
+                    ? (isAm ? 'የመኮንን መለያ' : 'Officer ID')
+                    : (isAm ? 'የዜጋ መለያ' : 'Citizen ID')}
                 </span>
                 <div className="flex items-center space-x-2 mt-0.5">
                   <code className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[#005BAC] dark:text-blue-300 font-bold font-mono text-xs border border-slate-200 dark:border-slate-700">
@@ -835,7 +875,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   <button
                     type="button"
                     onClick={handleCopyCitizenId}
-                    title="Copy Account ID"
+                    title={isAm ? 'የአካውንት መለያ ቅዳ' : 'Copy Account ID'}
                     className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors"
                   >
                     {idCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -845,7 +885,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Account Status
+                  {isAm ? 'የአካውንት ሁኔታ' : 'Account Status'}
                 </span>
                 <div className="mt-1">
                   <span
@@ -858,14 +898,20 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                     }`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                    <span className="capitalize">{currentUser.status || 'Active'}</span>
+                    <span className="capitalize">
+                      {currentUser.status === 'active' || !currentUser.status
+                        ? (isAm ? 'ንቁ' : 'Active')
+                        : currentUser.status === 'suspended'
+                        ? (isAm ? 'የታገደ' : 'Suspended')
+                        : (isAm ? 'በመጠባበቅ ላይ' : (currentUser.status || 'Active'))}
+                    </span>
                   </span>
                 </div>
               </div>
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Registration Date
+                  {isAm ? 'የተመዘገበበት ቀን' : 'Registration Date'}
                 </span>
                 <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 mt-0.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -875,18 +921,18 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px] uppercase tracking-wider">
-                  Last Login
+                  {isAm ? 'የመጨረሻ መግቢያ' : 'Last Login'}
                 </span>
                 <span className="text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 mt-0.5">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{lastLoginDisplay}</span>
+                  <span>{isAm ? lastLoginDisplay.replace('Today', 'ዛሬ').replace('Yesterday', 'ትናንት') : lastLoginDisplay}</span>
                 </span>
               </div>
             </div>
           </div>
 
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-            <span>Non-modifiable system field</span>
+            <span>{isAm ? 'የማይለወጥ የስርዓት መስክ' : 'Non-modifiable system field'}</span>
             <Lock className="w-3.5 h-3.5" />
           </div>
         </div>
@@ -901,10 +947,12 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             </div>
             <div>
               <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                Password & Account Security
+                {isAm ? 'የይለፍ ቃል እና የአካውንት ደህንነት' : 'Password & Account Security'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Update account access credentials and manage secure session authentication
+                {isAm
+                  ? 'የመለያ መግቢያ ይለፍ ቃልዎን ያዘምኑ እና ክፍለ-ጊዜውን ይጠብቁ'
+                  : 'Update account access credentials and manage secure session authentication'}
               </p>
             </div>
           </div>
@@ -916,18 +964,18 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#005BAC] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Recommend Strong Password</span>
+              <span>{isAm ? 'አስተማማኝ የይለፍ ቃል ጠቁም' : 'Recommend Strong Password'}</span>
             </button>
 
             {!isAdministrator && currentUser.isDefaultPassword ? (
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Default Password Active</span>
+                <span>{isAm ? 'መደበኛ የይለፍ ቃል ነቅቷል' : 'Default Password Active'}</span>
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Secured</span>
+                <span>{isAm ? 'ደህንነቱ የተጠበቀ' : 'Secured'}</span>
               </span>
             )}
           </div>
@@ -952,14 +1000,14 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             {/* Current Password */}
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 dark:text-slate-300 text-xs block">
-                Current / Default Password
+                {isAm ? 'የአሁኑ / መደበኛ የይለፍ ቃል' : 'Current / Default Password'}
               </label>
               <div className="relative">
                 <input
                   type={showOldPassword ? 'text' : 'password'}
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="Enter current password"
+                  placeholder={isAm ? 'የአሁኑን የይለፍ ቃል ያስገቡ' : 'Enter current password'}
                   className="w-full px-3.5 py-2.5 pr-8 text-xs rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                 />
                 <button
@@ -975,7 +1023,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             {/* New Password */}
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 dark:text-slate-300 text-xs block">
-                New Password *
+                {isAm ? 'አዲስ የይለፍ ቃል *' : 'New Password *'}
               </label>
               <div className="relative">
                 <input
@@ -983,7 +1031,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Create strong password"
+                  placeholder={isAm ? 'ጠንካራ የይለፍ ቃል ይፍጠሩ' : 'Create strong password'}
                   className="w-full px-3.5 py-2.5 pr-8 text-xs rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                 />
                 <button
@@ -999,8 +1047,18 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {newPassword && (
                 <div className="space-y-1 pt-1">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">Strength:</span>
-                    <span className={`font-bold ${passStrength.color}`}>{passStrength.label}</span>
+                    <span className="text-slate-400">{isAm ? 'ጥንካሬ:' : 'Strength:'}</span>
+                    <span className={`font-bold ${passStrength.color}`}>
+                      {isAm
+                        ? passStrength.score <= 1
+                          ? 'ደካማ'
+                          : passStrength.score === 2
+                          ? 'መካከለኛ'
+                          : passStrength.score === 3
+                          ? 'ጥሩ'
+                          : 'በጣም ጠንካራ'
+                        : passStrength.label}
+                    </span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex gap-1">
                     {[1, 2, 3, 4].map((step) => (
@@ -1023,19 +1081,19 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   <div className="grid grid-cols-2 gap-1 text-[9px] text-slate-500 dark:text-slate-400 pt-0.5">
                     <span className={`flex items-center space-x-1 ${passStrength.hasMinLength ? 'text-emerald-600 font-bold' : ''}`}>
                       {passStrength.hasMinLength ? <Check className="w-3 h-3 text-emerald-600" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />}
-                      <span>8+ Chars</span>
+                      <span>{isAm ? '8+ ፊደላት' : '8+ Chars'}</span>
                     </span>
                     <span className={`flex items-center space-x-1 ${passStrength.hasUpper ? 'text-emerald-600 font-bold' : ''}`}>
                       {passStrength.hasUpper ? <Check className="w-3 h-3 text-emerald-600" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />}
-                      <span>Uppercase (A-Z)</span>
+                      <span>{isAm ? 'ትልቅ ፊደል (A-Z)' : 'Uppercase (A-Z)'}</span>
                     </span>
                     <span className={`flex items-center space-x-1 ${passStrength.hasNumber ? 'text-emerald-600 font-bold' : ''}`}>
                       {passStrength.hasNumber ? <Check className="w-3 h-3 text-emerald-600" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />}
-                      <span>Number (0-9)</span>
+                      <span>{isAm ? 'ቁጥር (0-9)' : 'Number (0-9)'}</span>
                     </span>
                     <span className={`flex items-center space-x-1 ${passStrength.hasSpecial ? 'text-emerald-600 font-bold' : ''}`}>
                       {passStrength.hasSpecial ? <Check className="w-3 h-3 text-emerald-600" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" />}
-                      <span>Symbol (!@#$)</span>
+                      <span>{isAm ? 'ልዩ ምልክት (!@#$)' : 'Symbol (!@#$)'}</span>
                     </span>
                   </div>
                 </div>
@@ -1046,7 +1104,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-700 dark:text-slate-300 text-xs block">
-                  Confirm Password *
+                  {isAm ? 'የይለፍ ቃል ያረጋግጡ *' : 'Confirm Password *'}
                 </label>
                 {confirmPassword && (
                   <span
@@ -1059,12 +1117,12 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                     {passwordsMatch ? (
                       <>
                         <Check className="w-3 h-3 text-emerald-600" />
-                        <span>Matches</span>
+                        <span>{isAm ? 'ይመሳሰላል' : 'Matches'}</span>
                       </>
                     ) : (
                       <>
                         <X className="w-3 h-3 text-red-600" />
-                        <span>Mismatch</span>
+                        <span>{isAm ? 'አይመሳሰልም' : 'Mismatch'}</span>
                       </>
                     )}
                   </span>
@@ -1076,7 +1134,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
+                  placeholder={isAm ? 'አዲሱን የይለፍ ቃል ይድገሙ' : 'Repeat new password'}
                   className={`w-full px-3.5 py-2.5 pr-8 text-xs rounded-xl border dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 ${
                     confirmPassword
                       ? passwordsMatch
@@ -1098,7 +1156,9 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Must include 8+ characters, uppercase (A-Z), lowercase (a-z), number (0-9), and special symbol (!@#$).
+              {isAm
+                ? 'ቢያንስ 8 ፊደላት፣ ትልቅ ፊደል (A-Z)፣ ትንሽ ፊደል (a-z)፣ ቁጥር (0-9) እና ልዩ ምልክት (!@#$) መያዝ አለበት።'
+                : 'Must include 8+ characters, uppercase (A-Z), lowercase (a-z), number (0-9), and special symbol (!@#$).'}
             </p>
             <button
               type="submit"
@@ -1106,7 +1166,11 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               className="px-5 py-2.5 bg-[#005BAC] hover:bg-blue-800 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center space-x-2 cursor-pointer transition-colors shrink-0"
             >
               <Key className="w-3.5 h-3.5" />
-              <span>{isUpdatingPassword ? 'Updating...' : 'Update Password'}</span>
+              <span>
+                {isUpdatingPassword
+                  ? (isAm ? 'በማዘመን ላይ...' : 'Updating...')
+                  : (isAm ? 'የይለፍ ቃል አዘምን' : 'Update Password')}
+              </span>
             </button>
           </div>
         </form>
@@ -1118,19 +1182,27 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {isCitizen ? (
                 <>
                   <Trash2 className="w-4 h-4 text-rose-600" />
-                  <span className="text-rose-700 dark:text-rose-400">Account Deletion & Data Retention</span>
+                  <span className="text-rose-700 dark:text-rose-400">
+                    {isAm ? 'አካውንት መሰረዝ እና የውሂብ አያያዝ' : 'Account Deletion & Data Retention'}
+                  </span>
                 </>
               ) : (
                 <>
                   <Shield className="w-4 h-4 text-[#005BAC]" />
-                  <span>Security Compliance & Official Offboarding</span>
+                  <span>
+                    {isAm ? 'የደህንነት ደንብ እና ኦፊሴላዊ የስራ መልቀቂያ' : 'Security Compliance & Official Offboarding'}
+                  </span>
                 </>
               )}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl">
               {isCitizen
-                ? 'Permanently deactivate your citizen account. In compliance with Ethiopian media regulations, submitted investigation records are archived for legal and audit compliance.'
-                : 'Administrative, institutional, and investigative accounts are bound by Ethiopian broadcast and media regulatory compliance. Official accounts cannot be deleted directly; please contact the Central Editorial Board for staff deprovisioning.'}
+                ? (isAm
+                    ? 'የዜጋ መለያዎን በቋሚነት ያሰናክሉ። በኢትዮጵያ የሚዲያ ደንቦች መሰረት፣ የቀረቡት የምርመራ መዝገቦች ለህጋዊ እና የኦዲት ተገዢነት በደህንነት ተቀምጠው ይቀራሉ።'
+                    : 'Permanently deactivate your citizen account. In compliance with Ethiopian media regulations, submitted investigation records are archived for legal and audit compliance.')
+                : (isAm
+                    ? 'አስተዳደራዊ፣ ተቋማዊ እና የምርመራ አካውንቶች በኢትዮጵያ ስርጭት እና ሚዲያ ቁጥጥር ደንብ የተገደቡ ናቸው። ኦፊሴላዊ አካውንቶችን በቀጥታ መሰረዝ አይቻልም፤ እባክዎ ለስራ መልቀቂያ ማዕከላዊ ኤዲቶሪያል ቦርድን ያነጋግሩ።'
+                    : 'Administrative, institutional, and investigative accounts are bound by Ethiopian broadcast and media regulatory compliance. Official accounts cannot be deleted directly; please contact the Central Editorial Board for staff deprovisioning.')}
             </p>
           </div>
 
@@ -1143,7 +1215,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               }}
               className="px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-xs font-bold transition-colors cursor-pointer shrink-0"
             >
-              Delete Account
+              {isAm ? 'አካውንት ሰርዝ' : 'Delete Account'}
             </button>
           )}
         </div>
@@ -1155,22 +1227,36 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
           <Shield className="w-4 h-4 text-[#005BAC]" />
           <span>
             {isAdministrator
-              ? 'Immutable Administrative Audit Guarantee'
+              ? (isAm ? 'የማይለወጥ የአስተዳደራዊ ኦዲት ዋስትና' : 'Immutable Administrative Audit Guarantee')
               : isInstitution
-              ? currentUser.role === 'Publisher' ? 'Publisher News Publishing & Verification Guarantee' : 'Institutional News Publishing & Verification Guarantee'
+              ? currentUser.role === 'Publisher'
+                ? (isAm ? 'የአሳታሚ ዜና ህትመት እና ማረጋገጫ ዋስትና' : 'Publisher News Publishing & Verification Guarantee')
+                : (isAm ? 'የተቋማዊ ዜና ህትመት እና ማረጋገጫ ዋስትና' : 'Institutional News Publishing & Verification Guarantee')
               : isInvestigator
-              ? 'Investigative Bureau Confidentiality Policy'
-              : 'Strict Privacy & RBAC Protection Guarantee'}
+              ? (isAm ? 'የምርመራ ቢሮ ምስጢራዊነት ፖሊሲ' : 'Investigative Bureau Confidentiality Policy')
+              : (isAm ? 'ጥብቅ የግላዊነት እና የRBAC ጥበቃ ዋስትና' : 'Strict Privacy & RBAC Protection Guarantee')}
           </span>
         </div>
         <p className="leading-relaxed text-[11px]">
           {isAdministrator
-            ? 'All administrative actions, login attempts, credential changes, and editorial moderation events are cryptographically recorded in the immutable audit log for compliance with Ethiopian broadcasting and digital media laws.'
+            ? (isAm
+                ? 'ሁሉም አስተዳደራዊ እርምጃዎች፣ የመግቢያ ሙከራዎች፣ የመረጃ ለውጦች እና የኤዲቶሪያል ማስተካከያ ክስተቶች ከኢትዮጵያ የስርጭት እና የዲጂታል ሚዲያ ህጎች ጋር በተጣጣመ መልኩ በማይለወጠው የኦዲት መዝገብ ውስጥ በምስጢር ይመዘገባሉ።'
+                : 'All administrative actions, login attempts, credential changes, and editorial moderation events are cryptographically recorded in the immutable audit log for compliance with Ethiopian broadcasting and digital media laws.')
             : isInstitution
-            ? currentUser.role === 'Publisher' ? 'Publisher news and official statements published via this portal are digitally verified before syndication to citizens.' : 'Institution press releases and official statements published via this portal are digitally verified before syndication to public citizens across Amhara Region.'
+            ? currentUser.role === 'Publisher'
+              ? (isAm
+                  ? 'በዚህ ፖርታል በኩል የሚታተሙ የአሳታሚ ዜናዎች እና ይፋዊ መግለጫዎች ለህዝብ ከመሰራጨታቸው በፊት በዲጂታል መንገድ ይረጋገጣሉ።'
+                  : 'Publisher news and official statements published via this portal are digitally verified before syndication to citizens.')
+              : (isAm
+                  ? 'በዚህ ፖርታል የሚታተሙ የተቋማት መግለጫዎች እና ይፋዊ ዜናዎች በመላው አማራ ክልል ለሚገኙ ዜጎች ከመሰራጨታቸው በፊት በዲጂታል መንገድ ይረጋገጣሉ።'
+                  : 'Institution press releases and official statements published via this portal are digitally verified before syndication to public citizens across Amhara Region.')
             : isInvestigator
-            ? 'Investigator reports, citizen source identities, field notes, and evidence logs are strictly encrypted and restricted to authorized editorial supervisors under regional media standards.'
-            : 'Citizen profile information (including full name, phone number, email address, date of birth, city/woreda, Citizen ID, and private investigator correspondence) is strictly confidential. Under AMECO security protocols, private citizen identities are masked from public news portals and accessible only to authorized editorial supervisors.'}
+            ? (isAm
+                ? 'የመርማሪ ሪፖርቶች፣ የዜጎች ምንጭ ማንነት፣ የመስክ ማስታወሻዎች እና የማስረጃ መዝገቦች በጥብቅ የተመሰጠሩ እና በክልላዊ የሚዲያ ደረጃዎች መሰረት ለተፈቀደላቸው የኤዲቶሪያል ኃላፊዎች ብቻ የተገደቡ ናቸው።'
+                : 'Investigator reports, citizen source identities, field notes, and evidence logs are strictly encrypted and restricted to authorized editorial supervisors under regional media standards.')
+            : (isAm
+                ? 'የዜጋ መገለጫ መረጃ (ሙሉ ስም፣ ስልክ ቁጥር፣ ኢሜይል፣ የትውልድ ቀን፣ ከተማ/ወረዳ፣ የዜጋ መለያ እና የግል መርማሪ መልዕክቶችን ጨምሮ) በጥብቅ ሚስጥራዊ ነው። በአሚኮ የደህንነት ፕሮቶኮሎች መሰረት የግል ዜጎች ማንነት ከህዝባዊ የዜና ፖርታሎች የተደበቀ ሲሆን ለተፈቀደላቸው የኤዲቶሪያል ኃላፊዎች ብቻ ተደራሽ ነው።'
+                : 'Citizen profile information (including full name, phone number, email address, date of birth, city/woreda, Citizen ID, and private investigator correspondence) is strictly confidential. Under AMECO security protocols, private citizen identities are masked from public news portals and accessible only to authorized editorial supervisors.')}
         </p>
       </div>
 
@@ -1188,10 +1274,12 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-lg">
-                    Edit Profile Information
+                    {isAm ? 'የመገለጫ መረጃ አርትዕ' : 'Edit Profile Information'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Update your personal and contact details with full validation
+                    {isAm
+                      ? 'የግል እና የመገናኛ ዝርዝሮችዎን በትክክለኛ ማረጋገጫ ያዘምኑ'
+                      : 'Update your personal and contact details with full validation'}
                   </p>
                 </div>
               </div>
@@ -1212,7 +1300,17 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <div className="flex items-center space-x-2">
                   <Lock className="w-4 h-4 text-slate-400" />
                   <span>
-                    <strong>Account ID ({currentUser.id})</strong> and <strong>Account Status ({currentUser.status || 'Active'})</strong> are non-modifiable system fields.
+                    <strong>{isAm ? 'የአካውንት መለያ' : 'Account ID'} ({currentUser.id})</strong> {isAm ? 'እና' : 'and'}{' '}
+                    <strong>
+                      {isAm ? 'የአካውንት ሁኔታ' : 'Account Status'} (
+                      {currentUser.status === 'active' || !currentUser.status
+                        ? (isAm ? 'ንቁ' : 'Active')
+                        : currentUser.status === 'suspended'
+                        ? (isAm ? 'የታገደ' : 'Suspended')
+                        : (currentUser.status || 'Active')}
+                      )
+                    </strong>{' '}
+                    {isAm ? 'የማይለወጡ የስርዓት መስኮች ናቸው።' : 'are non-modifiable system fields.'}
                   </span>
                 </div>
               </div>
@@ -1222,14 +1320,14 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   <div className="space-y-1">
                     <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                      Institution Official Name *
+                      {isAm ? 'የተቋሙ ይፋዊ ስም *' : 'Institution Official Name *'}
                     </label>
                     <input
                       type="text"
                       required
                       value={institutionName}
                       onChange={(e) => setInstitutionName(e.target.value)}
-                      placeholder="e.g. Amhara Public Health Institute"
+                      placeholder={isAm ? 'ለምሳሌ፡ የአማራ የህብረተሰብ ጤና ኢንስቲትዩት' : 'e.g. Amhara Public Health Institute'}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                     />
                   </div>
@@ -1237,30 +1335,30 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                        Institutional Category / Sector *
+                        {isAm ? 'የተቋሙ ምድብ / ዘርፍ *' : 'Institutional Category / Sector *'}
                       </label>
                       <select
                         value={institutionCategory}
                         onChange={(e) => setInstitutionCategory(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                       >
-                        <option value="Public Health & Healthcare">Public Health & Healthcare</option>
-                        <option value="Education & Academic Affairs">Education & Academic Affairs</option>
-                        <option value="Environmental & Forestry Protection">Environmental & Forestry Protection</option>
-                        <option value="Infrastructure, Roads & Energy">Infrastructure, Roads & Energy</option>
-                        <option value="Agriculture & Food Security">Agriculture & Food Security</option>
-                        <option value="Public Safety, Police & Justice">Public Safety, Police & Justice</option>
-                        <option value="Municipal & Regional Administration">Municipal & Regional Administration</option>
-                        <option value="Civic & Non-Governmental Entity">Civic & Non-Governmental Entity</option>
+                        <option value="Public Health & Healthcare">{isAm ? 'የህዝብ ጤና እና ህክምና' : 'Public Health & Healthcare'}</option>
+                        <option value="Education & Academic Affairs">{isAm ? 'ትምህርት እና አካዳሚክ ጉዳዮች' : 'Education & Academic Affairs'}</option>
+                        <option value="Environmental & Forestry Protection">{isAm ? 'አካባቢ እና ደን ጥበቃ' : 'Environmental & Forestry Protection'}</option>
+                        <option value="Infrastructure, Roads & Energy">{isAm ? 'መሰረተ ልማት፣ መንገዶች እና ኢነርጂ' : 'Infrastructure, Roads & Energy'}</option>
+                        <option value="Agriculture & Food Security">{isAm ? 'ግብርና እና የምግብ ዋስትና' : 'Agriculture & Food Security'}</option>
+                        <option value="Public Safety, Police & Justice">{isAm ? 'የህዝብ ደህንነት፣ ፖሊስ እና ፍትህ' : 'Public Safety, Police & Justice'}</option>
+                        <option value="Municipal & Regional Administration">{isAm ? 'ማዘጋጃ ቤት እና የክልል አስተዳደር' : 'Municipal & Regional Administration'}</option>
+                        <option value="Civic & Non-Governmental Entity">{isAm ? 'ሲቪክ እና መንግስታዊ ያልሆነ ተቋም' : 'Civic & Non-Governmental Entity'}</option>
                       </select>
                     </div>
 
                     <ValidatedNameInput
-                      label="Authorized Representative Name"
+                      label={isAm ? 'የተፈቀደለት ተወካይ ስም' : 'Authorized Representative Name'}
                       required
                       value={fullName}
                       onChange={setFullName}
-                      placeholder="e.g. Dr. Kassahun Abebe"
+                      placeholder={isAm ? 'ለምሳሌ፡ ዶ/ር ካሳሁን አበበ' : 'e.g. Dr. Kassahun Abebe'}
                     />
                   </div>
                 </>
@@ -1268,18 +1366,24 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <>
                   {/* 1. Full Name */}
                   <ValidatedNameInput
-                    label={isAdministrator ? 'Administrator Full Name' : isInvestigator ? 'Officer Full Name' : 'Full Name'}
+                    label={
+                      isAdministrator
+                        ? (isAm ? 'የአስተዳዳሪ ሙሉ ስም' : 'Administrator Full Name')
+                        : isInvestigator
+                        ? (isAm ? 'የመኮንን ሙሉ ስም' : 'Officer Full Name')
+                        : (isAm ? 'ሙሉ ስም' : 'Full Name')
+                    }
                     required
                     value={fullName}
                     onChange={setFullName}
-                    placeholder="e.g. Abebe Balcha"
+                    placeholder={isAm ? 'ለምሳሌ፡ አበበ ባልቻ' : 'e.g. Abebe Balcha'}
                   />
 
                   {/* 2. Username & Gender */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                        Username (Optional)
+                        {isAm ? 'የተጠቃሚ ስም (አማራጭ)' : 'Username (Optional)'}
                       </label>
                       <div className="relative">
                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono">
@@ -1305,17 +1409,17 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                     {!isAdministrator && !isInvestigator && (
                       <div className="space-y-1">
                         <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                          Gender (Optional)
+                          {isAm ? 'ጾታ (አማራጭ)' : 'Gender (Optional)'}
                         </label>
                         <select
                           value={gender}
                           onChange={(e) => setGender(e.target.value)}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                         >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                          <option value="Prefer not to say">Prefer not to say</option>
+                          <option value="Male">{isAm ? 'ወንድ' : 'Male'}</option>
+                          <option value="Female">{isAm ? 'ሴት' : 'Female'}</option>
+                          <option value="Other">{isAm ? 'ሌላ' : 'Other'}</option>
+                          <option value="Prefer not to say">{isAm ? 'መግለጽ አልፈልግም' : 'Prefer not to say'}</option>
                         </select>
                       </div>
                     )}
@@ -1326,7 +1430,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {/* 3. Email & Phone Number */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormalEmailInput
-                  label={isInstitution ? 'Official Contact Email' : 'Email Address'}
+                  label={isInstitution ? (isAm ? 'የተቋም ይፋዊ ኢሜይል' : 'Official Contact Email') : (isAm ? 'የኢሜይል አድራሻ' : 'Email Address')}
                   required
                   value={email}
                   onChange={setEmail}
@@ -1335,7 +1439,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                    {isInstitution ? 'Official Contact Phone' : 'Phone Number'}
+                    {isInstitution ? (isAm ? 'የተቋም ይፋዊ ስልክ' : 'Official Contact Phone') : (isAm ? 'የስልክ ቁጥር' : 'Phone Number')}
                   </label>
                   <InternationalPhoneInput
                     value={phone}
@@ -1350,7 +1454,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {isCitizen && (
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                    Date of Birth (Optional)
+                    {isAm ? 'የትውልድ ቀን (አማራጭ)' : 'Date of Birth (Optional)'}
                   </label>
                   <input
                     type="date"
@@ -1376,13 +1480,15 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    {isInstitution ? 'Sub-City / Office District / Kebele' : 'Sub-city / Woreda / Kebele (Optional)'}
+                    {isInstitution
+                      ? (isAm ? 'ክፍለ ከተማ / ቢሮ / ቀበሌ' : 'Sub-City / Office District / Kebele')
+                      : (isAm ? 'ክፍለ ከተማ / ወረዳ / ቀበሌ (አማራጭ)' : 'Sub-city / Woreda / Kebele (Optional)')}
                   </label>
                   <input
                     type="text"
                     value={subCity}
                     onChange={(e) => setSubCity(e.target.value)}
-                    placeholder="e.g. Woreda 04 or Felege Hiwot Area"
+                    placeholder={isAm ? 'ለምሳሌ፡ ወረዳ 04 ወይም ፍለገ ህይወት አካባቢ' : 'e.g. Woreda 04 or Felege Hiwot Area'}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs outline-none focus:ring-2 focus:ring-[#005BAC]"
                   />
                 </div>
@@ -1395,13 +1501,13 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   onClick={() => setIsEditModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl shadow cursor-pointer transition-colors"
                 >
-                  Save Profile Changes
+                  {isAm ? 'የመገለጫ ለውጦችን አስቀምጥ' : 'Save Profile Changes'}
                 </button>
               </div>
             </form>
@@ -1449,21 +1555,21 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Category</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{isAm ? 'ምድብ' : 'Category'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{selectedTip.category}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Priority</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{isAm ? 'ቅድሚያ' : 'Priority'}</span>
                   <span className={`inline-block font-bold mt-0.5 ${selectedTip.priority === 'Critical' ? 'text-red-600' : 'text-blue-600'}`}>
                     {selectedTip.priority}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Location / Zone</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{isAm ? 'አካባቢ / ዞን' : 'Location / Zone'}</span>
                   <span className="text-slate-800 dark:text-slate-200">{selectedTip.zone || selectedTip.region}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Submitted Date</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{isAm ? 'የቀረበበት ቀን' : 'Submitted Date'}</span>
                   <span className="font-mono text-slate-800 dark:text-slate-200">{selectedTip.createdAt}</span>
                 </div>
               </div>
@@ -1471,7 +1577,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               {/* Description */}
               <div className="space-y-2">
                 <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">
-                  Report Description & Narrative
+                  {isAm ? 'የጥቆማው ዝርዝር መግለጫ እና ማብራሪያ' : 'Report Description & Narrative'}
                 </h4>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 leading-relaxed text-xs sm:text-sm whitespace-pre-wrap">
                   {selectedTip.description}
@@ -1483,7 +1589,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <div className="space-y-2">
                   <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                     <Paperclip className="w-3.5 h-3.5" />
-                    <span>Evidence Attachments ({selectedTip.evidence.length})</span>
+                    <span>{isAm ? `የማስረጃ ፋይሎች (${selectedTip.evidence.length})` : `Evidence Attachments (${selectedTip.evidence.length})`}</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedTip.evidence.map((ev, idx) => (
@@ -1497,7 +1603,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                           </span>
                           <div className="truncate">
                             <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{ev.name}</p>
-                            <p className="text-[10px] text-slate-400">{ev.size || 'Attachment'}</p>
+                            <p className="text-[10px] text-slate-400">{ev.size || (isAm ? 'አባሪ ፋይል' : 'Attachment')}</p>
                           </div>
                         </div>
 
@@ -1507,7 +1613,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-300 shrink-0"
-                            title="Download/Open Evidence"
+                            title={isAm ? 'ማስረጃውን አውርድ/ክፈት' : 'Download/Open Evidence'}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -1523,7 +1629,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 space-y-1">
                   <h4 className="font-bold text-teal-900 dark:text-teal-300 text-xs flex items-center space-x-1.5">
                     <CheckCircle className="w-4 h-4 text-teal-600" />
-                    <span>AMECO Editorial & Investigation Findings</span>
+                    <span>{isAm ? 'የአሚኮ ኤዲቶሪያል እና የምርመራ ግኝቶች' : 'AMECO Editorial & Investigation Findings'}</span>
                   </h4>
                   <p className="text-xs text-teal-800 dark:text-teal-200 leading-relaxed">
                     {selectedTip.investigationFindings}
@@ -1535,15 +1641,15 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                   <Shield className="w-3.5 h-3.5 text-[#005BAC]" />
-                  <span>Secure Communication Channel (Confidential)</span>
+                  <span>{isAm ? 'ደህንነቱ የተጠበቀ የመገናኛ መስመር (ምስጢራዊ)' : 'Secure Communication Channel (Confidential)'}</span>
                 </h4>
 
                 {/* Messages Box */}
                 <div className="h-44 overflow-y-auto p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
                   {messages.filter((m) => m.reportId === selectedTip.id).length === 0 ? (
                     <div className="text-center py-6 text-slate-400 dark:text-slate-500">
-                      <p>No messages yet on this case.</p>
-                      <p className="text-[11px] mt-0.5">Send a confidential inquiry or supplementary evidence update below.</p>
+                      <p>{isAm ? 'በዚህ ጉዳይ ላይ እስካሁን ምንም መልዕክት የለም።' : 'No messages yet on this case.'}</p>
+                      <p className="text-[11px] mt-0.5">{isAm ? 'ምስጢራዊ ጥያቄ ወይም ተጨማሪ ማስረጃ ከዚህ በታች መላክ ይችላሉ።' : 'Send a confidential inquiry or supplementary evidence update below.'}</p>
                     </div>
                   ) : (
                     messages
@@ -1563,7 +1669,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                               }`}
                             >
                               <p className="font-bold text-[10px] opacity-75 mb-0.5">
-                                {isMe ? 'You (Citizen)' : msg.senderDisplayName || 'AMECO Investigator'}
+                                {isMe ? (isAm ? 'እርስዎ (ዜጋ)' : 'You (Citizen)') : msg.senderDisplayName || (isAm ? 'የአሚኮ መርማሪ' : 'AMECO Investigator')}
                               </p>
                               {msg.text && <p className="leading-relaxed">{msg.text}</p>}
                               <MessageAttachment attachment={msg.attachment} />
@@ -1590,7 +1696,9 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                       <div className="p-3 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center space-x-2.5 text-xs text-amber-900 dark:text-amber-200">
                         <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span className="text-[11px] leading-tight">
-                          Chat channel will open after an administrator assigns an investigator to this report.
+                          {isAm
+                            ? 'የውይይት መስመሩ የሚከፈተው አስተዳዳሪ ለዚህ ሪፖርት መርማሪ ከመደበ በኋላ ነው።'
+                            : 'Chat channel will open after an administrator assigns an investigator to this report.'}
                         </span>
                       </div>
                     );
@@ -1599,7 +1707,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                   return (
                     <ChatComposer
                       onSend={(text, attachment) => onSendMessage(selectedTip.id, text, attachment)}
-                      placeholder="Type a confidential update or response to the investigator..."
+                      placeholder={isAm ? 'ለመረጃ መርማሪው ሚስጥራዊ ምላሽ ወይም ዝማኔ ይጻፉ...' : 'Type a confidential update or response to the investigator...'}
                     />
                   );
                 })()}
@@ -1621,26 +1729,36 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
               </div>
               <div>
                 <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-lg">
-                  Confirm Account Deletion
+                  {isAm ? 'የአካውንት መሰረዝን ያረጋግጡ' : 'Confirm Account Deletion'}
                 </h3>
                 <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">
-                  Permanent Action & Access Revocation
+                  {isAm ? 'ቋሚ እርምጃ እና የመዳረሻ መሰረዝ' : 'Permanent Action & Access Revocation'}
                 </p>
               </div>
             </div>
 
             <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/40 text-xs text-rose-800 dark:text-rose-200 space-y-2 leading-relaxed">
               <p>
-                <strong>Warning:</strong> Deleting your account will immediately revoke your authentication credentials, personal dashboard, and direct two-way messaging access.
+                <strong>{isAm ? 'ማስጠንቀቂያ:' : 'Warning:'}</strong>{' '}
+                {isAm
+                  ? 'አካውንትዎን መሰረዝ ወዲያውኑ የመግቢያ ፈቃድዎን፣ የግል ዳሽቦርድዎን እና ቀጥተኛ የሁለትዮሽ መልዕክት መለዋወጫ መዳረሻዎን ይሰርዛል።'
+                  : 'Deleting your account will immediately revoke your authentication credentials, personal dashboard, and direct two-way messaging access.'}
               </p>
               <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                <strong>Legal Audit Retention:</strong> Any previously submitted investigative reports and associated evidence files will be securely preserved for editorial, journalistic, and legal compliance in accordance with data retention policies.
+                <strong>{isAm ? 'የህጋዊ ኦዲት አያያዝ:' : 'Legal Audit Retention:'}</strong>{' '}
+                {isAm
+                  ? 'ቀደም ሲል የቀረቡ ማናቸውም የምርመራ ሪፖርቶች እና ተዛማጅ ማስረጃዎች በውሂብ አያያዝ ፖሊሲ መሰረት ለኤዲቶሪያል፣ ለጋዜጠኝነት እና ለህጋዊ ተገዢነት በደህንነት ተቀምጠው ይቀራሉ።'
+                  : 'Any previously submitted investigative reports and associated evidence files will be securely preserved for editorial, journalistic, and legal compliance in accordance with data retention policies.'}
               </p>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Type <code>DELETE</code> to confirm:
+                {isAm ? (
+                  <>ለማረጋገጥ <code>DELETE</code> ብለው ይተይቡ:</>
+                ) : (
+                  <>Type <code>DELETE</code> to confirm:</>
+                )}
               </label>
               <input
                 type="text"
@@ -1657,7 +1775,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-colors cursor-pointer"
               >
-                Cancel
+                {isAm ? 'ሰርዝ' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -1665,7 +1783,7 @@ export const CitizenProfile: React.FC<CitizenProfileProps> = ({
                 onClick={handleConfirmAccountDeletion}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow transition-colors cursor-pointer"
               >
-                Confirm Account Deletion
+                {isAm ? 'የአካውንት መሰረዝን አረጋግጥ' : 'Confirm Account Deletion'}
               </button>
             </div>
           </div>

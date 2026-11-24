@@ -9,6 +9,7 @@ import {
   requestPasswordResetApi,
   resetPasswordWithSecurityAnswersApi,
 } from '../../lib/api';
+import { useLanguage } from '../../context/LanguageContext';
 import { hashPassword } from '../../utils/authSecurity';
 import {
   KeyRound,
@@ -46,6 +47,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   onPasswordResetSuccess,
   users,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
   const [step, setStep] = useState<'request' | 'verify_reset' | 'success'>('request');
   const [identifier, setIdentifier] = useState(initialIdentifier);
   const [maskedEmail, setMaskedEmail] = useState('');
@@ -139,12 +142,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
     const cleanIdentifier = identifier.trim();
     if (!cleanIdentifier) {
-      setErrorMessage('Please enter your registered email address or username.');
+      setErrorMessage(isAm ? 'እባክዎ የተመዘገቡበትን ኢሜይል ወይም የተጠቃሚ ስም ያስገቡ።' : 'Please enter your registered email address or username.');
       return;
     }
 
     if (!isRequestCaptchaVerified) {
-      setRequestCaptchaError('Please complete the case-sensitive security CAPTCHA verification.');
+      setRequestCaptchaError(isAm ? 'እባክዎ የደህንነት ካፕቻ (CAPTCHA) ማረጋገጫውን በትክክል ይሙሉ' : 'Please complete the case-sensitive security CAPTCHA verification.');
       return;
     }
 
@@ -323,10 +326,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                Account Password Recovery
+                {isAm ? 'የይለፍ ቃል መልሶ ማግኛ' : 'Account Password Recovery'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Answer security questions to set a new password
+                {isAm ? 'አዲስ የይለፍ ቃል ለማዘጋጀት የደህንነት ጥያቄዎችን ይመልሱ' : 'Answer security questions to set a new password'}
               </p>
             </div>
           </div>
@@ -335,7 +338,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-            title="Close modal"
+            title={isAm ? 'ዝጋ' : 'Close modal'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -360,7 +363,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               >
                 {step === 'request' ? '1' : <Check className="w-3 h-3" />}
               </div>
-              <span>Identify Account</span>
+              <span>{isAm ? 'አካውንት መለየት' : 'Identify Account'}</span>
             </div>
 
             <div className="h-0.5 w-10 bg-slate-200 dark:bg-zinc-800" />
@@ -385,7 +388,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               >
                 {step === 'success' ? <Check className="w-3 h-3" /> : '2'}
               </div>
-              <span>Security Questions & Password</span>
+              <span>{isAm ? 'የደህንነት ጥያቄዎች እና የይለፍ ቃል' : 'Security Questions & Password'}</span>
             </div>
 
             <div className="h-0.5 w-10 bg-slate-200 dark:bg-zinc-800" />
@@ -406,7 +409,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               >
                 3
               </div>
-              <span>Ready</span>
+              <span>{isAm ? 'ተጠናቋል' : 'Ready'}</span>
             </div>
           </div>
         </div>
@@ -427,12 +430,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           {step === 'request' && (
             <form onSubmit={handleRequestAccount} className="space-y-4">
               <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
-                Enter your registered email address or username. We will retrieve your security recovery questions to verify your identity and allow you to set a new password.
+                {isAm
+                  ? 'የተመዘገቡበትን የኢሜይል አድራሻ ወይም የተጠቃሚ ስም ያስገቡ። ማንነትዎን ለማረጋገጥ እና አዲስ የይለፍ ቃል እንዲያዘጋጁ የደህንነት ጥያቄዎችዎን እናቀርብልዎታለን።'
+                  : 'Enter your registered email address or username. We will retrieve your security recovery questions to verify your identity and allow you to set a new password.'}
               </p>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                  Registered Email Address or Username *
+                  {isAm ? 'የተመዘገበ የኢሜይል አድራሻ ወይም የተጠቃሚ ስም *' : 'Registered Email Address or Username *'}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 dark:text-zinc-400 absolute left-3.5 top-3" />
@@ -441,7 +446,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="e.g. abebe@ameco.et or your username"
+                    placeholder={isAm ? 'ለምሳሌ፡ abebe@ameco.et ወይም የተጠቃሚ ስም' : 'e.g. abebe@ameco.et or your username'}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-500"
                   />
                 </div>
@@ -464,7 +469,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -474,11 +479,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   {isLoading ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Checking Account...</span>
+                      <span>{isAm ? 'አካውንቱን በመፈተሽ ላይ...' : 'Checking Account...'}</span>
                     </>
                   ) : (
                     <>
-                      <span>Continue to Security Questions</span>
+                      <span>{isAm ? 'ወደ ደህንነት ጥያቄዎች ቀጥል' : 'Continue to Security Questions'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -498,14 +503,16 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <div className="text-xs text-slate-700 dark:text-zinc-300 flex-1">
                   <div className="flex items-center justify-between">
                     <p className="font-bold text-slate-900 dark:text-white">
-                      Account: {userName || identifier}
+                      {isAm ? 'አካውንት:' : 'Account:'} {userName || identifier}
                     </p>
                     <span className="text-[10px] text-slate-500 dark:text-zinc-400">
                       {maskedEmail}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-zinc-400 mt-0.5">
-                    Answer at least <strong>one</strong> of your security recovery questions below and enter your new password to regain access.
+                    {isAm
+                      ? 'ከታች ከተዘረዘሩት የደህንነት ጥያቄዎች ቢያንስ አንዱን በትክክል ይመልሱ እና አዲሱን የይለፍ ቃልዎን ያስገቡ።'
+                      : 'Answer at least one of your security recovery questions below and enter your new password to regain access.'}
                   </p>
                 </div>
               </div>
@@ -515,21 +522,21 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-zinc-800/80">
                   <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center space-x-1.5">
                     <HelpCircle className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                    <span>Security Recovery Questions</span>
+                    <span>{isAm ? 'የደህንነት መልሶ ማግኛ ጥያቄዎች' : 'Security Recovery Questions'}</span>
                   </span>
                   <span className="text-[10px] font-semibold text-[#005BAC] dark:text-blue-400 bg-blue-100/60 dark:bg-blue-950 px-2 py-0.5 rounded-full">
-                    1 Answer Required
+                    {isAm ? '1 መልስ ያስፈልጋል' : '1 Answer Required'}
                   </span>
                 </div>
 
                 {/* Question 1: Favourite Number */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 flex items-center justify-between">
-                    <span>1. {securityQuestions.question1}</span>
+                    <span>1. {isAm ? (securityQuestions.question1.includes('favourite number') ? 'የሚወዱት ቁጥር ስንት ነው?' : securityQuestions.question1) : securityQuestions.question1}</span>
                     {answer1.trim() && (
                       <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                         <Check className="w-3 h-3" />
-                        <span>Filled</span>
+                        <span>{isAm ? 'ተሞልቷል' : 'Filled'}</span>
                       </span>
                     )}
                   </label>
@@ -539,7 +546,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       type="text"
                       value={answer1}
                       onChange={(e) => setAnswer1(e.target.value)}
-                      placeholder="Enter your answer (e.g. 7)"
+                      placeholder={isAm ? 'መልስዎን ያስገቡ (ለምሳሌ፡ 7)' : 'Enter your answer (e.g. 7)'}
                       className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                     />
                   </div>
@@ -548,11 +555,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 {/* Question 2: Nickname */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 flex items-center justify-between">
-                    <span>2. {securityQuestions.question2}</span>
+                    <span>2. {isAm ? (securityQuestions.question2.includes('nickname') ? 'የልጅነት የቅጽል ስምዎ ማን ነበር?' : securityQuestions.question2) : securityQuestions.question2}</span>
                     {answer2.trim() && (
                       <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                         <Check className="w-3 h-3" />
-                        <span>Filled</span>
+                        <span>{isAm ? 'ተሞልቷል' : 'Filled'}</span>
                       </span>
                     )}
                   </label>
@@ -562,7 +569,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       type="text"
                       value={answer2}
                       onChange={(e) => setAnswer2(e.target.value)}
-                      placeholder="Enter your answer (e.g. Abebe or Mickey)"
+                      placeholder={isAm ? 'መልስዎን ያስገቡ (ለምሳሌ፡ አበበ)' : 'Enter your answer (e.g. Abebe or Mickey)'}
                       className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                     />
                   </div>
@@ -571,11 +578,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 {/* Question 3: Favourite Place */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 flex items-center justify-between">
-                    <span>3. {securityQuestions.question3}</span>
+                    <span>3. {isAm ? (securityQuestions.question3.includes('place or city') ? 'የሚወዱት ቦታ ወይም ከተማ የቱ ነው?' : securityQuestions.question3) : securityQuestions.question3}</span>
                     {answer3.trim() && (
                       <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                         <Check className="w-3 h-3" />
-                        <span>Filled</span>
+                        <span>{isAm ? 'ተሞልቷል' : 'Filled'}</span>
                       </span>
                     )}
                   </label>
@@ -585,7 +592,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       type="text"
                       value={answer3}
                       onChange={(e) => setAnswer3(e.target.value)}
-                      placeholder="Enter your answer (e.g. Bahir Dar, Gondar)"
+                      placeholder={isAm ? 'መልስዎን ያስገቡ (ለምሳሌ፡ ባህር ዳር፣ ጎንደር)' : 'Enter your answer (e.g. Bahir Dar, Gondar)'}
                       className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                     />
                   </div>
@@ -597,7 +604,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center space-x-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                    <span>Enter New Password *</span>
+                    <span>{isAm ? 'አዲስ የይለፍ ቃል አስገባ *' : 'Enter New Password *'}</span>
                   </label>
                   <button
                     type="button"
@@ -605,7 +612,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400 hover:underline flex items-center space-x-1 cursor-pointer"
                   >
                     <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span>{passwordCopied ? 'Copied!' : 'Suggest Strong Password'}</span>
+                    <span>{passwordCopied ? (isAm ? 'ተቀድቷል!' : 'Copied!') : (isAm ? 'ጠንካራ የይለፍ ቃል ምረጥ' : 'Suggest Strong Password')}</span>
                   </button>
                 </div>
 
@@ -615,7 +622,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Create a strong password"
+                    placeholder={isAm ? 'ጠንካራ አዲስ የይለፍ ቃል ፍጠር' : 'Create a strong password'}
                     className="w-full pl-3.5 pr-10 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400 font-mono"
                   />
                   <button
@@ -631,9 +638,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 {newPassword.length > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-500 dark:text-zinc-400 font-medium">Strength:</span>
+                      <span className="text-slate-500 dark:text-zinc-400 font-medium">
+                        {isAm ? 'ጥንካሬ:' : 'Strength:'}
+                      </span>
                       <span className={`font-bold ${passwordStrength.color}`}>
-                        {passwordStrength.label} ({passwordStrength.score}/4)
+                        {isAm ? (passwordStrength.label === 'Good' ? 'ጠንካራ' : passwordStrength.label === 'Fair' ? 'መካከለኛ' : 'ደካማ') : passwordStrength.label} ({passwordStrength.score}/4)
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden flex">
@@ -655,7 +664,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 {/* Confirm Password */}
                 <div className="space-y-1 pt-1">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
-                    Confirm New Password *
+                    {isAm ? 'አዲሱን የይለፍ ቃል አረጋግጥ *' : 'Confirm New Password *'}
                   </label>
                   <div className="relative">
                     <input
@@ -663,7 +672,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Repeat new password"
+                      placeholder={isAm ? 'አዲሱን የይለፍ ቃል ድገም' : 'Repeat new password'}
                       className={`w-full pl-3.5 pr-10 py-2 rounded-xl bg-white dark:bg-zinc-900 border text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none transition-colors font-mono ${
                         passwordsMatch
                           ? 'border-emerald-500 ring-2 ring-emerald-400/20'
@@ -684,13 +693,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   {passwordsMatch && (
                     <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Passwords match</span>
+                      <span>{isAm ? 'የይለፍ ቃሎቹ ይጣጣማሉ' : 'Passwords match'}</span>
                     </p>
                   )}
                   {passwordsMismatch && (
                     <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center space-x-1">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <span>Passwords do not match</span>
+                      <span>{isAm ? 'የይለፍ ቃሎቹ አይመሳሰሉም' : 'Passwords do not match'}</span>
                     </p>
                   )}
                 </div>
@@ -704,7 +713,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   className="px-3.5 py-2 rounded-xl text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back</span>
+                  <span>{isAm ? 'ተመለስ' : 'Back'}</span>
                 </button>
 
                 <button
@@ -720,11 +729,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   {isLoading ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Verifying & Resetting...</span>
+                      <span>{isAm ? 'በማረጋገጥና በማዘመን ላይ...' : 'Verifying & Resetting...'}</span>
                     </>
                   ) : (
                     <>
-                      <span>Verify Answer & Set New Password</span>
+                      <span>{isAm ? 'መልሱን አረጋግጥና አዲስ የይለፍ ቃል መዝግብ' : 'Verify Answer & Set New Password'}</span>
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -744,10 +753,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
               <div className="space-y-1.5 max-w-sm mx-auto">
                 <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                  Password Reset Successfully!
+                  {isAm ? 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!' : 'Password Reset Successfully!'}
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                  Your security question answer was verified and your account password has been updated. You can now log into the AMECO portal using your new password.
+                  {isAm
+                    ? 'የደህንነት መልስዎ ተረጋግጧል፤ የአካውንትዎ የይለፍ ቃልም ተዘምኗል። አዲሱን የይለፍ ቃል ተጠቅመው ወደ አሜኮ ፖርታል መግባት ይችላሉ።'
+                    : 'Your security question answer was verified and your account password has been updated. You can now log into the AMECO portal using your new password.'}
                 </p>
               </div>
 
@@ -757,7 +768,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   onClick={handleFinishAndLogin}
                   className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black font-extrabold text-xs shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer"
                 >
-                  <span>Proceed to Sign In with New Password</span>
+                  <span>{isAm ? 'በአዲሱ የይለፍ ቃል ወደ ሲስተሙ ይግቡ' : 'Proceed to Sign In with New Password'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

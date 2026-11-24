@@ -50,6 +50,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
   onNavigateTab,
 }) => {
   const { language, t, translateCategory, translatePriority, translateStatus } = useLanguage();
+  const isAm = language === 'am';
   // Business Rule 5: Responsible persons see ONLY reports assigned to them
   const assignedReports = reports.filter(
     (r) => r.assignedTo && r.assignedTo.responsiblePersonId === currentUser.id
@@ -76,7 +77,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
 
   // Password strength check
   const getPasswordStrength = (pass: string) => {
-    if (!pass) return { score: 0, label: 'None', color: 'bg-slate-200 text-slate-400' };
+    if (!pass) return { score: 0, label: isAm ? 'ምንም' : 'None', color: 'bg-slate-200 text-slate-400' };
     let score = 0;
     if (pass.length >= 6) score += 1;
     if (pass.length >= 8) score += 1;
@@ -84,9 +85,9 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
     if (/[0-9]/.test(pass)) score += 1;
     if (/[^A-Za-z0-9]/.test(pass)) score += 1;
 
-    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500 text-red-700' };
-    if (score <= 3) return { score, label: 'Moderate', color: 'bg-amber-500 text-amber-700' };
-    return { score, label: 'Strong', color: 'bg-emerald-500 text-emerald-700' };
+    if (score <= 2) return { score, label: isAm ? 'ደካማ' : 'Weak', color: 'bg-red-500 text-red-700' };
+    if (score <= 3) return { score, label: isAm ? 'መካከለኛ' : 'Moderate', color: 'bg-amber-500 text-amber-700' };
+    return { score, label: isAm ? 'ጠንካራ' : 'Strong', color: 'bg-emerald-500 text-emerald-700' };
   };
 
   const passStrength = getPasswordStrength(newPassword);
@@ -97,12 +98,12 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
     setPasswordSuccess(null);
 
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+      setPasswordError(isAm ? 'አዲሱ የይለፍ ቃል ቢያንስ 6 ፊደላት ወይም ቁጥሮች መሆን አለበት።' : 'New password must be at least 6 characters long.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match.');
+      setPasswordError(isAm ? 'የይለፍ ቃሎቹ አይመሳሰሉም።' : 'Passwords do not match.');
       return;
     }
 
@@ -116,7 +117,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
       });
 
       if (res.success) {
-        setPasswordSuccess(res.message || 'Password changed successfully!');
+        setPasswordSuccess(res.message || (isAm ? 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!' : 'Password changed successfully!'));
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -131,13 +132,14 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
         }, 1800);
       }
     } catch (err: any) {
-      setPasswordError(err.message || 'Failed to update password. Please check your current password and try again.');
+      setPasswordError(err.message || (isAm ? 'የይለፍ ቃል መቀየር አልተሳካም። እባክዎ የአሁኑን የይለፍ ቃል ያረጋግጡና እንደገና ይሞክሩ።' : 'Failed to update password. Please check your current password and try again.'));
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   const activeReport = reports.find((r) => r.id === selectedReportId) || assignedReports[0];
+
   const activeMessages = messages.filter((m) => m.reportId === activeReport?.id);
 
   const handleStatusChange = (status: ReportStatus) => {
@@ -166,10 +168,12 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
             </div>
             <div className="text-xs">
               <h4 className="font-bold text-amber-900 dark:text-amber-200 text-sm">
-                Default Credentials In Use
+                {isAm ? 'ነባሪ የይለፍ ቃል ስራ ላይ ነው' : 'Default Credentials In Use'}
               </h4>
               <p className="text-amber-800 dark:text-amber-300 mt-0.5">
-                You are currently signed in with your administrator-assigned default password. Please choose a strong personal password to secure your case files.
+                {isAm
+                  ? 'በአስተዳዳሪ በተሰጠዎት ነባሪ የይለፍ ቃል ገብተዋል። እባክዎ የምርመራ መረጃዎችን ለመጠበቅ አዲስ ጠንካራ የይለፍ ቃል ይቀይሩ።'
+                  : 'You are currently signed in with your administrator-assigned default password. Please choose a strong personal password to secure your case files.'}
               </p>
             </div>
           </div>
@@ -178,7 +182,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
             className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5"
           >
             <Key className="w-3.5 h-3.5" />
-            <span>Change Password Now</span>
+            <span>{isAm ? 'የይለፍ ቃል አሁኑኑ ቀይር' : 'Change Password Now'}</span>
           </button>
         </div>
       )}
@@ -188,11 +192,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
         <div>
           <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-1">
             <Shield className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-            <span>AMECO Investigative Journalism Workbench</span>
+            <span>{isAm ? 'የአሜኮ መርማሪ ጋዜጠኝነት የስራ ጠረጴዛ' : 'AMECO Investigative Journalism Workbench'}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{currentUser.fullName}</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
-            Email: {currentUser.email || 'N/A'} • Desk: {currentUser.department || 'Investigative Unit'} • ID: {currentUser.id}
+            {isAm ? 'ኢሜይል:' : 'Email:'} {currentUser.email || 'N/A'} • {isAm ? 'ዴስክ:' : 'Desk:'} {currentUser.department || (isAm ? 'የምርመራ ክፍል' : 'Investigative Unit')} • {isAm ? 'መለያ:' : 'ID:'} {currentUser.id}
           </p>
         </div>
 
@@ -204,17 +208,17 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
               className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 border border-slate-900 dark:border-slate-100 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Admin Chat</span>
+              <span>{isAm ? 'ከአስተዳዳሪ ጋር ውይይት' : 'Admin Chat'}</span>
             </button>
           )}
 
           <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-xs space-y-0.5">
             <span className="font-bold text-slate-800 dark:text-slate-200 block flex items-center space-x-1">
               <ShieldCheck className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
-              <span>Identity Protection Active</span>
+              <span>{isAm ? 'የማንነት ጥበቃ ንቁ ነው' : 'Identity Protection Active'}</span>
             </span>
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Citizens identified by Citizen ID only.
+              {isAm ? 'ዜጎች በመለያ ቁጥራቸው (Citizen ID) ብቻ ይታወቃሉ።' : 'Citizens identified by Citizen ID only.'}
             </p>
           </div>
         </div>
@@ -223,9 +227,13 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
       {assignedReports.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 space-y-3">
           <FileText className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-base font-bold text-slate-800">No Cases Currently Assigned</h3>
+          <h3 className="text-base font-bold text-slate-800">
+            {isAm ? 'በአሁኑ ሰዓት የተመደበ ጉዳይ የለም' : 'No Cases Currently Assigned'}
+          </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            You currently have zero active investigation assignments assigned by AMECO Administrators.
+            {isAm
+              ? 'በአሁኑ ሰዓት በአስተዳዳሪ የተመደበ ምንም አይነት ንቁ የምርመራ ስራ የለዎትም።'
+              : 'You currently have zero active investigation assignments assigned by AMECO Administrators.'}
           </p>
         </div>
       ) : (
@@ -233,7 +241,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
           {/* Assigned Reports List */}
           <div className="lg:col-span-5 space-y-3">
             <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
-              Assigned Investigation Cases ({assignedReports.length})
+              {isAm ? `የተመደቡ የምርመራ ጉዳዮች (${assignedReports.length})` : `Assigned Investigation Cases (${assignedReports.length})`}
             </div>
 
             <div className="space-y-3 max-h-[650px] overflow-y-auto pr-1">
@@ -256,7 +264,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         item.priority === 'Critical' ? 'bg-red-100 dark:bg-red-950 text-red-900 dark:text-red-300' : 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300'
                       }`}>
-                        {item.priority}
+                        {translatePriority(item.priority)}
                       </span>
                     </div>
 
@@ -264,8 +272,8 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-2">{item.description}</p>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 font-mono">
-                      <span>Citizen ID: {item.citizenId}</span>
-                      <span className="text-amber-700 dark:text-amber-400 font-bold">Due: {item.assignedTo?.deadline}</span>
+                      <span>{isAm ? 'የዜጋ መለያ:' : 'Citizen ID:'} {item.citizenId}</span>
+                      <span className="text-amber-700 dark:text-amber-400 font-bold">{isAm ? 'ማጠናቀቂያ:' : 'Due:'} {item.assignedTo?.deadline}</span>
                     </div>
                   </div>
                 );
@@ -296,9 +304,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                   <div className="flex items-center space-x-2">
                     <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span>Submitted by Citizen ID: <strong className="font-mono text-slate-900 dark:text-slate-100">{activeReport.citizenId}</strong></span>
+                    <span>{isAm ? 'የቀረበው በዜጋ መለያ:' : 'Submitted by Citizen ID:'} <strong className="font-mono text-slate-900 dark:text-slate-100">{activeReport.citizenId}</strong></span>
                   </div>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Identity Encrypted</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                    {isAm ? 'ማንነት በሚስጥር የተጠበቀ' : 'Identity Encrypted'}
+                  </span>
                 </div>
 
                 {/* AI Executive Briefing */}

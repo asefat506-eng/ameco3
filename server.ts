@@ -53,21 +53,54 @@ import {
 
 dotenv.config();
 
-function validateServerStrongPassword(pass: string): { isValid: boolean; error?: string } {
+function getReqLang(req: express.Request): 'am' | 'en' {
+  const header = req.headers['x-language'];
+  if (header === 'am' || header === 'en') return header;
+  const q = req.query.lang;
+  if (q === 'am' || q === 'en') return q;
+  return 'en';
+}
+
+function validateServerStrongPassword(pass: string, isAm: boolean = false): { isValid: boolean; error?: string } {
   if (!pass || pass.length < 8) {
-    return { isValid: false, error: 'Password must be at least 8 characters long.' };
+    return {
+      isValid: false,
+      error: isAm
+        ? 'የይለፍ ቃል ቢያንስ 8 ፊደላት ወይም ቁጥሮች መሆን አለበት።'
+        : 'Password must be at least 8 characters long.',
+    };
   }
   if (!/[A-Z]/.test(pass)) {
-    return { isValid: false, error: 'Password must include at least one uppercase letter (A-Z).' };
+    return {
+      isValid: false,
+      error: isAm
+        ? 'የይለፍ ቃል ቢያንስ አንድ ትልቅ የእንግሊዝኛ ፊደል (A-Z) ማካተት አለበት።'
+        : 'Password must include at least one uppercase letter (A-Z).',
+    };
   }
   if (!/[a-z]/.test(pass)) {
-    return { isValid: false, error: 'Password must include at least one lowercase letter (a-z).' };
+    return {
+      isValid: false,
+      error: isAm
+        ? 'የይለፍ ቃል ቢያንስ አንድ ትንሽ የእንግሊዝኛ ፊደል (a-z) ማካተት አለበት።'
+        : 'Password must include at least one lowercase letter (a-z).',
+    };
   }
   if (!/[0-9]/.test(pass)) {
-    return { isValid: false, error: 'Password must include at least one numeric digit (0-9).' };
+    return {
+      isValid: false,
+      error: isAm
+        ? 'የይለፍ ቃል ቢያንስ አንድ የቁጥር አሃዝ (0-9) ማካተት አለበት።'
+        : 'Password must include at least one numeric digit (0-9).',
+    };
   }
   if (!/[^A-Za-z0-9]/.test(pass)) {
-    return { isValid: false, error: 'Password must include at least one special character (!@#$%^&*).' };
+    return {
+      isValid: false,
+      error: isAm
+        ? 'የይለፍ ቃል ቢያንስ አንድ ልዩ ምልክት (!@#$%^&*) ማካተት አለበት።'
+        : 'Password must include at least one special character (!@#$%^&*).',
+    };
   }
   return { isValid: true };
 }
@@ -514,17 +547,31 @@ async function startServer() {
         securityAnswer3,
       } = req.body;
 
+      const isAm = getReqLang(req) === 'am';
+
       if (!email || !password || !fullName) {
-        return res.status(400).json({ error: 'Full name, email, and password are required.' });
+        return res.status(400).json({
+          error: isAm
+            ? 'ሙሉ ስም፣ ኢሜይል እና የይለፍ ቃል ያስፈልጋሉ።'
+            : 'Full name, email, and password are required.',
+        });
       }
 
       const trimmedName = fullName.trim();
       const validNameRegex = /^[a-zA-Z\u1200-\u137F\u1380-\u139F\u2D80-\u2DDF\uAB00-\uAB2F\s'\-\.]+$/;
       if (/\d/.test(trimmedName)) {
-        return res.status(400).json({ error: 'Name cannot contain numbers. Text in English or Amharic only is permitted.' });
+        return res.status(400).json({
+          error: isAm
+            ? 'ስም ቁጥሮችን ማካተት አይችልም። ፊደላት ብቻ ይፈቀዳሉ።'
+            : 'Name cannot contain numbers. Text in English or Amharic only is permitted.',
+        });
       }
       if (!validNameRegex.test(trimmedName)) {
-        return res.status(400).json({ error: 'Name must contain valid text characters (English or Amharic / ፊደል).' });
+        return res.status(400).json({
+          error: isAm
+            ? 'ስም ትክክለኛ የፊደላት ገጸ-ባህሪያትን (አማርኛ ወይም እንግሊዝኛ) ብቻ መያዝ አለበት።'
+            : 'Name must contain valid text characters (English or Amharic / ፊደል).',
+        });
       }
 
       const normalizedEmail = email.trim().toLowerCase();
@@ -536,28 +583,32 @@ async function startServer() {
         const sanitizedPhone = cleanPhone.replace(/[\s\-\(\)\.]/g, '');
         if (!sanitizedPhone.startsWith('+') || !/^\+\d{7,15}$/.test(sanitizedPhone)) {
           return res.status(400).json({
-            error: 'Invalid international phone format. Must start with "+" and country code followed by 6-14 digits (e.g., +251..., +1..., +44...).',
+            error: isAm
+              ? 'ትክክለኛ ያልሆነ ዓለም አቀፍ የስልክ ቁጥር ቅርጸት። በ "+" እና በሀገር ኮድ መጀመር አለበት (ለምሳሌ +251...)።'
+              : 'Invalid international phone format. Must start with "+" and country code followed by 6-14 digits (e.g., +251..., +1..., +44...).',
           });
         }
       }
 
       // Validate Strong Password
-      const passValidation = validateServerStrongPassword(password);
+      const passValidation = validateServerStrongPassword(password, isAm);
       if (!passValidation.isValid) {
         return res.status(400).json({
-          error: passValidation.error || 'Password must be strong (8+ chars, uppercase, lowercase, number, and symbol).',
+          error: passValidation.error || (isAm ? 'የይለፍ ቃል ጠንካራ መሆን አለበት (8+ ፊደላት፣ ትልቅ፣ ትንሽ፣ ቁጥር እና ልዩ ምልክት)።' : 'Password must be strong (8+ chars, uppercase, lowercase, number, and symbol).'),
         });
       }
 
       // Hash password before storing
       const hashedPassword = await hashPassword(password);
 
-      // Check if user already exists by email or phone
+      // Check if user already exists by email or phone with dynamic language response
       const existingUsers = await getAllUsers();
       const duplicateEmail = existingUsers.find((u) => (u.email || '').toLowerCase() === normalizedEmail);
       if (duplicateEmail) {
         return res.status(409).json({
-          error: 'This account is already registered. Please sign in to continue.',
+          error: isAm
+            ? 'ይህ የኢሜይል አድራሻ አስቀድሞ ተመዝግቧል። እባክዎ በቀጥታ ይግቡ ወይም የይለፍ ቃልዎን ይቀይሩ።'
+            : 'This email is already registered. Please sign in to continue.',
         });
       }
 
@@ -570,13 +621,17 @@ async function startServer() {
           });
           if (duplicatePhone) {
             return res.status(409).json({
-              error: 'This account is already registered. Please sign in to continue.',
+              error: isAm
+                ? 'ይህ ስልክ ቁጥር አስቀድሞ ተመዝግቧል። እባክዎ በቀጥታ ይግቡ።'
+                : 'This phone number is already registered. Please sign in to continue.',
             });
           }
         }
       }
 
       const newCitizenId = 'CTZ-' + Math.floor(1000 + Math.random() * 9000);
+      // Strict role security constraint: Public self-registration is strictly for Citizen whistleblowers. Elevated roles (Admin, Investigator, Institution) can only be granted by an Admin.
+      const assignedRole = 'Citizen';
       const newUser: UserProfile = {
         id: newCitizenId,
         userId: newCitizenId,
@@ -586,7 +641,7 @@ async function startServer() {
         password: hashedPassword,
         phone: cleanPhone,
         phoneNumber: cleanPhone,
-        role: (role || 'Citizen') as any,
+        role: assignedRole,
         zone: zone || 'Bahir Dar City',
         woreda: woreda || '',
         status: 'active' as const,
@@ -631,9 +686,14 @@ async function startServer() {
 
   app.post('/api/auth/login', async (req, res) => {
     try {
+      const isAm = getReqLang(req) === 'am';
       const { identifier, password } = req.body;
       if (!identifier || !password) {
-        return res.status(400).json({ error: 'Email/Username and Password are required.' });
+        return res.status(400).json({
+          error: isAm
+            ? 'ኢሜይል/የተጠቃሚ ስም እና የይለፍ ቃል ያስፈልጋሉ።'
+            : 'Email/Username and Password are required.',
+        });
       }
 
       const cleanInput = identifier.trim().toLowerCase();
@@ -723,7 +783,9 @@ async function startServer() {
 
       if (!matchedUser) {
         return res.status(404).json({
-          error: 'No registered account found matching this username or email.',
+          error: isAm
+            ? 'በዚህ የተጠቃሚ ስም ወይም ኢሜይል የተመዘገበ አካውንት አልተገኘም።'
+            : 'No registered account found matching this username or email.',
         });
       }
 
@@ -763,7 +825,9 @@ async function startServer() {
 
       if (!isPasswordValid) {
         return res.status(401).json({
-          error: 'Incorrect password. Please verify your password and try again.',
+          error: isAm
+            ? 'ትክክለኛ ያልሆነ የይለፍ ቃል። እባክዎ ያረጋግጡና በድጋሚ ይሞክሩ።'
+            : 'Incorrect password. Please verify your password and try again.',
         });
       }
 
@@ -778,10 +842,14 @@ async function startServer() {
       // Check if user account is suspended
       if (matchedUser.status === 'suspended') {
         return res.status(403).json({
-          error: 'Suspended Account: Your account has been suspended by administration.',
+          error: isAm
+            ? 'የታገደ አካውንት፡ አካውንትዎ በአስተዳዳሪ ታግዷል።'
+            : 'Suspended Account: Your account has been suspended by administration.',
           isSuspended: true,
           user: sanitizeUser(matchedUser),
-          message: 'Your account is suspended. You may submit a case report or appeal for administrative review.',
+          message: isAm
+            ? 'አካውንትዎ ታግዷል። ጉዳይዎ በአስተዳዳሪ እንዲታይ ይግባኝ ወይም ማመልከቻ ማቅረብ ይችላሉ።'
+            : 'Your account is suspended. You may submit a case report or appeal for administrative review.',
         });
       }
 
@@ -1955,21 +2023,56 @@ async function startServer() {
 
   app.post('/api/departments', async (req, res) => {
     try {
-      const saved = await createDepartment(req.body);
-      res.json({ success: true, department: saved });
+      const isAm = getReqLang(req) === 'am';
+      const deptData = req.body;
+      if (!deptData.name || !String(deptData.name).trim()) {
+        return res.status(400).json({
+          error: isAm
+            ? 'የዲፓርትመንት ዴስክ ስም ያስፈልጋል።'
+            : 'Department Desk name is required.',
+        });
+      }
+      if (!deptData.id || !String(deptData.id).trim()) {
+        deptData.id = `DEP-${Math.floor(100 + Math.random() * 900)}`;
+      }
+      if (!deptData.head || !String(deptData.head).trim()) {
+        deptData.head = 'Assigned Lead Officer';
+      }
+      const saved = await createDepartment(deptData);
+      res.json({
+        success: true,
+        department: saved,
+        message: isAm
+          ? 'የዲፓርትመንት ዴስኩ በተሳካ ሁኔታ ተመዝግቧል።'
+          : 'Department desk created successfully.',
+      });
     } catch (error: any) {
       console.error('Error saving department:', error);
-      res.status(500).json({ error: 'Failed to save department' });
+      const isAm = getReqLang(req) === 'am';
+      res.status(500).json({
+        error: isAm
+          ? `የዲፓርትመንት ዴስኩን መመዝገብ አልተቻለም፡ ${error.message}`
+          : `Failed to save department: ${error.message}`,
+      });
     }
   });
 
   app.delete('/api/departments/:id', async (req, res) => {
     try {
+      const isAm = getReqLang(req) === 'am';
       await deleteDepartment(req.params.id);
-      res.json({ success: true, message: 'Department deleted' });
+      res.json({
+        success: true,
+        message: isAm
+          ? 'የዲፓርትመንት ዴስኩ ተሰርዟል።'
+          : 'Department deleted successfully.',
+      });
     } catch (error: any) {
       console.error('Error deleting department:', error);
-      res.status(500).json({ error: 'Failed to delete department' });
+      const isAm = getReqLang(req) === 'am';
+      res.status(500).json({
+        error: isAm ? 'የዲፓርትመንት ዴስኩን መሰረዝ አልተቻለም።' : 'Failed to delete department',
+      });
     }
   });
 

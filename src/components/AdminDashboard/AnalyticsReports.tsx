@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ReportItem, Department, UserProfile, PriorityLevel, ReportStatus } from '../../types';
 import { AmecoLogo } from '../AmecoLogo';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   BarChart3,
   Download,
@@ -401,6 +402,9 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
   departments,
   users,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   // Active Template State
   const [reportType, setReportType] = useState<ReportTemplateType>('Category');
 
@@ -801,10 +805,12 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
             </div>
             <div>
               <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
-                <span>AMECO Executive Reporting & Statistical Analytics</span>
+                <span>{isAm ? 'የአሚኮ የስታቲስቲክስ ትንታኔ እና የአመራር ሪፖርቶች' : 'AMECO Executive Reporting & Statistical Analytics'}</span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Automated analytical document generator with interactive Recharts visualizers, dynamic period filters, and print-ready dossiers.
+                {isAm
+                  ? 'በይነተገናኝ የሪቻርትስ ገበታዎች፣ ተለዋዋጭ የጊዜ ማጣሪያዎች እና ለማተም የተዘጋጁ የትንታኔ ሰነዶች አውጪ።'
+                  : 'Automated analytical document generator with interactive Recharts visualizers, dynamic period filters, and print-ready dossiers.'}
               </p>
             </div>
           </div>
@@ -816,14 +822,14 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
             className="px-4 py-2.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-sm flex items-center space-x-2 transition-transform active:scale-95 cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>Export CSV</span>
+            <span>{isAm ? 'ወደ CSV አውርድ' : 'Export CSV'}</span>
           </button>
           <button
             onClick={handlePrint}
             className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-sm flex items-center space-x-2 transition-transform active:scale-95 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Print / Save PDF</span>
+            <span>{isAm ? 'አትም / PDF አስቀምጥ' : 'Print / Save PDF'}</span>
           </button>
         </div>
       </div>
@@ -833,16 +839,18 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
         {/* Template Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-xs text-slate-700 dark:text-slate-300 mr-1">Report Template:</span>
+            <span className="font-bold text-xs text-slate-700 dark:text-slate-300 mr-1">
+              {isAm ? 'የሪፖርት ዓይነት:' : 'Report Template:'}
+            </span>
             {(
               [
-                { id: 'Category', label: 'Category Report', icon: PieIcon },
-                { id: 'Regional', label: 'Regional Report', icon: MapPin },
-                { id: 'Investigation', label: 'Investigation Report', icon: ShieldCheck },
-                { id: 'Daily', label: 'Daily Report', icon: Clock },
-                { id: 'Monthly', label: 'Monthly Report', icon: Calendar },
-                { id: 'Annual', label: 'Annual Report', icon: TrendingUp },
-                { id: 'Performance', label: 'Performance Report', icon: Award },
+                { id: 'Category', label: isAm ? 'የምድብ ሪፖርት' : 'Category Report', icon: PieIcon },
+                { id: 'Regional', label: isAm ? 'የክልላዊ ዞን ሪፖርት' : 'Regional Report', icon: MapPin },
+                { id: 'Investigation', label: isAm ? 'የምርመራ ሪፖርት' : 'Investigation Report', icon: ShieldCheck },
+                { id: 'Daily', label: isAm ? 'የዕለት ሪፖርት' : 'Daily Report', icon: Clock },
+                { id: 'Monthly', label: isAm ? 'የወር ሪፖርት' : 'Monthly Report', icon: Calendar },
+                { id: 'Annual', label: isAm ? 'የዓመት ሪፖርት' : 'Annual Report', icon: TrendingUp },
+                { id: 'Performance', label: isAm ? 'የአፈጻጸም ሪፖርት' : 'Performance Report', icon: Award },
               ] as const
             ).map(({ id, label, icon: Icon }) => {
               const isActive = reportType === id;
@@ -873,7 +881,7 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              Target Period
+              {isAm ? 'የተመረጠ ወቅት' : 'Target Period'}
             </button>
             <button
               onClick={() => setTimeframeScope('all')}
@@ -883,7 +891,7 @@ export const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              All Records ({effectiveReports.length})
+              {isAm ? `ሁሉም መዝገቦች (${effectiveReports.length})` : `All Records (${effectiveReports.length})`}
             </button>
           </div>
         </div>

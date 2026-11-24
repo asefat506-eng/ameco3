@@ -39,6 +39,8 @@ import {
   markAllNotificationsReadApi,
   deleteNotificationApi,
   saveTrendingNewsApi,
+  saveDepartmentApi,
+  deleteDepartmentApi,
   fetchChannelsApi,
   saveChannelApi,
   verifyChannelApi,
@@ -115,7 +117,19 @@ function AppContent() {
     return INITIAL_USERS;
   });
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USERS[0]); // Default Citizen fallback
-  const [departments, setDepartments] = useState<Department[]>(INITIAL_DEPARTMENTS);
+  const [departments, setDepartments] = useState<Department[]>(() => {
+    try {
+      const stored = localStorage.getItem('ameco_custom_departments');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const ids = new Set(parsed.map((d: any) => d.id));
+          return [...parsed, ...INITIAL_DEPARTMENTS.filter((d) => !ids.has(d.id))];
+        }
+      }
+    } catch {}
+    return INITIAL_DEPARTMENTS;
+  });
   const [reports, setReports] = useState<ReportItem[]>(INITIAL_REPORTS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
@@ -187,7 +201,23 @@ function AppContent() {
         if (data.messages) setMessages(data.messages);
         if (data.auditLogs) setAuditLogs(data.auditLogs);
         if (data.notifications) setNotifications(data.notifications);
-        if (data.departments) setDepartments(data.departments);
+        if (data.departments && data.departments.length > 0) {
+          let mergedDepts = [...data.departments];
+          try {
+            const stored = localStorage.getItem('ameco_custom_departments');
+            if (stored) {
+              const customDepts = JSON.parse(stored);
+              if (Array.isArray(customDepts)) {
+                for (const cd of customDepts) {
+                  if (!mergedDepts.some((d) => d.id === cd.id || d.name.toLowerCase() === cd.name.toLowerCase())) {
+                    mergedDepts.push(cd);
+                  }
+                }
+              }
+            }
+          } catch {}
+          setDepartments(mergedDepts);
+        }
         if (data.trendingNews) setTrendingNews(data.trendingNews);
         if (data.channels) setChannels(data.channels);
         if (data.mediaList) setMediaList(data.mediaList);
@@ -200,6 +230,55 @@ function AppContent() {
       isMounted = false;
     };
   }, []);
+
+  // Department Desk Handlers
+  const handleAddDepartment = async (newDept: Department) => {
+    setDepartments((prev) => {
+      const exists = prev.some((d) => d.id === newDept.id || d.name.toLowerCase() === newDept.name.toLowerCase());
+      const next = exists
+        ? prev.map((d) => (d.id === newDept.id || d.name.toLowerCase() === newDept.name.toLowerCase() ? { ...d, ...newDept } : d))
+        : [...prev, newDept];
+      try {
+        localStorage.setItem('ameco_custom_departments', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    try {
+      await saveDepartmentApi(newDept);
+    } catch (e) {
+      console.error('Error saving department to API:', e);
+    }
+  };
+
+  const handleUpdateDepartment = async (updatedDept: Department) => {
+    setDepartments((prev) => {
+      const next = prev.map((d) => (d.id === updatedDept.id ? updatedDept : d));
+      try {
+        localStorage.setItem('ameco_custom_departments', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    try {
+      await saveDepartmentApi(updatedDept);
+    } catch (e) {
+      console.error('Error updating department in API:', e);
+    }
+  };
+
+  const handleDeleteDepartment = async (deptId: string) => {
+    setDepartments((prev) => {
+      const next = prev.filter((d) => d.id !== deptId);
+      try {
+        localStorage.setItem('ameco_custom_departments', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    try {
+      await deleteDepartmentApi(deptId);
+    } catch (e) {
+      console.error('Error deleting department in API:', e);
+    }
+  };
 
   // Social Channel Handlers
   const handleSaveChannel = async (channel: InstitutionSocialChannel) => {
@@ -1064,6 +1143,7 @@ function AppContent() {
     return (
       <LoginPage
         users={displayUsers}
+        departments={departments}
         onLoginSuccess={handleLoginSuccess}
         onGuestAccess={handleGuestAccess}
         onRegisterUser={handleRegisterUser}
@@ -1325,6 +1405,9 @@ function AppContent() {
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onUpdateUserStatus={handleUpdateUserStatus}
+            onAddDepartment={handleAddDepartment}
+            onUpdateDepartment={handleUpdateDepartment}
+            onDeleteDepartment={handleDeleteDepartment}
           />
         )}
 

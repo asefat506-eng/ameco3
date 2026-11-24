@@ -11,6 +11,7 @@ import {
   validatePlatformUrl,
 } from '../../utils/socialMediaProviders';
 import { PlatformIcon } from './PlatformIcon';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Plus,
   ShieldCheck,
@@ -47,6 +48,8 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
   onDeleteChannel,
   onVerifyChannel,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingChannel, setEditingChannel] = useState<InstitutionSocialChannel | null>(null);
 
@@ -100,7 +103,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
     }
     const validation = validatePlatformUrl(platform, inputUrl);
     if (!validation.isValid) {
-      setUrlError(validation.error || 'Invalid URL');
+      setUrlError(validation.error || (isAm ? 'ልክ ያልሆነ ሊንክ (URL)' : 'Invalid URL'));
     } else {
       setUrlError(null);
       // Auto-extract platform ID / handle
@@ -116,7 +119,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
     e.preventDefault();
     const validation = validatePlatformUrl(platform, channelUrl);
     if (!validation.isValid) {
-      setUrlError(validation.error || 'Please enter a valid channel URL');
+      setUrlError(validation.error || (isAm ? 'እባክዎ ትክክለኛ የቻናል ሊንክ (URL) ያስገቡ' : 'Please enter a valid channel URL'));
       return;
     }
 
@@ -150,28 +153,28 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Verified Official</span>
+            <span>{isAm ? 'የተረጋገጠ ይፋዊ' : 'Verified Official'}</span>
           </span>
         );
       case 'Pending Verification':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
             <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>Pending Review</span>
+            <span>{isAm ? 'ግምገማ ላይ ያለ' : 'Pending Review'}</span>
           </span>
         );
       case 'Rejected':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
             <XCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
-            <span>Rejected</span>
+            <span>{isAm ? 'ውድቅ የተደረገ' : 'Rejected'}</span>
           </span>
         );
       case 'Unverified':
       default:
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            <span>Unverified</span>
+            <span>{isAm ? 'ያልተረጋገጠ' : 'Unverified'}</span>
           </span>
         );
     }
@@ -184,10 +187,12 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
             <Radio className="w-5 h-5 text-[#005BAC]" />
-            <span>Official Media & Social Channels</span>
+            <span>{isAm ? 'ይፋዊ የሚዲያ እና ማህበራዊ ሚዲያ ቻናሎች' : 'Official Media & Social Channels'}</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Registered channels used for cross-platform public report verification and media syndication.
+            {isAm
+              ? 'ለክልላዊ የዜና ማረጋገጫ እና ለሚዲያ ስርጭት የተመዘገቡ ይፋዊ ቻናሎች።'
+              : 'Registered channels used for cross-platform public report verification and media syndication.'}
           </p>
         </div>
 
@@ -197,7 +202,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
             className="px-4 py-2.5 bg-[#005BAC] hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-sm transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Official Channel</span>
+            <span>{isAm ? 'ይፋዊ ቻናል ጨምር' : 'Add Official Channel'}</span>
           </button>
         )}
       </div>
@@ -207,10 +212,12 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
         <div className="text-center py-12 px-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
           <Globe className="w-10 h-10 text-slate-400 mx-auto mb-3" />
           <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            No Official Channels Connected
+            {isAm ? 'ምንም ይፋዊ ቻናል አልተገናኘም' : 'No Official Channels Connected'}
           </h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 mb-4">
-            Connect official YouTube, Facebook, TikTok, Telegram, Instagram, or X channels to allow automatic media verification.
+            {isAm
+              ? 'ራስ-ሰር የሚዲያ ማረጋገጫ እንዲሰራ ይፋዊ የYouTube፣ Facebook፣ TikTok፣ Telegram፣ Instagram ወይም X ቻናሎችን ያገናኙ።'
+              : 'Connect official YouTube, Facebook, TikTok, Telegram, Instagram, or X channels to allow automatic media verification.'}
           </p>
           {canEdit && (
             <button
@@ -218,7 +225,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
               className="px-4 py-2 bg-[#005BAC] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Connect First Channel</span>
+              <span>{isAm ? 'የመጀመሪያውን ቻናል ያገናኙ' : 'Connect First Channel'}</span>
             </button>
           )}
         </div>
@@ -266,17 +273,17 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                   <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 font-mono">
                     {ch.subscriberOrFollowerCount && (
                       <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                        {ch.subscriberOrFollowerCount} Followers/Subscribers
+                        {ch.subscriberOrFollowerCount} {isAm ? 'ተከታዮች / ሰብስክራይበሮች' : 'Followers/Subscribers'}
                       </span>
                     )}
                     {ch.verifiedAt && (
                       <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Verified on {ch.verifiedAt}
+                        <CheckCircle2 className="w-3 h-3" /> {isAm ? `በ${ch.verifiedAt} ተረጋግጧል` : `Verified on ${ch.verifiedAt}`}
                       </span>
                     )}
                     {ch.rejectionReason && ch.verificationStatus === 'Rejected' && (
                       <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> Reason: {ch.rejectionReason}
+                        <AlertTriangle className="w-3 h-3" /> {isAm ? `ምክንያት፦ ${ch.rejectionReason}` : `Reason: ${ch.rejectionReason}`}
                       </span>
                     )}
                   </div>
@@ -290,18 +297,24 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                         <button
                           onClick={() => handleOpenEdit(ch)}
                           className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
-                          title="Edit Channel"
+                          title={isAm ? 'ቻናሉን አስተካክል' : 'Edit Channel'}
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Remove official channel ${ch.channelName}?`)) {
+                            if (
+                              confirm(
+                                isAm
+                                  ? `ይፋዊውን ቻናል ${ch.channelName} ይሰረዝ?`
+                                  : `Remove official channel ${ch.channelName}?`
+                              )
+                            ) {
                               onDeleteChannel(ch.id);
                             }
                           }}
                           className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 rounded-lg cursor-pointer transition-colors"
-                          title="Delete Channel"
+                          title={isAm ? 'ቻናሉን ሰርዝ' : 'Delete Channel'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -318,7 +331,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
                         >
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>Approve Channel</span>
+                          <span>{isAm ? 'ቻናሉን አጽድቅ' : 'Approve Channel'}</span>
                         </button>
                       )}
 
@@ -331,7 +344,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                           className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center space-x-1 cursor-pointer transition-colors"
                         >
                           <XCircle className="w-3 h-3" />
-                          <span>Reject</span>
+                          <span>{isAm ? 'ውድቅ አድርግ' : 'Reject'}</span>
                         </button>
                       )}
                     </div>
@@ -354,9 +367,13 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                 </div>
                 <div>
                   <h3 className="font-bold text-base">
-                    {editingChannel ? 'Edit Official Channel' : 'Connect Official Channel'}
+                    {editingChannel
+                      ? (isAm ? 'ይፋዊ ቻናል አስተካክል' : 'Edit Official Channel')
+                      : (isAm ? 'ይፋዊ ቻናል አገናኝ' : 'Connect Official Channel')}
                   </h3>
-                  <p className="text-xs text-blue-100">{institution.institutionName || 'Institution'} Profile</p>
+                  <p className="text-xs text-blue-100">
+                    {institution.institutionName || (isAm ? 'ተቋም' : 'Institution')} {isAm ? 'መገለጫ' : 'Profile'}
+                  </p>
                 </div>
               </div>
               <button
@@ -371,7 +388,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
               {/* Platform Selector */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Platform <span className="text-red-500">*</span>
+                  {isAm ? 'መድረክ (Platform)' : 'Platform'} <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {SUPPORTED_PLATFORMS.map((plat) => {
@@ -401,14 +418,14 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
               {/* Channel / Page Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Official Channel / Page Name <span className="text-red-500">*</span>
+                  {isAm ? 'ይፋዊ የቻናል / የገጽ ስም' : 'Official Channel / Page Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={channelName}
                   onChange={(e) => setChannelName(e.target.value)}
-                  placeholder="e.g. Amhara Media Corporation (AMECO) Official"
+                  placeholder={isAm ? 'ለምሳሌ፦ Amhara Media Corporation (AMECO) Official' : 'e.g. Amhara Media Corporation (AMECO) Official'}
                   className="w-full p-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-[#005BAC]"
                 />
               </div>
@@ -416,7 +433,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
               {/* Channel URL */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Channel / Profile URL <span className="text-red-500">*</span>
+                  {isAm ? 'የቻናል / የመገለጫ ሊንክ (URL)' : 'Channel / Profile URL'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="url"
@@ -442,7 +459,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Handle (e.g. @ameco)
+                    {isAm ? 'መለያ (Handle - ለምሳሌ @ameco)' : 'Handle (e.g. @ameco)'}
                   </label>
                   <input
                     type="text"
@@ -454,13 +471,13 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Followers / Subscribers
+                    {isAm ? 'ተከታዮች / ሰብስክራይበሮች' : 'Followers / Subscribers'}
                   </label>
                   <input
                     type="text"
                     value={subscriberCount}
                     onChange={(e) => setSubscriberCount(e.target.value)}
-                    placeholder="e.g. 1.2M or 450K"
+                    placeholder={isAm ? 'ለምሳሌ፦ 1.2M ወይም 450K' : 'e.g. 1.2M or 450K'}
                     className="w-full p-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-[#005BAC]"
                   />
                 </div>
@@ -473,14 +490,16 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   disabled={Boolean(urlError) || !channelUrl.trim() || !channelName.trim()}
                   className="px-5 py-2.5 bg-[#005BAC] hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  {editingChannel ? 'Save Channel' : 'Register Official Channel'}
+                  {editingChannel
+                    ? (isAm ? 'ቻናሉን አስቀምጥ' : 'Save Channel')
+                    : (isAm ? 'ይፋዊ ቻናሉን መዝግብ' : 'Register Official Channel')}
                 </button>
               </div>
             </form>
@@ -494,16 +513,22 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full p-5 space-y-3 animate-in zoom-in-95">
             <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
               <XCircle className="w-4 h-4 text-red-500" />
-              <span>Reject Official Channel</span>
+              <span>{isAm ? 'ይፋዊ ቻናሉን ውድቅ አድርግ' : 'Reject Official Channel'}</span>
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Provide an administrative rationale for rejecting this channel registration.
+              {isAm
+                ? 'ይህን የቻናል ምዝገባ ውድቅ ለማድረግ አስተዳደራዊ ምክንያት ያስገቡ።'
+                : 'Provide an administrative rationale for rejecting this channel registration.'}
             </p>
             <textarea
               rows={3}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="e.g. Could not verify institution ownership of this page / Invalid credentials"
+              placeholder={
+                isAm
+                  ? 'ለምሳሌ፦ የገጹ የተቋም ባለቤትነት ማረጋገጥ አልተቻለም / ትክክለኛ ያልሆነ መረጃ'
+                  : 'e.g. Could not verify institution ownership of this page / Invalid credentials'
+              }
               className="w-full p-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-red-500"
             />
             <div className="flex justify-end space-x-2 pt-2">
@@ -512,7 +537,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                 onClick={() => setRejectingChannelId(null)}
                 className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 rounded-xl"
               >
-                Cancel
+                {isAm ? 'ሰርዝ' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -524,7 +549,7 @@ export const OfficialChannelsManager: React.FC<OfficialChannelsManagerProps> = (
                 }}
                 className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow"
               >
-                Confirm Rejection
+                {isAm ? 'ውድቅ ማድረግን አረጋግጥ' : 'Confirm Rejection'}
               </button>
             </div>
           </div>

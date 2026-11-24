@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext.tsx';
 
 const amecoLogoImg = '/assets/images/ameco_logo_1785844574405.jpg';
 
@@ -14,6 +15,8 @@ export const AmecoLogo: React.FC<AmecoLogoProps> = ({
   showSubtitle = true,
 }) => {
   const [imgError, setImgError] = useState(false);
+  const { language } = useLanguage();
+  const isAm = language === 'am';
 
   const dimensions = {
     sm: { box: 'w-10 h-10', text: 'text-base', title: 'text-sm font-bold', sub: 'text-[10px]' },
@@ -56,9 +59,10 @@ export const AmecoLogo: React.FC<AmecoLogoProps> = ({
       {/* Brand Text */}
       <div>
         <span className={`tracking-tight text-red-600 dark:text-red-500 block leading-snug ${dimensions.title}`}>
-          Amhara Media Corporation
+          {isAm ? 'የአማራ ሚዲያ ኮርፖሬሽን' : 'Amhara Media Corporation'}
         </span>
       </div>
     </div>
   );
 };
+

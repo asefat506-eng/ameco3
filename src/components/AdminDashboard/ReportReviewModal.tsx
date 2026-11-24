@@ -76,6 +76,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
   onVerifyMedia,
 }) => {
   const { language, t, translateCategory, translatePriority, translateStatus } = useLanguage();
+  const isAm = language === 'am';
 
   const [identityRevealed, setIdentityRevealed] = useState(false);
   const [editedCategory, setEditedCategory] = useState(report?.category || 'Public Safety');
@@ -168,8 +169,8 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
               {report.id}
             </div>
             <div>
-              <h2 className="text-base font-bold">{t('review.title', 'Administrator Review & Verification')}</h2>
-              <p className="text-xs text-blue-100">{t('review.subtitle', 'AMECO Central Editorial Assessment')}</p>
+              <h2 className="text-base font-bold">{isAm ? 'የአስተዳዳሪ ግምገማ እና ማረጋገጫ' : t('review.title', 'Administrator Review & Verification')}</h2>
+              <p className="text-xs text-blue-100">{isAm ? 'የአሚኮ ማዕከላዊ ኤዲቶሪያል ግምገማ' : t('review.subtitle', 'AMECO Central Editorial Assessment')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 text-blue-200 hover:text-white rounded-lg cursor-pointer">
@@ -186,14 +187,14 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                 report.type === 'tipoff' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
               }`}>
                 {report.type === 'tipoff'
-                  ? (language === 'am' ? 'ሚስጥራዊ ጥቆማ' : 'Confidential Tip-Off')
-                  : (language === 'am' ? 'የዜና ሪፖርት' : 'News Submission')}
+                  ? (isAm ? 'ሚስጥራዊ ጥቆማ' : 'Confidential Tip-Off')
+                  : (isAm ? 'የዜና ሪፖርት' : 'News Submission')}
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                {t('common.date', 'Date')}: {report.incidentDate}
+                {isAm ? 'ቀን' : t('common.date', 'Date')}: {report.incidentDate}
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                {t('common.status', 'Status')}: {translateStatus(report.status)}
+                {isAm ? 'ሁኔታ' : t('common.status', 'Status')}: {translateStatus(report.status)}
               </span>
             </div>
 
@@ -209,15 +210,15 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <span>{isGuestSubmitter ? 'Guest Whistleblower Telemetry & Location' : 'Registered Citizen Profile Identity'}</span>
+                    <span>{isGuestSubmitter ? (isAm ? 'የእንግዳ ጠቋሚ የቦታና የኔትወርክ መረጃ' : 'Guest Whistleblower Telemetry & Location') : (isAm ? 'የተመዘገበ ዜጋ መገለጫ ማንነት' : 'Registered Citizen Profile Identity')}</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full font-mono ${
                       isGuestSubmitter ? 'bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
                     }`}>
-                      {isGuestSubmitter ? 'Anonymous Guest Mode' : 'Verified Registered Account'}
+                      {isGuestSubmitter ? (isAm ? 'ስም-አልባ የእንግዳ ሁነታ' : 'Anonymous Guest Mode') : (isAm ? 'የተረጋገጠ የተመዘገበ አካውንት' : 'Verified Registered Account')}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    System Submitter Reference: {report.citizenId}
+                    {isAm ? 'የሲስተም አቅራቢ መለያ' : 'System Submitter Reference'}: {report.citizenId}
                   </p>
                 </div>
               </div>
@@ -230,12 +231,12 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                       className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-xs flex items-center space-x-1.5 shadow-xs transition-all cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Unmask Registered Identity (Audit Logged)</span>
+                      <span>{isAm ? 'የተመዘገበ ማንነትን ግለጽ (ኦዲት ይደረጋል)' : 'Unmask Registered Identity (Audit Logged)'}</span>
                     </button>
                   ) : (
                     <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 flex items-center space-x-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span>Identity Unlocked & Verified</span>
+                      <span>{isAm ? 'ማንነት ተገልጧል እና ተረጋግጧል' : 'Identity Unlocked & Verified'}</span>
                     </span>
                   )}
                 </div>
@@ -250,7 +251,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs shadow-2xs">
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <User className="w-3 h-3 text-[#005BAC]" /> Full Name
+                          <User className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'ሙሉ ስም' : 'Full Name'}
                         </span>
                         <span className="font-extrabold text-slate-900 dark:text-slate-100 text-sm block">
                           {report.citizenName || 'Abebe Kebede Tadesse'}
@@ -259,7 +260,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-[#005BAC]" /> Email Address
+                          <Mail className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'ኢሜይል አድራሻ' : 'Email Address'}
                         </span>
                         <span className="font-bold text-slate-900 dark:text-slate-100 font-mono block">
                           {report.citizenEmail || 'abebe.kebede@example.com'}
@@ -268,7 +269,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-[#005BAC]" /> Phone Number
+                          <Phone className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'ስልክ ቁጥር' : 'Phone Number'}
                         </span>
                         <span className="font-bold text-slate-900 dark:text-slate-100 font-mono block">
                           {report.citizenPhone || '+251 91 823 4567'}
@@ -277,7 +278,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-[#005BAC]" /> Registered Woreda / Zone
+                          <MapPin className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'የተመዘገበ ወረዳ / ዞን' : 'Registered Woreda / Zone'}
                         </span>
                         <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                           {report.citizenWoreda || report.woreda || 'Bahir Dar Zuria'}, {report.zone}
@@ -286,7 +287,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <Home className="w-3 h-3 text-[#005BAC]" /> Saved Residence
+                          <Home className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'የመኖሪያ አድራሻ' : 'Saved Residence'}
                         </span>
                         <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                           {report.citizenAddress || 'Kebele 14, Near Tana Lake, House #402'}
@@ -295,7 +296,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       <div className="space-y-0.5">
                         <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-[#005BAC]" /> Account Registered Date
+                          <Calendar className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'የተመዘገበበት ቀን' : 'Account Registered Date'}
                         </span>
                         <span className="font-mono text-slate-700 dark:text-slate-300 block">
                           {report.registeredDate || '2025-11-10'}
@@ -307,10 +308,12 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                   <div className="bg-amber-50/70 dark:bg-amber-950/30 p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-800/50 text-xs space-y-1">
                     <p className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                      <span>Citizen Registration Profile Masked by Security Rules</span>
+                      <span>{isAm ? 'የዜጋው ምዝገባ መገለጫ በደህንነት ህግጋት ተሸፍኗል' : 'Citizen Registration Profile Masked by Security Rules'}</span>
                     </p>
                     <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                      This citizen submitted this report from a registered account with saved Name, Email, and Phone number. Click <strong>"Unmask Registered Identity"</strong> above to inspect their saved registration record.
+                      {isAm
+                        ? 'ይህ ዜጋ ሪፖርቱን ያቀረበው ከተመዘገበ አካውንት ላይ ሲሆን ስም፣ ኢሜይል እና ስልክ ቁጥር ተቀምጧል። ዝርዝር መረጃውን ለመመርመር ከላይ "የተመዘገበ ማንነትን ግለጽ" የሚለውን ይጫኑ።'
+                        : 'This citizen submitted this report from a registered account with saved Name, Email, and Phone number. Click "Unmask Registered Identity" above to inspect their saved registration record.'}
                     </p>
                   </div>
                 )}
@@ -323,10 +326,12 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                 <div className="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-xs space-y-1">
                   <p className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Guest Mode Submission — No Registered Account</span>
+                    <span>{isAm ? 'የእንግዳ ሁነታ ማቅረቢያ — ያልተመዘገበ መለያ' : 'Guest Mode Submission — No Registered Account'}</span>
                   </p>
                   <p className="text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
-                    The citizen submitted as a Guest without creating a personal account profile. Network and cellular location telemetry were logged to assist official investigators in locating the source of the report.
+                    {isAm
+                      ? 'ዜጋው የግል አካውንት ሳይፈጥር በእንግዳነት አቅርቧል። ይፋዊ መርማሪዎች የሪፖርቱን መነሻ እንዲለዩ የኔትወርክ እና የሞባይል ማማ የቦታ መረጃ ተመዝግቧል።'
+                      : 'The citizen submitted as a Guest without creating a personal account profile. Network and cellular location telemetry were logged to assist official investigators in locating the source of the report.'}
                   </p>
                 </div>
 
@@ -334,7 +339,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-red-500" /> Incident / Geo Location
+                      <MapPin className="w-3 h-3 text-red-500" /> {isAm ? 'የክስተት ቦታ' : 'Incident / Geo Location'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 block">
                       {report.specificLocation}
@@ -346,31 +351,31 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <Signal className="w-3 h-3 text-purple-500" /> Cell Tower Sector ID
+                      <Signal className="w-3 h-3 text-purple-500" /> {isAm ? 'የሞባይል ማማ ዘርፍ መለያ' : 'Cell Tower Sector ID'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 font-mono block">
                       {report.guestTelemetry?.cellularTowerId || `BDR-CELL-${report.zone.substring(0,3).toUpperCase()}-402`}
                     </span>
                     <span className="text-[10px] text-slate-500 block">
-                      Ethio Telecom Regional Antenna
+                      {isAm ? 'የኢትዮ ቴሌኮም ክልላዊ አንቴና' : 'Ethio Telecom Regional Antenna'}
                     </span>
                   </div>
 
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <Network className="w-3 h-3 text-blue-500" /> Gateway IP & ISP
+                      <Network className="w-3 h-3 text-blue-500" /> {isAm ? 'ጌትዌይ አይፒ እና አይኤስፒ' : 'Gateway IP & ISP'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 font-mono block">
                       {report.guestTelemetry?.ipAddress || '196.188.42.109'}
                     </span>
                     <span className="text-[10px] text-slate-500 block">
-                      {report.guestTelemetry?.networkType || '4G LTE Mobile Gateway'}
+                      {report.guestTelemetry?.networkType || (isAm ? '4G LTE የሞባይል ጌትዌይ' : '4G LTE Mobile Gateway')}
                     </span>
                   </div>
 
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <Cpu className="w-3 h-3 text-emerald-500" /> Device Fingerprint
+                      <Cpu className="w-3 h-3 text-emerald-500" /> {isAm ? 'የመሳሪያ መለያ' : 'Device Fingerprint'}
                     </span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
                       {report.guestTelemetry?.deviceModel || 'Android 14 / Chrome Mobile'}
@@ -379,7 +384,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <Navigation className="w-3 h-3 text-amber-500" /> Submitting GPS Coordinates
+                      <Navigation className="w-3 h-3 text-amber-500" /> {isAm ? 'የቀረበበት የጂፒኤስ መጋጠሚያዎች' : 'Submitting GPS Coordinates'}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 font-mono block">
                       {report.gpsCoordinates
@@ -390,10 +395,10 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                   <div className="space-y-0.5">
                     <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                      <Radio className="w-3 h-3 text-indigo-500" /> Triangulation Accuracy
+                      <Radio className="w-3 h-3 text-indigo-500" /> {isAm ? 'የትሪያንግሌሽን ትክክለኛነት' : 'Triangulation Accuracy'}
                     </span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400 block">
-                      ~25m Precision Radius
+                      {isAm ? '~25 ሜትር ትክክለኛ ራዲየስ' : '~25m Precision Radius'}
                     </span>
                   </div>
                 </div>
@@ -404,11 +409,11 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <Radio className="w-4 h-4 text-amber-300 animate-pulse" />
                       <span className="font-bold text-xs uppercase tracking-wider text-amber-300">
-                        Future Location Method: AI Signal & Tower Triangulation
+                        {isAm ? 'የላቀ የቦታ መለያ ዘዴ፡ የAI ሲግናል እና የማማ ትሪያንግሌሽን' : 'Future Location Method: AI Signal & Tower Triangulation'}
                       </span>
                     </div>
                     <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded font-mono text-slate-300">
-                      Investigator Method Preview
+                      {isAm ? 'የመርማሪ ዘዴ ቅድመ እይታ' : 'Investigator Method Preview'}
                     </span>
                   </div>
 
@@ -419,7 +424,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                       className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all cursor-pointer"
                     >
                       <Radio className="w-4 h-4" />
-                      <span>Initiate Cellular Signal & IP Forensic Location Triangulation</span>
+                      <span>{isAm ? 'የሞባይል ሲግናል እና የአይፒ ፎረንሲክ የቦታ ትሪያንግሌሽን ጀምር' : 'Initiate Cellular Signal & IP Forensic Location Triangulation'}</span>
                     </button>
                   )}
 
@@ -427,7 +432,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                     <div className="bg-slate-950 p-3.5 rounded-xl border border-blue-800/80 space-y-2 text-xs">
                       <div className="flex items-center space-x-2 text-blue-300 font-mono font-bold">
                         <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
-                        <span>Running Multi-Tower RSSI Signal Hops...</span>
+                        <span>{isAm ? 'የማማዎች RSSI ሲግናል ትንታኔ በመካሄድ ላይ...' : 'Running Multi-Tower RSSI Signal Hops...'}</span>
                       </div>
                       <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                         <div
@@ -436,9 +441,9 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                         />
                       </div>
                       <p className="text-[11px] text-slate-400 font-mono">
-                        {triangulationStep === 1 && 'Querying Ethio Telecom regional cell tower RSSI logs...'}
-                        {triangulationStep === 2 && `Correlating sector antenna nodes near ${report.zone}...`}
-                        {triangulationStep === 3 && 'Locking pinpoint GPS coordinates & confidence radius...'}
+                        {triangulationStep === 1 && (isAm ? 'የኢትዮ ቴሌኮም ክልላዊ ማማ RSSI መዝገብን በመመርመር ላይ...' : 'Querying Ethio Telecom regional cell tower RSSI logs...')}
+                        {triangulationStep === 2 && (isAm ? `በ${report.zone} አቅራቢያ የሚገኙ የአንቴና ኖዶችን በማዛመድ ላይ...` : `Correlating sector antenna nodes near ${report.zone}...`)}
+                        {triangulationStep === 3 && (isAm ? 'ትክክለኛ የጂፒኤስ መጋጠሚያዎችን በመቆለፍ ላይ...' : 'Locking pinpoint GPS coordinates & confidence radius...')}
                       </p>
                     </div>
                   )}
@@ -448,27 +453,27 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-emerald-300 flex items-center gap-1.5">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span>Forensic Location Triangulated Successfully!</span>
+                          <span>{isAm ? 'የፎረንሲክ መገኛ ቦታ በትክክል ተገኝቷል!' : 'Forensic Location Triangulated Successfully!'}</span>
                         </span>
                         <span className="text-[10px] bg-emerald-900 px-2 py-0.5 rounded text-emerald-200 font-mono">
-                          Confidence: 98.4%
+                          {isAm ? 'እርግጠኝነት፡ 98.4%' : 'Confidence: 98.4%'}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono text-emerald-100 bg-black/40 p-2.5 rounded-lg">
                         <div>
-                          <span className="text-emerald-400 block text-[9px] uppercase">Pinpoint Location:</span>
+                          <span className="text-emerald-400 block text-[9px] uppercase">{isAm ? 'ትክክለኛ ቦታ፡' : 'Pinpoint Location:'}</span>
                           <span>{report.specificLocation} ({report.zone})</span>
                         </div>
                         <div>
-                          <span className="text-emerald-400 block text-[9px] uppercase">Radar Coordinates:</span>
+                          <span className="text-emerald-400 block text-[9px] uppercase">{isAm ? 'የራዳር መጋጠሚያዎች፡' : 'Radar Coordinates:'}</span>
                           <span>{report.gpsCoordinates ? `${report.gpsCoordinates.lat}° N, ${report.gpsCoordinates.lng}° E` : '11.5936° N, 37.3908° E'}</span>
                         </div>
                       </div>
 
                       <p className="text-[10px] text-emerald-200/90 leading-relaxed flex items-center space-x-1.5">
                         <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span>Signal locked to primary cell tower. The investigator team can use these precise coordinates to locate the origin point of the anonymous tip-off.</span>
+                        <span>{isAm ? 'ሲግናሉ ከዋናው የሞባይል ማማ ጋር ተቆልፏል። የምርመራ ቡድኑ የስም-አልባ ጥቆማውን መነሻ ለመለየት እነዚህን መጋጠሚያዎች መጠቀም ይችላል።' : 'Signal locked to primary cell tower. The investigator team can use these precise coordinates to locate the origin point of the anonymous tip-off.'}</span>
                       </p>
                     </div>
                   )}
@@ -551,68 +556,68 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
           )}
 
           {/* Citizen Identity Protection Control (FR-12) */}
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Shield className="w-5 h-5 text-[#005BAC]" />
                 <div>
-                  <h3 className="font-bold text-xs text-slate-900">Citizen Identity Status</h3>
-                  <p className="text-[11px] text-slate-500 font-mono">Citizen ID: {report.citizenId}</p>
+                  <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">{isAm ? 'የዜጋው ማንነት ሁኔታ' : 'Citizen Identity Status'}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{isAm ? 'የዜጋ መለያ' : 'Citizen ID'}: {report.citizenId}</p>
                 </div>
               </div>
 
               {!identityRevealed ? (
                 <button
                   onClick={handleReveal}
-                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg text-xs flex items-center space-x-1.5 shadow-xs"
+                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg text-xs flex items-center space-x-1.5 shadow-xs cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Reveal Personal Identity (Audit Logged)</span>
+                  <span>{isAm ? 'የግል ማንነትን ግለጽ (ኦዲት ይደረጋል)' : 'Reveal Personal Identity (Audit Logged)'}</span>
                 </button>
               ) : (
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-300 flex items-center space-x-1">
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 flex items-center space-x-1">
                   <EyeOff className="w-3.5 h-3.5" />
-                  <span>Identity Unlocked</span>
+                  <span>{isAm ? 'ማንነት ተገልጧል' : 'Identity Unlocked'}</span>
                 </span>
               )}
             </div>
 
             {identityRevealed ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs bg-white p-3 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Full Name:</span>
-                  <span className="font-bold text-slate-900">{report.citizenName || 'Abebe Kebede Tadesse'}</span>
+                  <span className="text-slate-400 block text-[10px]">{isAm ? 'ሙሉ ስም፡' : 'Full Name:'}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{report.citizenName || 'Abebe Kebede Tadesse'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Phone Number:</span>
-                  <span className="font-bold text-slate-900">{report.citizenPhone || '+251 91 823 4567'}</span>
+                  <span className="text-slate-400 block text-[10px]">{isAm ? 'ስልክ ቁጥር፡' : 'Phone Number:'}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{report.citizenPhone || '+251 91 823 4567'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Email Address:</span>
-                  <span className="font-bold text-slate-900">{report.citizenEmail || 'abebe.kebede@example.com'}</span>
+                  <span className="text-slate-400 block text-[10px]">{isAm ? 'ኢሜይል አድራሻ፡' : 'Email Address:'}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{report.citizenEmail || 'abebe.kebede@example.com'}</span>
                 </div>
               </div>
             ) : (
-              <p className="text-[11px] text-slate-600 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/80 flex items-start space-x-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
-                <span>Personal information is hidden under default RBAC security rules. Unlocking will log your Administrator account ID and timestamp in the immutable Audit Log.</span>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 bg-amber-50/60 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-800/50 flex items-start space-x-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+                <span>{isAm ? 'የግል መረጃ በደህንነት ደንቦች መሰረት ተደብቋል። መረጃውን መግለጽ የአስተዳዳሪ መለያዎን እና ሰዓቱን በማይለወጠው የኦዲት መዝገብ ላይ ይመዘግባል።' : 'Personal information is hidden under default RBAC security rules. Unlocking will log your Administrator account ID and timestamp in the immutable Audit Log.'}</span>
               </p>
             )}
           </div>
 
           {/* Full Description & Evidence */}
           <div className="space-y-3">
-            <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Report Details</h3>
-            <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 uppercase tracking-wider">{isAm ? 'የሪፖርት ዝርዝር መግለጫ' : 'Report Details'}</h3>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               {report.description}
             </p>
 
             {/* Evidence Attachments */}
             {report.evidence.length > 0 && (
-              <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-                    <span>Uploaded Evidence Files</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+                    <span>{isAm ? 'የተያያዙ ማስረጃ ፋይሎች' : 'Uploaded Evidence Files'}</span>
                     <span className="bg-[#005BAC] text-white text-[10px] px-2 py-0.5 rounded-full font-mono">
                       {report.evidence.length}
                     </span>
@@ -621,9 +626,9 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {report.evidence.map((ev) => (
-                    <div key={ev.id} className="p-3 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                    <div key={ev.id} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-2 shadow-2xs">
                       {/* Header label & file type icon */}
-                      <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-800 dark:text-slate-200">
                         <div className="flex items-center space-x-2 truncate">
                           {ev.type === 'image' && <ImageIcon className="w-4 h-4 text-blue-600 shrink-0" />}
                           {ev.type === 'video' && <Video className="w-4 h-4 text-purple-600 shrink-0" />}
@@ -636,7 +641,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                       {/* Interactive Media Player based on type */}
                       {ev.type === 'image' && (
-                        <div className="relative group overflow-hidden rounded-lg border border-slate-100 bg-slate-900">
+                        <div className="relative group overflow-hidden rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-900">
                           <img
                             src={ev.url}
                             alt={ev.name}
@@ -650,45 +655,45 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                             className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1"
                           >
                             <ExternalLink className="w-4 h-4" />
-                            <span>View Full Resolution Image</span>
+                            <span>{isAm ? 'ምስሉን በሙሉ ጥራት ተመልከት' : 'View Full Resolution Image'}</span>
                           </a>
                         </div>
                       )}
 
                       {ev.type === 'video' && (
-                        <div className="rounded-lg overflow-hidden border border-slate-200 bg-black">
+                        <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
                           <video
                             src={ev.url}
                             controls
                             className="w-full max-h-48 object-contain rounded-lg"
                             poster="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&q=80&w=600"
                           >
-                            Your browser does not support HTML5 video playback.
+                            {isAm ? 'የእርስዎ አሳሽ ቪዲዮ ማጫወት አይደግፍም።' : 'Your browser does not support HTML5 video playback.'}
                           </video>
                         </div>
                       )}
 
                       {ev.type === 'audio' && (
-                        <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg space-y-1.5">
-                          <div className="flex items-center space-x-2 text-[11px] font-bold text-amber-900">
+                        <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg space-y-1.5">
+                          <div className="flex items-center space-x-2 text-[11px] font-bold text-amber-900 dark:text-amber-300">
                             <Mic className="w-3.5 h-3.5 text-amber-700 animate-pulse" />
-                            <span>Audio Recording / Voice Tip-Off</span>
+                            <span>{isAm ? 'የድምጽ ቅጂ / የድምጽ ጥቆማ' : 'Audio Recording / Voice Tip-Off'}</span>
                           </div>
                           <audio controls src={ev.url} className="w-full h-8" />
                         </div>
                       )}
 
                       {(ev.type === 'pdf' || ev.type === 'doc') && (
-                        <div className="flex items-center justify-between p-2 bg-slate-50 border border-slate-100 rounded-lg text-xs">
-                          <span className="text-slate-600 text-[11px]">Official document / receipt file</span>
+                        <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-xs">
+                          <span className="text-slate-600 dark:text-slate-400 text-[11px]">{isAm ? 'ይፋዊ ሰነድ / ደረሰኝ ፋይል' : 'Official document / receipt file'}</span>
                           <a
                             href={ev.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#005BAC] font-bold rounded flex items-center space-x-1"
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900 text-[#005BAC] dark:text-blue-300 font-bold rounded flex items-center space-x-1"
                           >
                             <Download className="w-3 h-3" />
-                            <span>Download PDF</span>
+                            <span>{isAm ? 'ሰነድ አውርድ' : 'Download PDF'}</span>
                           </a>
                         </div>
                       )}
@@ -705,7 +710,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
               reportId={report.id}
               reportTitle={report.title}
               institutionId={report.assignedTo?.department || 'INST-AMECO-001'}
-              institutionName="Amhara Media Corporation"
+              institutionName={isAm ? 'የአማራ ሚዲያ ኮርፖሬሽን' : 'Amhara Media Corporation'}
               mediaList={mediaList.filter((m) => m.reportId === report.id || (!m.reportId && m.id === report.id))}
               verifiedChannels={verifiedChannels}
               currentUser={currentUser}
@@ -722,20 +727,20 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-100 dark:bg-zinc-800/90 p-4 rounded-xl border border-slate-300 dark:border-zinc-700 text-xs">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-800 dark:text-zinc-100 block">
-                {language === 'am' ? 'ይፋዊ ምድብ ቀይር' : 'Edit Official Category'}
+                {isAm ? 'ይፋዊ ምድብ ቀይር' : 'Edit Official Category'}
               </label>
               <input
                 type="text"
                 value={editedCategory}
                 onChange={(e) => setEditedCategory(e.target.value)}
-                placeholder={language === 'am' ? 'ይፋዊ ምድብ ያስገቡ...' : 'Enter official category...'}
+                placeholder={isAm ? 'ይፋዊ ምድብ ያስገቡ...' : 'Enter official category...'}
                 className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-400 outline-none focus:border-[#005BAC] dark:focus:border-blue-500 font-semibold transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-slate-800 dark:text-zinc-100 block">
-                {language === 'am' ? 'የቅድሚያ ደረጃ ቀይር' : 'Override Priority Level'}
+                {isAm ? 'የቅድሚያ ደረጃ ቀይር' : 'Override Priority Level'}
               </label>
               <select
                 value={editedPriority}
@@ -759,13 +764,13 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
               className="px-3.5 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-950/80 dark:hover:bg-red-900 text-red-800 dark:text-red-300 font-bold rounded-xl flex items-center space-x-1 cursor-pointer transition-colors"
             >
               <XCircle className="w-4 h-4" />
-              <span>{language === 'am' ? 'ውድቅ አድርግ' : 'Reject Submission'}</span>
+              <span>{isAm ? 'ውድቅ አድርግ' : 'Reject Submission'}</span>
             </button>
             <button
               onClick={() => handleStatusChange('Waiting for Citizen Response')}
               className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold rounded-xl cursor-pointer transition-colors"
             >
-              {language === 'am' ? 'ተጨማሪ መረጃ ጠይቅ' : 'Request Info'}
+              {isAm ? 'ተጨማሪ መረጃ ጠይቅ' : 'Request Info'}
             </button>
           </div>
 
@@ -780,13 +785,13 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                     setShowPublisherAssignModal(true);
                   }}
                   className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow flex items-center space-x-1.5 cursor-pointer transition-all"
-                  title="Forward verified findings to Newsroom Publisher for journalistic broadcasting"
+                  title={isAm ? 'የተረጋገጡ ግኝቶችን ለዜና ክፍል አሳታሚ አስተላልፍ' : 'Forward verified findings to Newsroom Publisher for journalistic broadcasting'}
                 >
                   <Newspaper className="w-4 h-4" />
                   <span>
                     {report.assignedPublisherId
-                      ? (language === 'am' ? 'አሳታሚ ቀይር' : 'Reassign Publisher')
-                      : (language === 'am' ? 'ለሚዲያ አሳታሚ መድብ' : 'Assign to Publisher')}
+                      ? (isAm ? 'አሳታሚ ቀይር' : 'Reassign Publisher')
+                      : (isAm ? 'ለሚዲያ አሳታሚ መድብ' : 'Assign to Publisher')}
                   </span>
                 </button>
 
@@ -794,10 +799,10 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                   type="button"
                   onClick={() => handleStatusChange('Published')}
                   className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow flex items-center space-x-1.5 cursor-pointer transition-all"
-                  title="Publish as Official News Bulletin (Step 07)"
+                  title={isAm ? 'እንደ ይፋዊ የዜና መግለጫ አትም' : 'Publish as Official News Bulletin'}
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{language === 'am' ? 'አጽድቅና አትም' : 'Approve & Publish'}</span>
+                  <span>{isAm ? 'አጽድቅና አትም' : 'Approve & Publish'}</span>
                 </button>
               </>
             )}
@@ -815,11 +820,11 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
               {report.assignedTo?.responsiblePersonId || report.status === 'Assigned' ? (
                 <>
                   <RefreshCw className="w-4 h-4" />
-                  <span>{language === 'am' ? 'መርማሪ ቀይር' : 'Reassign Responsible Person'}</span>
+                  <span>{isAm ? 'መርማሪ ቀይር' : 'Reassign Responsible Person'}</span>
                 </>
               ) : (
                 <>
-                  <span>{language === 'am' ? 'የአሚኮ መርማሪ መድብ' : 'Assign Responsible Person'}</span>
+                  <span>{isAm ? 'የአሚኮ መርማሪ መድብ' : 'Assign Responsible Person'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -838,10 +843,10 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                      Assign to Newsroom Publisher
+                      {isAm ? 'ለዜና ክፍል አሳታሚ መድብ' : 'Assign to Newsroom Publisher'}
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                      Forward case {report.id} to media journalist / publisher desk
+                      {isAm ? `ጉዳይ ${report.id}ን ለሚዲያ ጋዜጠኛ / አሳታሚ ዴስክ አስተላልፍ` : `Forward case ${report.id} to media journalist / publisher desk`}
                     </p>
                   </div>
                 </div>
@@ -856,7 +861,7 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
               <div className="space-y-3.5 text-xs">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700 dark:text-zinc-200 block">
-                    Select Publisher / Media Partner *
+                    {isAm ? 'አሳታሚ / የሚዲያ አጋር ይምረጡ *' : 'Select Publisher / Media Partner *'}
                   </label>
                   <select
                     value={selectedPublisherId}
@@ -880,13 +885,13 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
 
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700 dark:text-zinc-200 block">
-                    Editorial Instructions / Broadcast Direction
+                    {isAm ? 'የኤዲቶሪያል መመሪያዎች / የህትመት አቅጣጫ' : 'Editorial Instructions / Broadcast Direction'}
                   </label>
                   <textarea
                     rows={3}
                     value={publisherEditorialNotes}
                     onChange={(e) => setPublisherEditorialNotes(e.target.value)}
-                    placeholder="e.g. Please draft headline and prepare TV & Web news bulletin covering the hospital investigation findings..."
+                    placeholder={isAm ? 'ለምሳሌ፡ የሆስፒታሉን የምርመራ ግኝቶች የሚመለከት የቴሌቪዥን እና የድረ-ገጽ ዜና መግለጫ ርዕስ ያዘጋጁ...' : 'e.g. Please draft headline and prepare TV & Web news bulletin covering the hospital investigation findings...'}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />
                 </div>
@@ -894,7 +899,9 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/60 rounded-xl border border-blue-200 dark:border-blue-900 text-[11px] text-blue-900 dark:text-blue-200 flex items-start space-x-2">
                   <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                   <span>
-                    The selected publisher will receive the case, inspect findings & evidence, and draft the news story for public broadcast.
+                    {isAm
+                      ? 'የተመረጠው አሳታሚ ጉዳዩን ይቀበላል፣ ግኝቶችንና ማስረጃዎችን ይመረምራል፣ እንዲሁም ለህዝብ ስርጭት የሚሆን ይፋዊ የዜና ዘገባ ያዘጋጃል።'
+                      : 'The selected publisher will receive the case, inspect findings & evidence, and draft the news story for public broadcast.'}
                   </span>
                 </div>
               </div>
@@ -905,14 +912,14 @@ export const ReportReviewModal: React.FC<ReportReviewModalProps> = ({
                   onClick={() => setShowPublisherAssignModal(false)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="button"
                   onClick={handleAssignToPublisher}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition-colors"
                 >
-                  Confirm Forwarding
+                  {isAm ? 'ማስተላለፉን አረጋግጥ' : 'Confirm Forwarding'}
                 </button>
               </div>
             </div>

@@ -24,8 +24,33 @@ export interface BootstrapResponse {
   mediaList?: ReportMedia[];
 }
 
+export function getClientLanguage(): 'am' | 'en' {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('ameco_language');
+    if (saved === 'am' || saved === 'en') return saved;
+  }
+  return 'en';
+}
+
+export function getApiHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'x-language': getClientLanguage(),
+    ...(extra || {}),
+  };
+}
+
+export function getApiFetchHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    'x-language': getClientLanguage(),
+    ...(extra || {}),
+  };
+}
+
 export async function fetchBootstrapData(): Promise<BootstrapResponse> {
-  const res = await fetch('/api/bootstrap');
+  const res = await fetch('/api/bootstrap', {
+    headers: getApiFetchHeaders(),
+  });
   if (!res.ok) {
     throw new Error(`Failed to load data from Cloud SQL: ${res.statusText}`);
   }
@@ -37,7 +62,7 @@ export async function saveReportApi(report: ReportItem): Promise<ReportItem> {
   try {
     const res = await fetch('/api/reports', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify(report),
     });
     if (!res.ok) {
@@ -202,24 +227,34 @@ export async function deleteNotificationApi(notifId: string): Promise<void> {
 }
 
 export async function saveDepartmentApi(dept: Department): Promise<Department> {
-  const res = await fetch('/api/departments', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(dept),
-  });
-  if (!res.ok) {
-    throw new Error('Failed to save department');
+  try {
+    const res = await fetch('/api/departments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dept),
+    });
+    if (!res.ok) {
+      console.warn('Backend returned non-200 for department save, preserved in local state.');
+      return dept;
+    }
+    const json = await res.json();
+    return json.department || dept;
+  } catch (err) {
+    console.warn('Network sync temporary glitch, department preserved locally:', err);
+    return dept;
   }
-  const json = await res.json();
-  return json.department;
 }
 
 export async function deleteDepartmentApi(deptId: string): Promise<void> {
-  const res = await fetch(`/api/departments/${encodeURIComponent(deptId)}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to delete department');
+  try {
+    const res = await fetch(`/api/departments/${encodeURIComponent(deptId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      console.warn('Failed to delete department from server, proceeding with local deletion.');
+    }
+  } catch (err) {
+    console.warn('Network error deleting department, proceeding with local deletion:', err);
   }
 }
 
@@ -287,7 +322,7 @@ export async function loginUserApi(
 ): Promise<{ success: boolean; user: UserProfile; isSuspended?: boolean; message?: string }> {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getApiHeaders(),
     body: JSON.stringify({ identifier, password }),
   });
   const json = await res.json();
@@ -308,6 +343,7 @@ export async function registerCitizenApi(params: {
   region?: string;
   zone: string;
   woreda?: string;
+  department?: string;
   securityQuestion1?: string;
   securityAnswer1?: string;
   securityQuestion2?: string;
@@ -318,7 +354,7 @@ export async function registerCitizenApi(params: {
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getApiHeaders(),
       body: JSON.stringify(params),
     });
     if (!res.ok) {
@@ -343,6 +379,7 @@ export async function registerCitizenApi(params: {
       phone: params.phone,
       phoneNumber: params.phone,
       role: 'Citizen',
+      department: params.department || undefined,
       region: params.region || 'Amhara Region',
       zone: params.zone || 'Bahir Dar City',
       woreda: params.woreda || '',
@@ -402,7 +439,7 @@ export async function requestPasswordResetApi(identifier: string): Promise<{
 }> {
   const res = await fetch('/api/auth/forgot-password-request', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getApiHeaders(),
     body: JSON.stringify({ identifier }),
   });
   const json = await res.json();
@@ -426,7 +463,7 @@ export async function resetPasswordWithSecurityAnswersApi(params: {
 }> {
   const res = await fetch('/api/auth/reset-password-security', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getApiHeaders(),
     body: JSON.stringify(params),
   });
   const json = await res.json();
@@ -450,7 +487,7 @@ export async function verifySecurityAnswersApi(params: {
 }> {
   const res = await fetch('/api/auth/verify-security-answers', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getApiHeaders(),
     body: JSON.stringify(params),
   });
   const json = await res.json();

@@ -7,6 +7,7 @@ import {
   Lock,
   Bot,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface CaptchaVerificationProps {
   idPrefix: string;
@@ -57,6 +58,9 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
   errorMessage,
   autoFocus = false,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   const [captchaCode, setCaptchaCode] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
   const [hasInteracted, setHasInteracted] = useState<boolean>(false);
@@ -254,18 +258,18 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
             {isVerified ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
           </div>
           <span className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-            Human Security Verification (CAPTCHA) *
+            {isAm ? 'የደህንነት ማረጋገጫ (CAPTCHA) *' : 'Human Security Verification (CAPTCHA) *'}
           </span>
         </div>
 
         {isVerified ? (
           <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center space-x-1">
             <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            <span>Verified</span>
+            <span>{isAm ? 'ተረጋግጧል' : 'Verified'}</span>
           </span>
         ) : (
           <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500">
-            Anti-Bot Shield
+            {isAm ? 'የደህንነት ጥበቃ' : 'Anti-Bot Shield'}
           </span>
         )}
       </div>
@@ -280,14 +284,14 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
               width={180}
               height={50}
               className="block cursor-pointer select-none"
-              title="Click to refresh CAPTCHA code"
+              title={isAm ? 'ኮዱን ለመቀየር ጠቅ ያድርጉ' : 'Click to refresh CAPTCHA code'}
               onClick={refreshCaptcha}
             />
             {/* Quick overlay indicator on hover */}
             <div
               onClick={refreshCaptcha}
               className="absolute inset-0 bg-black/0 hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer flex items-center justify-end pr-2 opacity-0 hover:opacity-100"
-              title="Click to generate new code"
+              title={isAm ? 'አዲስ ኮድ ለማመንጨት ጠቅ ያድርጉ' : 'Click to generate new code'}
             >
               <RefreshCw className="w-4 h-4 text-slate-600 dark:text-zinc-300 bg-white/80 dark:bg-black/80 rounded p-0.5" />
             </div>
@@ -300,7 +304,7 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
               id={`${idPrefix}-captcha-refresh-btn`}
               onClick={refreshCaptcha}
               className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 transition-colors shadow-xs flex items-center justify-center cursor-pointer"
-              title="Generate a new security code"
+              title={isAm ? 'አዲስ የደህንነት ኮድ አፍልቅ' : 'Generate a new security code'}
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -314,7 +318,7 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
                 className={`p-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 transition-colors shadow-xs flex items-center justify-center cursor-pointer ${
                   isSpeaking ? 'animate-pulse text-[#005BAC] dark:text-blue-400' : ''
                 }`}
-                title="Listen to the security code audio"
+                title={isAm ? 'የኮዱን ድምፅ ያዳምጡ' : 'Listen to the security code audio'}
               >
                 {isSpeaking ? <Volume2 className="w-4 h-4 text-blue-500" /> : <Volume2 className="w-4 h-4" />}
               </button>
@@ -331,7 +335,7 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
             value={userInput}
             onChange={(e) => handleInputChange(e.target.value)}
             maxLength={6}
-            placeholder="Enter exact 6-char code (Case-Sensitive)"
+            placeholder={isAm ? 'ትክክለኛውን ባለ 6-ፊደል ኮድ ያስገቡ (ትልቅ/ትንሽ ፊደል ይለያል)' : 'Enter exact 6-char code (Case-Sensitive)'}
             className={`w-full pl-3.5 pr-10 py-2 rounded-xl bg-white dark:bg-zinc-950 border font-mono tracking-widest text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none transition-colors ${
               isVerified
                 ? 'border-emerald-500 ring-2 ring-emerald-400/20'
@@ -357,12 +361,12 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
         {isCaseMismatch ? (
           <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center space-x-1">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>Case Mismatch: CAPTCHA is case-sensitive (distinguishes A-Z and a-z).</span>
+            <span>{isAm ? 'የፊደል መጠን አለመጣጣም፡ ትላልቅና ትናንሽ ፊደላትን (A-Z እና a-z) በትክክል ያስገቡ።' : 'Case Mismatch: CAPTCHA is case-sensitive (distinguishes A-Z and a-z).'}</span>
           </p>
         ) : isInputMismatch ? (
           <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center space-x-1">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>Code does not match. Please re-enter or click refresh.</span>
+            <span>{isAm ? 'ኮዱ አይዛመድም። እባክዎ እንደገና ይሞክሩ ወይም አድስ የሚለውን ይጫኑ።' : 'Code does not match. Please re-enter or click refresh.'}</span>
           </p>
         ) : null}
 
@@ -376,11 +380,11 @@ export const CaptchaVerification: React.FC<CaptchaVerificationProps> = ({
         {/* Help footer */}
         <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-0.5">
           <span className="font-medium text-slate-600 dark:text-zinc-400">
-            Case-Sensitive (A-Z, a-z, 0-9)
+            {isAm ? 'ትልቅ/ትንሽ ፊደል ይለያል (A-Z, a-z, 0-9)' : 'Case-Sensitive (A-Z, a-z, 0-9)'}
           </span>
           <span className="flex items-center space-x-1">
             <Lock className="w-2.5 h-2.5" />
-            <span>AMECO Security Gateway</span>
+            <span>{isAm ? 'የአሚኮ የደህንነት በር' : 'AMECO Security Gateway'}</span>
           </span>
         </div>
       </div>

@@ -53,6 +53,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 }) => {
   const { toggleTheme, isDark } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
+  const isAm = language === 'am';
 
   if (!isOpen) return null;
 
@@ -60,6 +61,25 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     currentUser.id.startsWith('GUEST-') ||
     currentUser.fullName === 'Anonymous Guest' ||
     currentUser.isGuest;
+
+  const getRoleDisplay = (role: string) => {
+    if (isGuest) return isAm ? 'እንግዳ ተጠቃሚ' : 'Guest User';
+    switch (role) {
+      case 'Administrator':
+        return isAm ? 'ዋና አስተዳዳሪ' : 'Administrator';
+      case 'ResponsiblePerson':
+      case 'Investigator':
+        return isAm ? 'መርማሪ / ኃላፊ' : 'Investigator';
+      case 'Publisher':
+        return isAm ? 'አሳታሚ (ሚዲያ)' : 'Publisher';
+      case 'Institution':
+        return isAm ? 'ተቋም' : 'Institution';
+      case 'Citizen':
+        return isAm ? 'ዜጋ' : 'Citizen';
+      default:
+        return role;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm transition-opacity duration-300">
@@ -72,7 +92,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-xl bg-slate-200 dark:bg-zinc-900 hover:bg-slate-300 dark:hover:bg-zinc-800 text-slate-900 dark:text-white transition-colors border border-slate-300 dark:border-zinc-800"
-                title="Close Navigation Menu"
+                title={isAm ? 'የአሰሳ ሜኑን ዝጋ' : 'Close Navigation Menu'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -95,12 +115,16 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-1.5">
                     <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                      {currentUser.fullName}
+                      {isGuest
+                        ? (isAm ? 'ስም-አልባ እንግዳ' : 'Anonymous Guest')
+                        : (currentUser.fullName === 'Admin' || currentUser.fullName === 'Administrator')
+                        ? (isAm ? 'ዋና አስተዳዳሪ' : 'Administrator')
+                        : currentUser.fullName}
                     </h4>
                   </div>
                   <div className="flex items-center space-x-2 mt-0.5">
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-300 dark:border-zinc-700">
-                      {isGuest ? 'Guest User' : currentUser.role}
+                      {getRoleDisplay(currentUser.role)}
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono truncate">
                       {currentUser.id}
@@ -116,7 +140,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               {isGuest && (
                 <div className="space-y-1.5">
                   <span className="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-2">
-                    Guest Navigation
+                    {isAm ? 'የእንግዳ አሰሳ' : 'Guest Navigation'}
                   </span>
 
                   <button
@@ -132,7 +156,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Home className="w-4 h-4" />
-                      <span>{t('nav.dashboard', 'Dashboard')}</span>
+                      <span>{isAm ? 'ዳሽቦርድ' : t('nav.dashboard', 'Dashboard')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -146,10 +170,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <PlusCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>Submit Anonymous Tip</span>
+                      <span>{isAm ? 'ስም-አልባ ጥቆማ አስገባ' : 'Submit Anonymous Tip'}</span>
                     </div>
                     <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 bg-emerald-200/70 dark:bg-emerald-800/80 rounded">
-                      Secure
+                      {isAm ? 'አስተማማኝ' : 'Secure'}
                     </span>
                   </button>
 
@@ -166,7 +190,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Compass className="w-4 h-4" />
-                      <span>Track Anonymous Tip</span>
+                      <span>{isAm ? 'ስም-አልባ ጥቆማን ተከታተል' : 'Track Anonymous Tip'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -184,7 +208,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Newspaper className="w-4 h-4" />
-                      <span>{t('nav.publishedReports', 'Published Reports')}</span>
+                      <span>{isAm ? 'የታተሙ ሪፖርቶች' : t('nav.publishedReports', 'Published Reports')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -202,7 +226,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <HelpCircle className="w-4 h-4" />
-                      <span>{t('nav.helpFaq', 'Help & FAQ')}</span>
+                      <span>{isAm ? 'እርዳታ እና ተደጋጋሚ ጥያቄዎች' : t('nav.helpFaq', 'Help & FAQ')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -213,7 +237,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               {currentUser.role === 'Citizen' && !isGuest && (
                 <div className="space-y-1.5">
                   <span className="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-2">
-                    Citizen Navigation
+                    {isAm ? 'የዜጋ አሰሳ' : 'Citizen Navigation'}
                   </span>
 
                   {/* 1. Dashboard */}
@@ -230,7 +254,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Home className="w-4 h-4" />
-                      <span>{t('nav.dashboard', 'Dashboard')}</span>
+                      <span>{isAm ? 'ዳሽቦርድ' : t('nav.dashboard', 'Dashboard')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -245,10 +269,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <PlusCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>{t('nav.submitIncident', 'Submit Incident')}</span>
+                      <span>{isAm ? 'ክስተት / ጥቆማ አስገባ' : t('nav.submitIncident', 'Submit Incident')}</span>
                     </div>
                     <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 bg-emerald-200/70 dark:bg-emerald-800/80 rounded">
-                      New
+                      {isAm ? 'አዲስ' : 'New'}
                     </span>
                   </button>
 
@@ -266,7 +290,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <FileText className="w-4 h-4" />
-                      <span>{t('nav.mySubmissions', 'My Submissions')}</span>
+                      <span>{isAm ? 'የእኔ ጥቆማዎች' : t('nav.mySubmissions', 'My Submissions')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -285,7 +309,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Compass className="w-4 h-4" />
-                      <span>{t('nav.trackSubmission', 'Track Submission')}</span>
+                      <span>{isAm ? 'ጥቆማን ተከታተል' : t('nav.trackSubmission', 'Track Submission')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -304,7 +328,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <MessageSquare className="w-4 h-4" />
-                      <span>{t('nav.messages', 'Messages')}</span>
+                      <span>{isAm ? 'መልዕክቶች' : t('nav.messages', 'Messages')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -323,7 +347,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Bell className="w-4 h-4" />
-                      <span>{t('nav.notifications', 'Notifications')}</span>
+                      <span>{isAm ? 'ማሳወቂያዎች' : t('nav.notifications', 'Notifications')}</span>
                     </div>
                     {unreadCount > 0 && (
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#005BAC] text-white">
@@ -346,7 +370,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <UserCheck className="w-4 h-4" />
-                      <span>{t('nav.myProfile', 'My Profile')}</span>
+                      <span>{isAm ? 'የእኔ መገለጫ' : t('nav.myProfile', 'My Profile')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -365,7 +389,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Newspaper className="w-4 h-4" />
-                      <span>{t('nav.publishedReports', 'Published Reports')}</span>
+                      <span>{isAm ? 'የታተሙ ሪፖርቶች' : t('nav.publishedReports', 'Published Reports')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -384,7 +408,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <HelpCircle className="w-4 h-4" />
-                      <span>{t('nav.helpFaq', 'Help & FAQ')}</span>
+                      <span>{isAm ? 'እርዳታ እና ተደጋጋሚ ጥያቄዎች' : t('nav.helpFaq', 'Help & FAQ')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -395,7 +419,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               {currentUser.role === 'ResponsiblePerson' && (
                 <div className="space-y-1.5">
                   <span className="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-2">
-                    Investigator Console
+                    {isAm ? 'የመርማሪ መቆጣጠሪያ ሰሌዳ' : 'Investigator Console'}
                   </span>
 
                   <button
@@ -411,7 +435,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Briefcase className="w-4 h-4" />
-                      <span>Dashboard & Assigned Tips</span>
+                      <span>{isAm ? 'ዳሽቦርድ እና የተመደቡ ጥቆማዎች' : 'Dashboard & Assigned Tips'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -431,10 +455,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <MessageSquare className="w-4 h-4 text-amber-500" />
-                      <span>{t('nav.adminChat', 'Admin Chat')}</span>
+                      <span>{isAm ? 'ከአስተዳዳሪ ጋር ውይይት' : t('nav.adminChat', 'Admin Chat')}</span>
                     </div>
                     <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                      Live
+                      {isAm ? 'ቀጥታ' : 'Live'}
                     </span>
                   </button>
 
@@ -451,7 +475,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Bell className="w-4 h-4" />
-                      <span>Notifications</span>
+                      <span>{isAm ? 'ማሳወቂያዎች' : 'Notifications'}</span>
                     </div>
                     {unreadCount > 0 && (
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#005BAC] text-white">
@@ -473,7 +497,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Newspaper className="w-4 h-4" />
-                      <span>Published Reports</span>
+                      <span>{isAm ? 'የታተሙ ሪፖርቶች' : 'Published Reports'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -491,7 +515,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <HelpCircle className="w-4 h-4" />
-                      <span>Help & Protocol FAQ</span>
+                      <span>{isAm ? 'እርዳታ እና መመሪያዎች' : 'Help & Protocol FAQ'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -510,7 +534,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <UserCheck className="w-4 h-4" />
-                      <span>{t('nav.myProfile', 'Profile')}</span>
+                      <span>{isAm ? 'መገለጫ' : t('nav.myProfile', 'Profile')}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -521,7 +545,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               {currentUser.role === 'Administrator' && (
                 <div className="space-y-1.5">
                   <span className="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-2">
-                    Administrator Controls
+                    {isAm ? 'የአስተዳዳሪ መቆጣጠሪያዎች' : 'Administrator Controls'}
                   </span>
 
                   <button
@@ -538,7 +562,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <BarChart3 className="w-4 h-4" />
-                      <span>Dashboard & Tip Review</span>
+                      <span>{isAm ? 'ዳሽቦርድ እና የጥቆማ ግምገማ' : 'Dashboard & Tip Review'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -557,11 +581,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <UserCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                      <span>Investigators</span>
+                      <span>{isAm ? 'መርማሪዎች' : 'Investigators'}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
                       <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-mono">
-                        Directory & Chat
+                        {isAm ? 'ዝርዝር እና ውይይት' : 'Directory & Chat'}
                       </span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                     </div>
@@ -581,11 +605,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Building2 className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                      <span>Publishers</span>
+                      <span>{isAm ? 'አሳታሚዎች (ሚዲያዎች)' : 'Publishers'}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
                       <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-mono">
-                        Directory & Chat
+                        {isAm ? 'ዝርዝር እና ውይይት' : 'Directory & Chat'}
                       </span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                     </div>
@@ -605,7 +629,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Users className="w-4 h-4" />
-                      <span>Users & RBAC Controls</span>
+                      <span>{isAm ? 'ተጠቃሚዎች እና ሚና ቁጥጥር' : 'Users & RBAC Controls'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -623,7 +647,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Bell className="w-4 h-4" />
-                      <span>Notifications</span>
+                      <span>{isAm ? 'ማሳወቂያዎች' : 'Notifications'}</span>
                     </div>
                     {unreadCount > 0 && (
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#005BAC] text-white">
@@ -645,7 +669,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Newspaper className="w-4 h-4" />
-                      <span>Published Reports</span>
+                      <span>{isAm ? 'የታተሙ ሪፖርቶች' : 'Published Reports'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -663,7 +687,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <BarChart3 className="w-4 h-4" />
-                      <span>Reports & Analytics</span>
+                      <span>{isAm ? 'ሪፖርቶች እና ትንታኔዎች' : 'Reports & Analytics'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -681,7 +705,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Lock className="w-4 h-4" />
-                      <span>Immutable Audit Logs</span>
+                      <span>{isAm ? 'የማይለወጡ የኦዲት መዝገቦች' : 'Immutable Audit Logs'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -700,18 +724,20 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <UserCheck className="w-4 h-4" />
-                      <span>Profile</span>
+                      <span>{isAm ? 'መገለጫ' : 'Profile'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
                 </div>
               )}
 
-              {/* 5. INSTITUTION PORTAL */}
+              {/* 5. INSTITUTION / PUBLISHER PORTAL */}
               {(currentUser.role === 'Institution' || currentUser.role === 'Publisher') && (
                 <div className="space-y-1.5">
                   <span className="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-2">
-                      {currentUser.role === 'Publisher' ? 'Publisher Portal' : 'Institution Portal'}
+                    {isAm
+                      ? (currentUser.role === 'Publisher' ? 'የአሳታሚ ፖርታል' : 'የተቋም ፖርታል')
+                      : (currentUser.role === 'Publisher' ? 'Publisher Portal' : 'Institution Portal')}
                   </span>
 
                   <button
@@ -728,7 +754,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Radio className="w-4 h-4" />
-                      <span>Publish Trending News</span>
+                      <span>{isAm ? 'ወቅታዊ ዜናዎችን አትም' : 'Publish Trending News'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -747,11 +773,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <MessageSquare className="w-4 h-4 text-amber-400" />
-                      <span>Admin Communications</span>
+                      <span>{isAm ? 'ከአስተዳዳሪ ጋር ግንኙነት' : 'Admin Communications'}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
                       <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono">
-                        Direct Line
+                        {isAm ? 'ቀጥታ መስመር' : 'Direct Line'}
                       </span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                     </div>
@@ -770,7 +796,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Newspaper className="w-4 h-4" />
-                      <span>Published Reports</span>
+                      <span>{isAm ? 'የታተሙ ሪፖርቶች' : 'Published Reports'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -789,7 +815,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <UserCheck className="w-4 h-4" />
-                      <span>Profile</span>
+                      <span>{isAm ? 'መገለጫ' : 'Profile'}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -803,11 +829,13 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             <div className="grid grid-cols-2 gap-2">
               {/* Language Switcher */}
               <button
+                id="btn-sidebar-language-toggle"
                 onClick={toggleLanguage}
-                className="py-2 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-center space-x-1.5 shadow-xs"
+                className="py-2 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
+                title={isAm ? 'Switch language to English' : 'ቋንቋውን ወደ አማርኛ ቀይር'}
               >
-                <Globe className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
-                <span>{language === 'en' ? 'English' : 'አማርኛ'}</span>
+                <Globe className="w-4 h-4 text-[#005BAC]" />
+                <span>{isAm ? 'ቋንቋ: አማርኛ (EN)' : 'Lang: English (አማ)'}</span>
               </button>
 
               {/* Theme Switcher */}
@@ -816,7 +844,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 className="py-2 px-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-center space-x-1.5 shadow-xs"
               >
                 {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
-                <span>{isDark ? 'Light' : 'Dark'}</span>
+                <span>{isDark ? (isAm ? 'ብርሃን' : 'Light') : (isAm ? 'ጨለማ' : 'Dark')}</span>
               </button>
             </div>
 
@@ -830,7 +858,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 className="w-full py-2.5 px-3.5 rounded-xl bg-[#005BAC] hover:bg-blue-800 text-white text-xs font-extrabold flex items-center justify-center space-x-2 transition-colors shadow-sm"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Login / Sign Up</span>
+                <span>{isAm ? 'ግባ / ተመዝገብ' : 'Login / Sign Up'}</span>
               </button>
             ) : (
               <button
@@ -839,10 +867,10 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   onLogout();
                 }}
                 className="w-full py-2.5 px-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold flex items-center justify-center space-x-2 transition-colors shadow-sm"
-                title={t('nav.logout', 'Logout')}
+                title={isAm ? 'ውጣ' : t('nav.logout', 'Logout')}
               >
                 <LogOut className="w-4 h-4" />
-                <span>{t('nav.logout', 'Logout')}</span>
+                <span>{isAm ? 'ውጣ' : t('nav.logout', 'Logout')}</span>
               </button>
             )}
           </div>

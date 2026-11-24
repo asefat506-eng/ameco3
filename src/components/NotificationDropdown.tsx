@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { NotificationItem, UserProfile } from '../types.ts';
+import { useLanguage } from '../context/LanguageContext.tsx';
 
 interface NotificationDropdownProps {
   isOpen: boolean;
@@ -38,6 +39,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onSelectNotification,
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { language } = useLanguage();
+  const isAm = language === 'am';
 
   // Close on outside click
   useEffect(() => {
@@ -101,7 +104,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
-              <span>Notifications</span>
+              <span>{isAm ? 'ማሳወቂያዎች' : 'Notifications'}</span>
               {unreadCount > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#005BAC] text-white">
                   {unreadCount}
@@ -121,7 +124,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             className="flex items-center space-x-1 text-[11px] font-semibold text-[#005BAC] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
           >
             <CheckCheck className="w-3.5 h-3.5" />
-            <span>Mark all read</span>
+            <span>{isAm ? 'ሁሉንም አንብብ' : 'Mark all read'}</span>
           </button>
         )}
       </div>
@@ -134,10 +137,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               <Bell className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              No notifications yet
+              {isAm ? 'ምንም ማሳወቂያዎች የሉም' : 'No notifications yet'}
             </p>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              You will receive updates when incident status changes or messages arrive.
+              {isAm
+                ? 'የጥቆማው ሁኔታ ሲቀየር ወይም መልዕክት ሲደርስዎ እዚህ ማሳወቂያ ይደርስዎታል።'
+                : 'You will receive updates when incident status changes or messages arrive.'}
             </p>
           </div>
         ) : (
@@ -206,17 +211,17 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
       {/* Dropdown Footer: View All Notifications */}
       <div className="p-2.5 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800 text-center">
-        <button
-          id="btn-view-all-notifications"
-          onClick={() => {
-            onNavigateToNotificationsPage();
-            onClose();
-          }}
-          className="w-full py-1.5 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#005BAC] dark:text-blue-400 text-xs font-bold border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center space-x-1.5 shadow-2xs"
-        >
-          <span>View All Notifications</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
+          <button
+            id="btn-view-all-notifications"
+            onClick={() => {
+              onNavigateToNotificationsPage();
+              onClose();
+            }}
+            className="w-full py-1.5 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#005BAC] dark:text-blue-400 text-xs font-bold border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center space-x-1.5 shadow-2xs"
+          >
+            <span>{isAm ? 'ሁሉንም ማሳወቂያዎች ተመልከት' : 'View All Notifications'}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
       </div>
     </div>
   );

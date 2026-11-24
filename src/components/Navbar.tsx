@@ -46,11 +46,31 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const { toggleTheme, isDark } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
+  const isAm = language === 'am';
 
   const isGuest =
     currentUser.id.startsWith('GUEST-') ||
     currentUser.fullName === 'Anonymous Guest' ||
     currentUser.isGuest;
+
+  const getRoleDisplay = (role: string) => {
+    if (isGuest) return isAm ? 'እንግዳ ተጠቃሚ' : 'Guest';
+    switch (role) {
+      case 'Administrator':
+        return isAm ? 'ዋና አስተዳዳሪ' : 'Administrator';
+      case 'ResponsiblePerson':
+      case 'Investigator':
+        return isAm ? 'መርማሪ / ኃላፊ' : 'Investigator';
+      case 'Publisher':
+        return isAm ? 'አሳታሚ' : 'Publisher';
+      case 'Institution':
+        return isAm ? 'ተቋም' : 'Institution';
+      case 'Citizen':
+        return isAm ? 'ዜጋ' : 'Citizen';
+      default:
+        return role;
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="inline-flex items-center space-x-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold">
-                LIVE PORTAL
+                {isAm ? 'ቀጥታ ፖርታል' : 'LIVE PORTAL'}
               </span>
             </span>
             <span className="hidden sm:inline text-slate-400 dark:text-zinc-600">•</span>
@@ -103,13 +123,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-700 dark:text-zinc-300 flex items-center space-x-1">
               <Radio className="w-3 h-3 text-red-500" />
               <span>
-                Role: <strong className="text-slate-900 dark:text-white">{currentUser.role}</strong>
+                {isAm ? 'ሚና:' : 'Role:'}{' '}
+                <strong className="text-slate-900 dark:text-white">
+                  {getRoleDisplay(currentUser.role)}
+                </strong>
               </span>
             </span>
             <span className="text-slate-300 dark:text-zinc-700">|</span>
             <span className="text-slate-700 dark:text-zinc-300 font-mono text-[10px] flex items-center space-x-1">
               <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>256-Bit SSL Secured</span>
+              <span>{isAm ? 'በ256-ቢት SSL የተጠበቀ' : '256-Bit SSL Secured'}</span>
             </span>
           </div>
         </div>
@@ -124,10 +147,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="btn-navbar-menu-toggle"
               onClick={onToggleSidebar}
               className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-900 dark:text-white transition-all focus:outline-none flex items-center space-x-2 border border-slate-200 dark:border-zinc-800 cursor-pointer shadow-xs"
-              title="Open Navigation Menu"
+              title={isAm ? 'የአሰሳ ሜኑን ክፈት' : 'Open Navigation Menu'}
             >
               <Menu className="w-5 h-5 text-slate-900 dark:text-white" />
-              <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 hidden sm:inline">Menu</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 hidden sm:inline">
+                {isAm ? 'ሜኑ' : 'Menu'}
+              </span>
             </button>
 
             <div
@@ -145,11 +170,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="btn-language-switcher"
               onClick={toggleLanguage}
               className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 hover:text-slate-900 dark:hover:text-white transition-all flex items-center space-x-1.5 focus:outline-none cursor-pointer"
-              title={language === 'en' ? 'ለማስቀየር ወደ አማርኛ ጠቅ ያድርጉ' : 'Switch language to English'}
+              title={isAm ? 'Switch language to English' : 'ቋንቋውን ወደ አማርኛ ቀይር'}
             >
-              <Globe className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
+              <Globe className="w-4 h-4 text-[#005BAC] dark:text-blue-400" />
               <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                {language === 'en' ? 'EN' : 'አማ'}
+                {isAm ? 'አማርኛ' : 'EN'}
               </span>
             </button>
 
@@ -158,17 +183,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="btn-theme-toggle"
               onClick={toggleTheme}
               className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-all flex items-center space-x-1 focus:outline-none shadow-xs cursor-pointer"
-              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+              title={isAm ? (isDark ? 'ወደ ብርሃን ገጽታ ቀይር' : 'ወደ ጨለማ ገጽታ ቀይር') : `Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
             >
               {isDark ? (
                 <>
                   <Sun className="w-4 h-4 text-amber-400" />
-                  <span className="text-[11px] font-bold text-zinc-200 hidden xl:inline ml-1">Light</span>
+                  <span className="text-[11px] font-bold text-zinc-200 hidden xl:inline ml-1">
+                    {isAm ? 'ብርሃን' : 'Light'}
+                  </span>
                 </>
               ) : (
                 <>
                   <Moon className="w-4 h-4 text-slate-700" />
-                  <span className="text-[11px] font-bold text-slate-800 hidden xl:inline ml-1">Dark</span>
+                  <span className="text-[11px] font-bold text-slate-800 hidden xl:inline ml-1">
+                    {isAm ? 'ጨለማ' : 'Dark'}
+                  </span>
                 </>
               )}
             </button>
@@ -232,10 +261,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <div className="text-left hidden lg:block">
                   <div className="font-bold text-xs leading-none truncate max-w-[100px] text-slate-900 dark:text-zinc-100">
-                    {currentUser.fullName}
+                    {(currentUser.fullName === 'Admin' || currentUser.fullName === 'Administrator')
+                      ? (isAm ? 'ዋና አስተዳዳሪ' : 'Administrator')
+                      : currentUser.fullName}
                   </div>
                   <div className="text-[9px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5">
-                    {currentUser.role}
+                    {currentUser.role === 'Administrator'
+                      ? (isAm ? 'አስተዳዳሪ' : 'Administrator')
+                      : currentUser.role === 'ResponsiblePerson'
+                      ? (isAm ? 'መርማሪ' : 'Investigator')
+                      : currentUser.role === 'Publisher'
+                      ? (isAm ? 'አሳታሚ' : 'Publisher')
+                      : currentUser.role === 'Institution'
+                      ? (isAm ? 'ተቋም' : 'Institution')
+                      : (isAm ? 'ዜጋ' : 'Citizen')}
                   </div>
                 </div>
               </button>

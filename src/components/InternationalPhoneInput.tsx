@@ -6,6 +6,7 @@ import {
   validateInternationalPhone,
 } from '../utils/phoneHelper';
 import { ChevronDown, Globe, Search, Check, Phone } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface InternationalPhoneInputProps {
   value: string;
@@ -24,12 +25,15 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
   onChange,
   required = false,
   disabled = false,
-  label = 'Phone Number',
+  label,
   placeholder,
   className = '',
   error,
   id,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+  const displayLabel = label !== undefined ? label : (isAm ? 'ስልክ ቁጥር' : 'Phone Number');
   const [selectedCountry, setSelectedCountry] = useState<CountryCodeItem>(() => findCountryFromPhone(value));
   const [localNumber, setLocalNumber] = useState<string>(() => {
     if (!value) return '';
@@ -129,11 +133,11 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
 
   return (
     <div className={`space-y-1 ${className}`} id={id}>
-      {label && (
+      {displayLabel && (
         <div className="flex items-center justify-between">
           <label className="font-semibold text-slate-700 dark:text-zinc-300 flex items-center space-x-1.5 text-xs">
             <Phone className="w-3.5 h-3.5 text-slate-500" />
-            <span>{label} {required && <span className="text-red-500">*</span>}</span>
+            <span>{displayLabel} {required && <span className="text-red-500">*</span>}</span>
           </label>
           <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">
             {selectedCountry.dialCode} ({selectedCountry.code} • {selectedCountry.name.split(' ')[0]})
@@ -149,7 +153,7 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
             disabled={disabled}
             onClick={() => setDropdownOpen((prev) => !prev)}
             className="flex items-center space-x-1.5 px-3 py-2.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 border border-r-0 border-slate-300 dark:border-zinc-700 rounded-l-xl text-slate-900 dark:text-white text-xs font-semibold focus:outline-none transition-colors"
-            title="Select Country Calling Code"
+            title={isAm ? 'የሀገር መለያ ኮድ ይምረጡ' : 'Select Country Calling Code'}
           >
             <span className="px-1 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-zinc-700 font-mono text-slate-800 dark:text-zinc-200 leading-none">
               {selectedCountry.code}
@@ -167,7 +171,7 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search country or code..."
+                    placeholder={isAm ? 'ሀገር ወይም የመለያ ኮድ ይፈልጉ...' : 'Search country or code...'}
                     className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs outline-none text-slate-800 dark:text-white"
                     autoFocus
                   />
@@ -202,7 +206,7 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
 
                 {filteredCountries.length === 0 && (
                   <div className="p-4 text-center text-xs text-slate-400">
-                    No country matches "{searchQuery}"
+                    {isAm ? `ከ "${searchQuery}" ጋር የሚዛመድ ሀገር አልተገኘም` : `No country matches "${searchQuery}"`}
                   </div>
                 )}
               </div>
@@ -234,7 +238,9 @@ export const InternationalPhoneInput: React.FC<InternationalPhoneInputProps> = (
         <p className="text-[11px] text-red-500 dark:text-red-400">{error}</p>
       ) : (
         <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-          International format supported. Example: {selectedCountry.dialCode} {selectedCountry.formatPlaceholder}
+          {isAm
+            ? `ዓለም አቀፍ ቅርጸት ይደገፋል። ምሳሌ፡ ${selectedCountry.dialCode} ${selectedCountry.formatPlaceholder}`
+            : `International format supported. Example: ${selectedCountry.dialCode} ${selectedCountry.formatPlaceholder}`}
         </p>
       )}
     </div>

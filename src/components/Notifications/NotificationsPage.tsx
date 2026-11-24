@@ -15,6 +15,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { NotificationItem, UserProfile } from '../../types.ts';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface NotificationsPageProps {
   currentUser: UserProfile;
@@ -37,6 +38,8 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
   onNavigateToMessages,
   onNavigateTab,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
   const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -126,16 +129,18 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
             <div>
               <div className="flex items-center space-x-3">
                 <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Notifications
+                  {isAm ? 'ማሳወቂያዎች' : 'Notifications'}
                 </h1>
                 {unreadCount > 0 && (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#005BAC] text-white">
-                    {unreadCount} unread
+                    {unreadCount} {isAm ? 'ያልተነበቡ' : 'unread'}
                   </span>
                 )}
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Real-time updates regarding incident submissions, assignments, editorial reviews, and messages.
+                {isAm
+                  ? 'ስለ ጥቆማ አቀራረቦች፣ ምደባዎች፣ የአርታዒያን ግምገማዎች እና መልዕክቶች የቀጥታ ወቅታዊ መረጃዎች።'
+                  : 'Real-time updates regarding incident submissions, assignments, editorial reviews, and messages.'}
               </p>
             </div>
           </div>
@@ -149,7 +154,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                 className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-[#005BAC] dark:text-blue-400 text-xs font-semibold border border-blue-200 dark:border-blue-800 transition-colors"
               >
                 <CheckCheck className="w-4 h-4" />
-                <span>Mark all as read</span>
+                <span>{isAm ? 'ሁሉንም እንደተነበቡ ምልክት አድርግ' : 'Mark all as read'}</span>
               </button>
             )}
           </div>
@@ -159,14 +164,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-1 overflow-x-auto pb-1 text-xs scrollbar-none">
             {[
-              { id: 'all', label: 'All', count: userNotifications.length },
-              { id: 'unread', label: 'Unread', count: unreadCount },
-              { id: 'submission', label: 'Submissions' },
-              { id: 'assignment', label: 'Assignments' },
-              { id: 'status_update', label: 'Status Updates' },
-              { id: 'message', label: 'Messages' },
-              { id: 'verification', label: 'Verifications' },
-              { id: 'publication', label: 'Publications' },
+              { id: 'all', label: isAm ? 'ሁሉም' : 'All', count: userNotifications.length },
+              { id: 'unread', label: isAm ? 'ያልተነበቡ' : 'Unread', count: unreadCount },
+              { id: 'submission', label: isAm ? 'ጥቆማዎች' : 'Submissions' },
+              { id: 'assignment', label: isAm ? 'ምደባዎች' : 'Assignments' },
+              { id: 'status_update', label: isAm ? 'የሁኔታ ለውጦች' : 'Status Updates' },
+              { id: 'message', label: isAm ? 'መልዕክቶች' : 'Messages' },
+              { id: 'verification', label: isAm ? 'ማረጋገጫዎች' : 'Verifications' },
+              { id: 'publication', label: isAm ? 'ህትመቶች' : 'Publications' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -202,7 +207,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search notifications..."
+              placeholder={isAm ? 'ማሳወቂያዎችን ፈልግ...' : 'Search notifications...'}
               className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#005BAC] dark:text-white"
             />
           </div>
@@ -217,14 +222,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
               <Bell className="w-7 h-7" />
             </div>
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              No notifications found
+              {isAm ? 'ምንም ማሳወቂያ አልተገኘም' : 'No notifications found'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
               {searchQuery
-                ? `No notifications match "${searchQuery}". Try clearing your search or filter.`
+                ? (isAm ? `ከ"${searchQuery}" ጋር የሚዛመድ ማሳወቂያ የለም። ፍለጋውን ያጽዱ።` : `No notifications match "${searchQuery}". Try clearing your search or filter.`)
                 : filterType === 'unread'
-                ? "You're all caught up! No unread notifications at this time."
-                : 'You have not received any notifications in this category yet.'}
+                ? (isAm ? 'ያልተነበበ አዲስ ማሳወቂያ የለም!' : "You're all caught up! No unread notifications at this time.")
+                : (isAm ? 'በዚህ ምድብ እስካሁን ምንም ማሳወቂያ አልደረሰዎትም።' : 'You have not received any notifications in this category yet.')}
             </p>
           </div>
         ) : (
@@ -299,13 +304,13 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         id={`btn-mark-read-${notif.id}`}
                         onClick={() => onMarkAsRead(notif.id)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-[#005BAC] dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        title="Mark as read"
+                        title={isAm ? 'እንደተነበበ ምልክት አድርግ' : 'Mark as read'}
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </button>
                     ) : (
                       <span className="text-[11px] text-slate-400 font-medium px-2 py-0.5">
-                        Read
+                        {isAm ? 'ተነቧል' : 'Read'}
                       </span>
                     )}
 
@@ -314,7 +319,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         id={`btn-delete-notif-${notif.id}`}
                         onClick={() => onDeleteNotification(notif.id)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
-                        title="Delete notification"
+                        title={isAm ? 'ማሳወቂያውን ሰርዝ' : 'Delete notification'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -324,7 +329,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                       id={`btn-open-notif-${notif.id}`}
                       onClick={() => handleNotificationClick(notif)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Open related incident"
+                      title={isAm ? 'ዝርዝር ክስተቱን ክፈት' : 'Open related incident'}
                     >
                       <ExternalLink className="w-4 h-4" />
                     </button>
@@ -340,7 +345,10 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
       <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
         <ShieldAlert className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
         <span>
-          <strong>Security Notice:</strong> All notifications are cryptographically secured and bound strictly to your authenticated session. No private case details are ever exposed across user accounts.
+          <strong>{isAm ? 'የደህንነት ማስታወሻ፡' : 'Security Notice:'}</strong>{' '}
+          {isAm
+            ? 'ሁሉም ማሳወቂያዎች በከፍተኛ የክሪፕቶግራፊክ ደህንነት የተጠበቁና ከተጠቃሚው ክፍለ-ጊዜ ጋር በጥብቅ የተሳሰሩ ናቸው። ምንም ዓይነት ሚስጥራዊ የጉዳይ መረጃ ለሌላ ተጠቃሚ አይገለጽም።'
+            : 'All notifications are cryptographically secured and bound strictly to your authenticated session. No private case details are ever exposed across user accounts.'}
         </span>
       </div>
     </div>

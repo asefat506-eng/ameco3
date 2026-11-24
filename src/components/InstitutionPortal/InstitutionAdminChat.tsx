@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { UserProfile, Message, EvidenceFile } from '../../types';
 import { ChatComposer } from '../Common/ChatComposer';
 import { MessageAttachment } from '../Common/MessageAttachment';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Building2,
   MessageSquare,
@@ -43,6 +44,8 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
   onSendMessage,
   onNavigateToPublishNews,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
   const [chatInput, setChatInput] = useState('');
   const [messagePriority, setMessagePriority] = useState<'Normal' | 'High' | 'Urgent'>('Normal');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -94,34 +97,46 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
         <div className="space-y-2">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-mono font-bold">
             <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-            <span>Direct Administrative Line</span>
+            <span>{isAm ? 'ቀጥተኛ የአስተዳደር መስመር' : 'Direct Administrative Line'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            AMECO Editorial & Central Admin Communications
+            {isAm ? 'የአሚኮ ኤዲቶሪያል እና ማዕከላዊ አስተዳደር ግንኙነት' : 'AMECO Editorial & Central Admin Communications'}
           </h1>
           <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-2xl">
-            Direct, official communication channel between your {isPublisher ? 'Publisher account' : 'institution'} (
-            <span className="font-bold text-slate-800 dark:text-slate-200">
-              {publisherDisplayName}
-            </span>
-            ) and the AMECO Central Administrative Desk.
+            {isAm ? (
+              <>
+                በእርስዎ {isPublisher ? 'የአሳታሚ አካውንት' : 'ተቋም'} (
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {publisherDisplayName}
+                </span>
+                ) እና በአሚኮ ማዕከላዊ አስተዳደር መካከል ያለ ቀጥተኛ ይፋዊ የመገናኛ መስመር።
+              </>
+            ) : (
+              <>
+                Direct, official communication channel between your {isPublisher ? 'Publisher account' : 'institution'} (
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {publisherDisplayName}
+                </span>
+                ) and the AMECO Central Administrative Desk.
+              </>
+            )}
           </p>
         </div>
 
         {/* Publisher Info Card */}
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 space-y-1.5 text-xs shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-500 text-[11px]">Publisher Account:</span>
+            <span className="text-slate-500 text-[11px]">{isAm ? 'የአሳታሚ አካውንት፦' : 'Publisher Account:'}</span>
             <span className="font-mono font-bold text-slate-900 dark:text-white">{currentUser.id}</span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-500 text-[11px]">Category:</span>
+            <span className="text-slate-500 text-[11px]">{isAm ? 'ዘርፍ፦' : 'Category:'}</span>
             <span className="font-bold text-slate-900 dark:text-white">
-              {currentUser.institutionCategory || 'Public Agency'}
+              {currentUser.institutionCategory || (isAm ? 'የህዝብ ተቋም' : 'Public Agency')}
             </span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-500 text-[11px]">Publishing Status:</span>
+            <span className="text-slate-500 text-[11px]">{isAm ? 'የህትመት ሁኔታ፦' : 'Publishing Status:'}</span>
             <span
               className={`font-mono font-bold text-[11px] ${
                 currentUser.isApprovedInstitution
@@ -129,7 +144,9 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
                   : 'text-amber-600 dark:text-amber-400'
               }`}
             >
-              {currentUser.isApprovedInstitution ? 'Authorized' : 'Pending Approval'}
+              {currentUser.isApprovedInstitution
+                ? (isAm ? 'ፈቃድ ያለው' : 'Authorized')
+                : (isAm ? 'ማረጋገጫ የሚጠብቅ' : 'Pending Approval')}
             </span>
           </div>
         </div>
@@ -146,14 +163,16 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-                  AMECO Central Administration Desk
+                  {isAm ? 'የአሚኮ ማዕከላዊ አስተዳደር ቢሮ' : 'AMECO Central Administration Desk'}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[9px] font-bold font-mono">
-                  Official Line
+                  {isAm ? 'ይፋዊ መስመር' : 'Official Line'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                Stationed at Bahir Dar Headquarters • Response turnaround: Real-time
+                {isAm
+                  ? 'ባህር ዳር ዋና መስሪያ ቤት • ፈጣን ምላሽ በቀጥታ'
+                  : 'Stationed at Bahir Dar Headquarters • Response turnaround: Real-time'}
               </p>
             </div>
           </div>
@@ -161,7 +180,7 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
           <div className="hidden sm:flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-              Admin Online
+              {isAm ? 'አስተዳደሩ መስመር ላይ ነው' : 'Admin Online'}
             </span>
           </div>
         </div>
@@ -175,10 +194,12 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
               </div>
               <div>
                 <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-200">
-                  No Previous Correspondence
+                  {isAm ? 'ቀደም ሲል የተላለፈ መልዕክት የለም' : 'No Previous Correspondence'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
-                  You can use this line to communicate directly with AMECO editors and administrators, request press release approvals, or clarify regional bulletins.
+                  {isAm
+                    ? 'ከአሚኮ ኤዲተሮች እና አስተዳዳሪዎች ጋር በቀጥታ ለመገናኘት፣ የፕሬስ መግለጫ ፈቃድ ለመጠየቅ ወይም ክልላዊ ማብራሪያዎችን ለማግኘት ይህን መስመር መጠቀም ይችላሉ።'
+                    : 'You can use this line to communicate directly with AMECO editors and administrators, request press release approvals, or clarify regional bulletins.'}
                 </p>
               </div>
             </div>
@@ -210,10 +231,12 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
                         {isBroadcast && <Megaphone className="w-3.5 h-3.5 text-amber-600" />}
                         <span className="font-bold opacity-90">
                           {isSentByMe
-                            ? isPublisher ? 'Bruk Afrem' : 'Your Institution'
+                            ? isPublisher
+                              ? publisherDisplayName
+                              : (isAm ? 'ተቋምዎ' : 'Your Institution')
                             : isBroadcast
-                            ? 'Official Multi-Agency Broadcast Directive'
-                            : 'AMECO Central Administration'}
+                            ? (isAm ? 'ይፋዊ የጋራ አስተዳደራዊ መመሪያ' : 'Official Multi-Agency Broadcast Directive')
+                            : (isAm ? 'የአሚኮ ማዕከላዊ አስተዳደር' : 'AMECO Central Administration')}
                         </span>
                       </div>
 
@@ -225,7 +248,9 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
                               : 'bg-amber-500 text-white'
                           }`}
                         >
-                          {msg.priority}
+                          {msg.priority === 'Urgent'
+                            ? (isAm ? 'አስቸኳይ' : 'Urgent')
+                            : (isAm ? 'ከፍተኛ' : 'High')}
                         </span>
                       )}
                     </div>
@@ -249,49 +274,61 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
 
         {/* Quick Suggestion Chips */}
         <div className="px-4 py-2 bg-slate-100/80 dark:bg-zinc-950/80 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-          <span className="font-bold text-slate-500 text-[10px] font-mono shrink-0">Quick Notice:</span>
+          <span className="font-bold text-slate-500 text-[10px] font-mono shrink-0">
+            {isAm ? 'ፈጣን መልዕክት፦' : 'Quick Notice:'}
+          </span>
           <button
             onClick={() =>
               insertPromptChip(
-                'Request urgent review and verification for our latest regional press bulletin.'
+                isAm
+                  ? 'ለቅርብ ጊዜው ክልላዊ የፕሬስ መግለጫችን አስቸኳይ ግምገማ እና ማረጋገጫ እንጠይቃለን።'
+                  : 'Request urgent review and verification for our latest regional press bulletin.'
               )
             }
             className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
           >
-            Request Bulletin Review
+            {isAm ? 'የዜና መግለጫ ግምገማ ጠይቅ' : 'Request Bulletin Review'}
           </button>
           <button
             onClick={() =>
               insertPromptChip(
-                'Submitting updated institutional focal person and emergency contact details.'
+                isAm
+                  ? 'የተቋማችንን የተወካይ እና የአስቸኳይ ጊዜ የመገናኛ መረጃ ማዘመን እንፈልጋለን።'
+                  : 'Submitting updated institutional focal person and emergency contact details.'
               )
             }
             className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
           >
-            Update Contact Info
+            {isAm ? 'የመገናኛ መረጃ አዘምን' : 'Update Contact Info'}
           </button>
           <button
             onClick={() =>
               insertPromptChip(
-                'Clarification on regional health/security advisory published earlier today.'
+                isAm
+                  ? 'ዛሬ ቀደም ብሎ በወጣው ክልላዊ የጤና/ደህንነት ማስታወቂያ ላይ ማብራሪያ እንጠይቃለን።'
+                  : 'Clarification on regional health/security advisory published earlier today.'
               )
             }
             className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
           >
-            Advisory Clarification
+            {isAm ? 'የማስጠንቀቂያ ማብራሪያ' : 'Advisory Clarification'}
           </button>
         </div>
 
         {/* Chat Input Form */}
         <ChatComposer
           onSend={(text, attachment) => handleSend(undefined, text, attachment)}
-          placeholder="Type message or official inquiry to AMECO Central Administration..."
+          placeholder={
+            isAm
+              ? 'ለአሚኮ ማዕከላዊ አስተዳደር መልዕክት ወይም ይፋዊ ጥያቄ እዚህ ይጻፉ...'
+              : 'Type message or official inquiry to AMECO Central Administration...'
+          }
           className="border-t border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2">
               <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                Priority:
+                {isAm ? 'ቅድሚያ፦' : 'Priority:'}
               </span>
               {(['Normal', 'High', 'Urgent'] as const).map((p) => (
                 <button
@@ -308,13 +345,17 @@ export const InstitutionAdminChat: React.FC<InstitutionAdminChatProps> = ({
                       : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400'
                   }`}
                 >
-                  {p}
+                  {p === 'Urgent'
+                    ? (isAm ? 'አስቸኳይ' : 'Urgent')
+                    : p === 'High'
+                    ? (isAm ? 'ከፍተኛ' : 'High')
+                    : (isAm ? 'መደበኛ' : 'Normal')}
                 </button>
               ))}
             </div>
 
             <span className="text-[10px] font-mono text-slate-400">
-              Direct to AMECO Headquarters
+              {isAm ? 'በቀጥታ ወደ አሚኮ ዋና መስሪያ ቤት' : 'Direct to AMECO Headquarters'}
             </span>
           </div>
 

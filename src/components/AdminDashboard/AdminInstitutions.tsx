@@ -12,6 +12,7 @@ import { MessageAttachment } from '../Common/MessageAttachment';
 import { REGIONAL_ZONES } from '../../data/zones';
 import { OfficialChannelsManager } from '../SocialMedia/OfficialChannelsManager';
 import { PlatformIcon } from '../SocialMedia/PlatformIcon';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Building2,
   MessageSquare,
@@ -90,12 +91,17 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
   onDeleteChannel,
   initialSelectedInstitutionId,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   // All registered institutions
   const institutions = useMemo(() => {
     return users.filter((u) => u.role === 'Institution' || u.role === 'Publisher');
   }, [users]);
   const hasInstitutionAccounts = institutions.some((user) => user.role === 'Institution');
-  const directoryAccountLabel = hasInstitutionAccounts ? 'Institution' : 'Publisher';
+  const directoryAccountLabel = isAm
+    ? (hasInstitutionAccounts ? 'ተቋም' : 'አሳታሚ (ሚዲያ)')
+    : (hasInstitutionAccounts ? 'Institution' : 'Publisher');
   const getAccountDisplayName = (user: UserProfile) =>
     user.role === 'Publisher' ? user.fullName : user.institutionName || user.fullName;
 
@@ -290,13 +296,15 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-mono font-bold">
               <Building2 className="w-3.5 h-3.5" />
-              <span>Partner Agency & {directoryAccountLabel} Desk</span>
+              <span>{isAm ? `አጋር ኤጀንሲ እና የ${directoryAccountLabel} ዴስክ` : `Partner Agency & ${directoryAccountLabel} Desk`}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {directoryAccountLabel} Network & Official Communications
+              {isAm ? `የ${directoryAccountLabel} መረብ እና ኦፊሴላዊ ግንኙነቶች` : `${directoryAccountLabel} Network & Official Communications`}
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-2xl">
-              Directory of verified public bureaus, universities, healthcare centers, and regional agencies across Amhara Region with dedicated 1-on-1 administrative communication lines.
+              {isAm
+                ? 'በአማራ ክልል ውስጥ የተረጋገጡ የመንግስት ቢሮዎች፣ ዩኒቨርሲቲዎች፣ የጤና ተቋማት እና ክልላዊ አጋር ኤጀንሲዎች ዝርዝር ከ1-ለ-1 አስተዳደራዊ የግንኙነት መስመር ጋር።'
+                : 'Directory of verified public bureaus, universities, healthcare centers, and regional agencies across Amhara Region with dedicated 1-on-1 administrative communication lines.'}
             </p>
           </div>
 
@@ -313,7 +321,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" />
-                <span>{directoryAccountLabel} Directory ({institutions.length})</span>
+                <span>{isAm ? `የ${directoryAccountLabel} ዝርዝር (${institutions.length})` : `${directoryAccountLabel} Directory (${institutions.length})`}</span>
               </button>
               <button
                 id="btn-admin-inst-view-chat"
@@ -325,7 +333,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-                <span>Communications Desk</span>
+                <span>{isAm ? 'የግንኙነት ዴስክ' : 'Communications Desk'}</span>
               </button>
             </div>
 
@@ -338,7 +346,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
               className="px-4 py-2.5 bg-[#005BAC] hover:bg-blue-800 text-white rounded-2xl text-xs font-bold shadow-sm transition-all flex items-center space-x-2 cursor-pointer"
             >
               <Megaphone className="w-4 h-4" />
-              <span>Broadcast Notice</span>
+              <span>{isAm ? 'ማሰራጫ መልዕክት (Broadcast)' : 'Broadcast Notice'}</span>
             </button>
           </div>
         </div>
@@ -347,45 +355,45 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-100 dark:border-zinc-800">
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800">
             <span className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block">
-              Total {directoryAccountLabel}s
+              {isAm ? `ጠቅላላ ${directoryAccountLabel}` : `Total ${directoryAccountLabel}s`}
             </span>
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-xl font-black text-slate-900 dark:text-white">{institutions.length}</span>
-              <span className="text-[10px] font-bold text-slate-400 font-mono">Agencies</span>
+              <span className="text-[10px] font-bold text-slate-400 font-mono">{isAm ? 'ኤጀንሲዎች' : 'Agencies'}</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40">
             <span className="text-[10px] font-mono uppercase text-emerald-700 dark:text-emerald-400 font-bold block">
-              Publishing Authorized
+              {isAm ? 'ህትመት የተፈቀደላቸው' : 'Publishing Authorized'}
             </span>
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">
                 {institutions.filter((i) => i.isApprovedInstitution).length}
               </span>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">Approved</span>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">{isAm ? 'የተረጋገጡ' : 'Approved'}</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40">
             <span className="text-[10px] font-mono uppercase text-amber-700 dark:text-amber-400 font-bold block">
-              Pending Review
+              {isAm ? 'ማረጋገጫ የሚጠብቁ' : 'Pending Review'}
             </span>
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-xl font-black text-amber-700 dark:text-amber-300">
                 {institutions.filter((i) => !i.isApprovedInstitution || i.status === 'pending').length}
               </span>
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 font-mono">Verification</span>
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 font-mono">{isAm ? 'ግምገማ' : 'Verification'}</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40">
             <span className="text-[10px] font-mono uppercase text-blue-700 dark:text-blue-400 font-bold block">
-              Published Bulletins
+              {isAm ? 'የታተሙ ዜናዎች' : 'Published Bulletins'}
             </span>
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-xl font-black text-blue-700 dark:text-blue-300">{trendingNews.length}</span>
-              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 font-mono">Live Articles</span>
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 font-mono">{isAm ? 'ቀጥታ ጽሁፎች' : 'Live Articles'}</span>
             </div>
           </div>
         </div>
@@ -405,7 +413,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search institutions by name, registration #, zone, email..."
+                placeholder={isAm ? "በስም፣ በምዝገባ ቁጥር፣ በዞን ወይም በኢሜይል ፈልግ..." : "Search institutions by name, registration #, zone, email..."}
                 className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#005BAC]"
               />
             </div>
@@ -417,7 +425,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
               >
-                <option value="All">All Categories</option>
+                <option value="All">{isAm ? 'ሁሉም ምድቦች' : 'All Categories'}</option>
                 {availableCategories.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -431,11 +439,11 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
               >
-                <option value="All">All Statuses</option>
-                <option value="approved">Publishing Authorized</option>
-                <option value="pending">Pending Approval</option>
-                <option value="active">Active Accounts</option>
-                <option value="suspended">Suspended</option>
+                <option value="All">{isAm ? 'ሁሉም ሁኔታዎች' : 'All Statuses'}</option>
+                <option value="approved">{isAm ? 'ህትመት የተፈቀደለት' : 'Publishing Authorized'}</option>
+                <option value="pending">{isAm ? 'ፈቃድ የሚጠብቅ' : 'Pending Approval'}</option>
+                <option value="active">{isAm ? 'ንቁ አካውንቶች' : 'Active Accounts'}</option>
+                <option value="suspended">{isAm ? 'የታገዱ' : 'Suspended'}</option>
               </select>
 
               {/* Zone Filter */}
@@ -444,7 +452,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 onChange={(e) => setZoneFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
               >
-                <option value="All">All Regions & Cities</option>
+                <option value="All">{isAm ? 'ሁሉም ዞኖችና ከተሞች' : 'All Regions & Cities'}</option>
                 {REGIONAL_ZONES.map((z) => (
                   <option key={z.value} value={z.value}>
                     {z.label}
@@ -458,9 +466,13 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
           {filteredInstitutions.length === 0 ? (
             <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
               <Building2 className="w-12 h-12 mx-auto text-slate-300 dark:text-zinc-700" />
-              <h3 className="font-bold text-base text-slate-800 dark:text-zinc-200">No institutions found</h3>
+              <h3 className="font-bold text-base text-slate-800 dark:text-zinc-200">
+                {isAm ? 'ምንም የተገኘ ተቋም / አሳታሚ የለም' : 'No institutions found'}
+              </h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No registered institution matches your search filters. Try clearing or expanding your search query.
+                {isAm
+                  ? 'የተመረጠውን ማጣሪያ የሚያሟላ የተመዘገበ አካውንት አልተገኘም። እባክዎ ፍለጋዎን ይቀይሩ።'
+                  : 'No registered institution matches your search filters. Try clearing or expanding your search query.'}
               </p>
             </div>
           ) : (
@@ -497,12 +509,12 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         {isApproved ? (
                           <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold font-mono shrink-0 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
-                            <span>Authorized</span>
+                            <span>{isAm ? 'የተፈቀደለት' : 'Authorized'}</span>
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[10px] font-bold font-mono shrink-0 flex items-center gap-1">
                             <AlertTriangle className="w-3 h-3" />
-                            <span>Pending</span>
+                            <span>{isAm ? 'በመጠባበቅ ላይ' : 'Pending'}</span>
                           </span>
                         )}
                       </div>
@@ -510,14 +522,14 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                       {/* Institution Metadata */}
                       <div className="mt-4 space-y-2 text-xs">
                         <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                          <span className="text-[11px] text-slate-400">Category:</span>
+                          <span className="text-[11px] text-slate-400">{isAm ? 'ምድብ:' : 'Category:'}</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {inst.institutionCategory || 'Public Agency'}
+                            {inst.institutionCategory || (isAm ? 'የመንግስት ኤጀንሲ' : 'Public Agency')}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                          <span className="text-[11px] text-slate-400">Zone / Locality:</span>
+                          <span className="text-[11px] text-slate-400">{isAm ? 'ዞን / አካባቢ:' : 'Zone / Locality:'}</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-slate-400" />
                             <span>{inst.zone}</span>
@@ -526,7 +538,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
 
                         {inst.registrationNumber && (
                           <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span className="text-[11px] text-slate-400">Registration #:</span>
+                            <span className="text-[11px] text-slate-400">{isAm ? 'የምዝገባ ቁጥር:' : 'Registration #:'}</span>
                             <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                               {inst.registrationNumber}
                             </span>
@@ -534,7 +546,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         )}
 
                         <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                          <span className="text-[11px] text-slate-400">Contact Email:</span>
+                          <span className="text-[11px] text-slate-400">{isAm ? 'ኢሜይል:' : 'Contact Email:'}</span>
                           <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px] truncate max-w-[170px]">
                             {inst.email}
                           </span>
@@ -542,7 +554,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
 
                         {inst.phone && (
                           <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span className="text-[11px] text-slate-400">Phone:</span>
+                            <span className="text-[11px] text-slate-400">{isAm ? 'ስልክ:' : 'Phone:'}</span>
                             <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px]">
                               {inst.phone}
                             </span>
@@ -550,9 +562,9 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         )}
 
                         <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 pt-1">
-                          <span className="text-[11px] text-slate-400">Published News:</span>
+                          <span className="text-[11px] text-slate-400">{isAm ? 'የታተሙ ዜናዎች:' : 'Published News:'}</span>
                           <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {publishedCount} bulletins
+                            {publishedCount} {isAm ? 'ዜናዎች' : 'bulletins'}
                           </span>
                         </div>
 
@@ -566,7 +578,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                             <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
                               <span className="text-[11px] text-slate-400 flex items-center gap-1">
                                 <Share2 className="w-3 h-3 text-[#005BAC]" />
-                                <span>Official Channels:</span>
+                                <span>{isAm ? 'ኦፊሴላዊ ቻናሎች:' : 'Official Channels:'}</span>
                               </span>
                               <div className="flex items-center gap-1">
                                 {instChannels.map((c) => (
@@ -593,7 +605,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         <div className="mt-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200/70 dark:border-zinc-800/80 text-[11px] space-y-1">
                           <div className="flex items-center justify-between text-slate-400 text-[10px] font-mono">
                             <span className="font-bold text-slate-600 dark:text-slate-300">
-                              {lastMsg.senderRole === 'Administrator' ? 'You' : directoryAccountLabel}:
+                              {lastMsg.senderRole === 'Administrator' ? (isAm ? 'እርስዎ' : 'You') : directoryAccountLabel}:
                             </span>
                             <span>{lastMsg.timestamp}</span>
                           </div>
@@ -613,7 +625,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                           className="py-2 px-3 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600" />
-                          <span>Direct Chat</span>
+                          <span>{isAm ? 'ቀጥታ ውይይት' : 'Direct Chat'}</span>
                         </button>
 
                         <button
@@ -622,7 +634,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                           className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
                         >
                           <Info className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Dossier</span>
+                          <span>{isAm ? 'ሙሉ መረጃ' : 'Dossier'}</span>
                         </button>
                       </div>
 
@@ -637,7 +649,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         }`}
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>{isApproved ? 'Revoke Publishing Permission' : 'Authorize News Publishing'}</span>
+                        <span>{isApproved ? (isAm ? 'የህትመት ፈቃድ ሰርዝ' : 'Revoke Publishing Permission') : (isAm ? 'የዜና ህትመት ፍቀድ' : 'Authorize News Publishing')}</span>
                       </button>
                     </div>
                   </div>
@@ -657,13 +669,13 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
           <div className="lg:col-span-4 space-y-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Official Agency Channels
+                {isAm ? 'ኦፊሴላዊ የኤጀንሲ ቻናሎች' : 'Official Agency Channels'}
               </span>
               <button
                 onClick={() => setViewMode('directory')}
                 className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>Directory</span>
+                <span>{isAm ? 'ዝርዝር' : 'Directory'}</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
@@ -683,14 +695,16 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                   <Megaphone className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs leading-none">Broadcast to All {directoryAccountLabel}s</h4>
+                  <h4 className="font-bold text-xs leading-none">
+                    {isAm ? `ለሁሉም ${directoryAccountLabel}ዎች ማሰራጫ` : `Broadcast to All ${directoryAccountLabel}s`}
+                  </h4>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
-                    All {institutions.length} partner agencies
+                    {isAm ? `ሁሉም ${institutions.length} አጋር ኤጀንሲዎች` : `All ${institutions.length} partner agencies`}
                   </p>
                 </div>
               </div>
               <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                ALL
+                {isAm ? 'ሁሉም' : 'ALL'}
               </span>
             </button>
 
@@ -769,12 +783,12 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                     <div className="flex items-center space-x-2">
                       <h2 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                         {selectedChannelId === 'broadcast-institutions'
-                          ? 'Broadcast Notice to All Partner Institutions'
-                          : selectedInstitution?.institutionName || selectedInstitution?.fullName || 'Institution Channel'}
+                          ? (isAm ? 'ለሁሉም አጋር ተቋማት / አሳታሚዎች የሚላክ ማሰራጫ' : 'Broadcast Notice to All Partner Institutions')
+                          : selectedInstitution?.institutionName || selectedInstitution?.fullName || (isAm ? 'የተቋም ቻናል' : 'Institution Channel')}
                       </h2>
                       {selectedInstitution?.isApprovedInstitution && (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold font-mono">
-                          Verified
+                          {isAm ? 'የተረጋገጠ' : 'Verified'}
                         </span>
                       )}
                     </div>
@@ -784,12 +798,12 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                         <>
                           <span>{selectedInstitution.id}</span>
                           <span>•</span>
-                          <span>{selectedInstitution.institutionCategory || 'Agency'}</span>
+                          <span>{selectedInstitution.institutionCategory || (isAm ? 'ኤጀንሲ' : 'Agency')}</span>
                           <span>•</span>
                           <span>{selectedInstitution.zone}</span>
                         </>
                       ) : (
-                        <span>Official Multi-Agency Broadcast Protocol</span>
+                        <span>{isAm ? 'ኦፊሴላዊ የባለብዙ ኤጀንሲ ማሰራጫ ፕሮቶኮል' : 'Official Multi-Agency Broadcast Protocol'}</span>
                       )}
                     </div>
                   </div>
@@ -802,7 +816,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                       className="px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 flex items-center space-x-1 cursor-pointer"
                     >
                       <Info className="w-3.5 h-3.5 text-blue-500" />
-                      <span>Dossier</span>
+                      <span>{isAm ? 'ሙሉ መረጃ' : 'Dossier'}</span>
                     </button>
                     <button
                       onClick={() => handleTogglePublishingApproval(selectedInstitution)}
@@ -812,7 +826,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                           : 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 text-amber-800 dark:text-amber-300'
                       }`}
                     >
-                      {selectedInstitution.isApprovedInstitution ? 'Authorized' : 'Approve'}
+                      {selectedInstitution.isApprovedInstitution ? (isAm ? 'የተፈቀደለት' : 'Authorized') : (isAm ? 'ፍቀድ' : 'Approve')}
                     </button>
                   </div>
                 )}
@@ -827,10 +841,12 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-200">
-                        Official Communication Channel Initialized
+                        {isAm ? 'ኦፊሴላዊ የግንኙነት ቻናል ተጀምሯል' : 'Official Communication Channel Initialized'}
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
-                        Send official administrative directives, request bulletins verification, or initiate correspondence with this institutional partner.
+                        {isAm
+                          ? 'ከዚህ ተቋም ጋር ኦፊሴላዊ መመሪያዎችን ይላኩ፣ የጋዜጣዊ መግለጫ ማረጋገጫ ይጠይቁ ወይም ቀጥታ ግንኙነት ያድርጉ።'
+                          : 'Send official administrative directives, request bulletins verification, or initiate correspondence with this institutional partner.'}
                       </p>
                     </div>
                   </div>
@@ -854,8 +870,8 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                           <div className="flex items-center justify-between gap-3 text-[10px] font-mono">
                             <span className="font-bold opacity-80">
                               {isAdminSender
-                                ? 'AMECO Central Administration'
-                                : selectedInstitution?.institutionName || msg.senderDisplayName || 'Institution'}
+                                ? (isAm ? 'የአሚኮ ማዕከላዊ አስተዳደር' : 'AMECO Central Administration')
+                                : selectedInstitution?.institutionName || msg.senderDisplayName || (isAm ? 'ተቋም' : 'Institution')}
                             </span>
                             {msg.priority && msg.priority !== 'Normal' && (
                               <span
@@ -865,7 +881,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                                     : 'bg-amber-500 text-white'
                                 }`}
                               >
-                                {msg.priority} Notice
+                                {isAm ? (msg.priority === 'Urgent' ? 'አስቸኳይ ማስታወቂያ' : 'ከፍተኛ ቅድሚያ') : `${msg.priority} Notice`}
                               </span>
                             )}
                           </div>
@@ -889,49 +905,61 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
 
               {/* Quick Institutional Directives (Prompt Chips) */}
               <div className="px-4 py-2 bg-slate-100/70 dark:bg-zinc-950/80 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-                <span className="font-bold text-slate-500 text-[10px] font-mono shrink-0">Directives:</span>
+                <span className="font-bold text-slate-500 text-[10px] font-mono shrink-0">
+                  {isAm ? 'ፈጣን መመሪያዎች:' : 'Directives:'}
+                </span>
                 <button
                   onClick={() =>
                     insertPromptDirective(
-                      'Request official agency verification on incoming citizen report.'
+                      isAm
+                        ? 'በገባው የዜጎች ጥቆማ ላይ ከኦፊሴላዊው ኤጀንሲ ማረጋገጫ እንጠይቃለን።'
+                        : 'Request official agency verification on incoming citizen report.'
                     )
                   }
                   className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
                 >
-                  Verify Report
+                  {isAm ? 'ጥቆማውን አረጋግጥ' : 'Verify Report'}
                 </button>
                 <button
                   onClick={() =>
                     insertPromptDirective(
-                      'Please share official press release / bulletin document with AMECO editorial desk.'
+                      isAm
+                        ? 'እባክዎ ኦፊሴላዊ ጋዜጣዊ መግለጫ / ሰነድ ለአሚኮ የዜና አርታዒያን ዴስክ ያጋሩ።'
+                        : 'Please share official press release / bulletin document with AMECO editorial desk.'
                     )
                   }
                   className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
                 >
-                  Request Press Release
+                  {isAm ? 'መግለጫ ጠይቅ' : 'Request Press Release'}
                 </button>
                 <button
                   onClick={() =>
                     insertPromptDirective(
-                      'Official focal person contact update requested for this reporting period.'
+                      isAm
+                        ? 'ለዚህ የሪፖርት ወቅት የኤጀንሲው ኦፊሴላዊ ተጠሪ ሰው አድራሻ እንዲታደስ ተጠይቋል።'
+                        : 'Official focal person contact update requested for this reporting period.'
                     )
                   }
                   className="px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 text-[11px] font-medium whitespace-nowrap cursor-pointer shrink-0"
                 >
-                  Update Focal Person
+                  {isAm ? 'ተጠሪ አድስ' : 'Update Focal Person'}
                 </button>
               </div>
 
               {/* Chat Input & Controls */}
               <ChatComposer
                 onSend={(text, attachment) => handleSend(undefined, text, attachment)}
-                placeholder={`Type official communication to ${selectedChannelId === 'broadcast-institutions' ? 'all institutions' : selectedInstitution?.institutionName || 'this agency'}...`}
+                placeholder={
+                  isAm
+                    ? `ኦፊሴላዊ መልዕክት ለ${selectedChannelId === 'broadcast-institutions' ? 'ሁሉም ተቋማት' : selectedInstitution?.institutionName || 'ይህ ኤጀንሲ'} ይጻፉ...`
+                    : `Type official communication to ${selectedChannelId === 'broadcast-institutions' ? 'all institutions' : selectedInstitution?.institutionName || 'this agency'}...`
+                }
                 className="border-t border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-slate-900"
               >
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-2">
                     <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                      Message Priority:
+                      {isAm ? 'የመልዕክት ደረጃ:' : 'Message Priority:'}
                     </span>
                     {(['Normal', 'High', 'Urgent'] as const).map((p) => (
                       <button
@@ -948,13 +976,13 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                             : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400'
                         }`}
                       >
-                        {p}
+                        {isAm ? (p === 'Normal' ? 'መደበኛ' : p === 'High' ? 'ከፍተኛ' : 'አስቸኳይ') : p}
                       </button>
                     ))}
                   </div>
 
                   <span className="text-[10px] font-mono text-slate-400">
-                    Logged to Official Audit Trail
+                    {isAm ? 'በኦዲት መዝገብ ላይ ይመዘገባል' : 'Logged to Official Audit Trail'}
                   </span>
                 </div>
 
@@ -992,39 +1020,39 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 space-y-2.5 text-xs">
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Category:</span>
+                <span className="text-slate-500">{isAm ? 'ምድብ:' : 'Category:'}</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {dossierInstitution.institutionCategory || 'Regional Agency'}
+                  {dossierInstitution.institutionCategory || (isAm ? 'ክልላዊ ኤጀንሲ' : 'Regional Agency')}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Registration ID:</span>
+                <span className="text-slate-500">{isAm ? 'የምዝገባ መለያ:' : 'Registration ID:'}</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-white">
                   {dossierInstitution.registrationNumber || 'GOV-REG-PENDING'}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Official Email:</span>
+                <span className="text-slate-500">{isAm ? 'ኦፊሴላዊ ኢሜይል:' : 'Official Email:'}</span>
                 <span className="font-mono text-slate-900 dark:text-white">{dossierInstitution.email}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Phone Number:</span>
+                <span className="text-slate-500">{isAm ? 'ስልክ ቁጥር:' : 'Phone Number:'}</span>
                 <span className="font-mono text-slate-900 dark:text-white">
                   {dossierInstitution.phone || 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Regional Zone:</span>
+                <span className="text-slate-500">{isAm ? 'ክልላዊ ዞን:' : 'Regional Zone:'}</span>
                 <span className="font-medium text-slate-900 dark:text-white">{dossierInstitution.zone}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-zinc-800/50">
-                <span className="text-slate-500">Official Website:</span>
+                <span className="text-slate-500">{isAm ? 'ኦፊሴላዊ ድረ-ገጽ:' : 'Official Website:'}</span>
                 <span className="font-mono text-blue-600 dark:text-blue-400">
                   {dossierInstitution.institutionWebsite || dossierInstitution.officialWebsite || 'https://ameco.org'}
                 </span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-500">Publishing Status:</span>
+                <span className="text-slate-500">{isAm ? 'የህትመት ሁኔታ:' : 'Publishing Status:'}</span>
                 <span
                   className={`font-bold font-mono ${
                     dossierInstitution.isApprovedInstitution
@@ -1032,7 +1060,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                       : 'text-amber-600 dark:text-amber-400'
                   }`}
                 >
-                  {dossierInstitution.isApprovedInstitution ? 'Authorized' : 'Pending Authorization'}
+                  {dossierInstitution.isApprovedInstitution ? (isAm ? 'የተፈቀደለት' : 'Authorized') : (isAm ? 'ፍቃድ የሚጠብቅ' : 'Pending Authorization')}
                 </span>
               </div>
             </div>
@@ -1064,7 +1092,7 @@ export const AdminInstitutions: React.FC<AdminInstitutionsProps> = ({
                 className="px-4 py-2.5 rounded-xl bg-[#005BAC] hover:bg-blue-800 text-white font-bold text-xs flex items-center space-x-2 shadow-xs cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Open Direct Chat</span>
+                <span>{isAm ? 'ቀጥታ ውይይት ክፈት' : 'Open Direct Chat'}</span>
               </button>
             </div>
           </div>

@@ -11,6 +11,7 @@ import {
 } from '../../types';
 import { REGIONAL_ZONES } from '../../data/zones';
 import { changePasswordApi, fetchLinkPreviewApi } from '../../lib/api';
+import { useLanguage } from '../../context/LanguageContext';
 import { InstitutionAdminChat } from './InstitutionAdminChat';
 import { ChatComposer } from '../Common/ChatComposer';
 import { MessageAttachment } from '../Common/MessageAttachment';
@@ -110,6 +111,45 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
   onUpdateReport,
   initialTab = 'published',
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
+  const getCategoryLabel = (cat: string) => {
+    if (!isAm) return cat;
+    const map: Record<string, string> = {
+      'Public Health': 'የህዝብ ጤና',
+      'Education & Innovation': 'ትምህርት እና ፈጠራ',
+      'Environment & Water': 'አካባቢ እና ውሃ',
+      'Infrastructure': 'መሰረተ ልማት',
+      'Public Safety': 'የህዝብ ደህንነት',
+      'Agriculture': 'ግብርና',
+    };
+    return map[cat] || cat;
+  };
+
+  const getZoneLabel = (zVal: string, fallbackLabel?: string) => {
+    if (!isAm) return fallbackLabel || zVal;
+    const zoneMap: Record<string, string> = {
+      'Addis Abeba': 'አዲስ አበባ (ከተማ አስተዳደር)',
+      'Dire Dawa': 'ድሬዳዋ (ከተማ አስተዳደር)',
+      'Amhara Region': 'አማራ ክልል',
+      'Oromia Region': 'ኦሮሚያ ክልል',
+      'Tigray Region': 'ትግራይ ክልል',
+      'Sidama Region': 'ሲዳማ ክልል',
+      'Central Ethiopia Region': 'ማዕከላዊ ኢትዮጵያ ክልል',
+      'South Ethiopia Region': 'ደቡብ ኢትዮጵያ ክልል',
+      'South West Ethiopia Peoples Region': 'የደቡብ ምዕራብ ኢትዮጵያ ህዝቦች ክልል',
+      'Somali Region': 'ሶማሌ ክልል',
+      'Afar Region': 'አፋር ክልል',
+      'Benishangul-Gumuz Region': 'ቤኒሻንጉል ጉሙዝ ክልል',
+      'Gambella Region': 'ጋምቤላ ክልል',
+      'Harari Region': 'ሐረሪ ክልል',
+      'Bahir Dar Special Zone': 'ባህር ዳር ልዩ ዞን',
+      'Others...': 'ሌሎች... (ልዩ ክልል/ከተማ/ዲያስፖራ ይጥቀሱ)',
+    };
+    return zoneMap[zVal] || fallbackLabel || zVal;
+  };
+
   const [activeTab, setActiveTab] = useState<'published' | 'create' | 'channels' | 'communications' | 'profile'>(initialTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNewsForMedia, setSelectedNewsForMedia] = useState<TrendingNewsItem | null>(null);
@@ -128,7 +168,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
   // Password strength check
   const getPasswordStrength = (pass: string) => {
-    if (!pass) return { score: 0, label: 'None', color: 'bg-slate-200 text-slate-400' };
+    if (!pass) return { score: 0, label: isAm ? 'ምንም' : 'None', color: 'bg-slate-200 text-slate-400' };
     let score = 0;
     if (pass.length >= 6) score += 1;
     if (pass.length >= 8) score += 1;
@@ -136,9 +176,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
     if (/[0-9]/.test(pass)) score += 1;
     if (/[^A-Za-z0-9]/.test(pass)) score += 1;
 
-    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500 text-red-700' };
-    if (score <= 3) return { score, label: 'Moderate', color: 'bg-amber-500 text-amber-700' };
-    return { score, label: 'Strong', color: 'bg-emerald-500 text-emerald-700' };
+    if (score <= 2) return { score, label: isAm ? 'ደካማ' : 'Weak', color: 'bg-red-500 text-red-700' };
+    if (score <= 3) return { score, label: isAm ? 'መካከለኛ' : 'Moderate', color: 'bg-amber-500 text-amber-700' };
+    return { score, label: isAm ? 'ጠንካራ' : 'Strong', color: 'bg-emerald-500 text-emerald-700' };
   };
 
   const passStrength = getPasswordStrength(newPassword);
@@ -149,12 +189,12 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
     setPasswordSuccess(null);
 
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+      setPasswordError(isAm ? 'አዲሱ የይለፍ ቃል ቢያንስ 6 ፊደላት ወይም ቁጥሮች መሆን አለበት።' : 'New password must be at least 6 characters long.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match.');
+      setPasswordError(isAm ? 'የይለፍ ቃሎቹ አይመሳሰሉም።' : 'Passwords do not match.');
       return;
     }
 
@@ -168,7 +208,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
       });
 
       if (res.success) {
-        setPasswordSuccess(res.message || 'Password updated successfully!');
+        setPasswordSuccess(res.message || (isAm ? 'የይለፍ ቃል በተሳካ ሁኔታ ተዘምኗል!' : 'Password updated successfully!'));
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -183,7 +223,12 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
         }, 1800);
       }
     } catch (err: any) {
-      setPasswordError(err.message || 'Failed to update password. Please check your current password and try again.');
+      setPasswordError(
+        err.message ||
+          (isAm
+            ? 'የይለፍ ቃሉን ማዘመን አልተቻለም። እባክዎ የአሁኑን የይለፍ ቃል አረጋግጠው እንደገና ይሞክሩ።'
+            : 'Failed to update password. Please check your current password and try again.')
+      );
     } finally {
       setIsChangingPassword(false);
     }
@@ -212,32 +257,44 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
   const REGIONAL_BANNER_PRESETS = [
     {
       category: 'Public Health',
+      categoryAm: 'የህዝብ ጤና',
       label: 'Health & Medical',
+      labelAm: 'ጤና እና ህክምና',
       url: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=1200',
     },
     {
       category: 'Agriculture',
+      categoryAm: 'ግብርና',
       label: 'Agriculture & Harvest',
+      labelAm: 'ግብርና እና ምርት',
       url: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1200',
     },
     {
       category: 'Infrastructure',
+      categoryAm: 'መሰረተ ልማት',
       label: 'Infrastructure & Roads',
+      labelAm: 'መሰረተ ልማት እና መንገዶች',
       url: 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&q=80&w=1200',
     },
     {
       category: 'Education & Innovation',
+      categoryAm: 'ትምህርት እና ፈጠራ',
       label: 'Education & University',
+      labelAm: 'ትምህርት እና ዩኒቨርሲቲ',
       url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1200',
     },
     {
       category: 'Environment & Water',
+      categoryAm: 'አካባቢ እና ውሃ',
       label: 'Water & Lake Tana',
+      labelAm: 'ውሃ እና ጣና ሐይቅ',
       url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1200',
     },
     {
       category: 'Public Safety',
+      categoryAm: 'የህዝብ ደህንነት',
       label: 'Public Safety & Advisory',
+      labelAm: 'የህዝብ ደህንነት እና ማሳሰቢያ',
       url: 'https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&q=80&w=1200',
     },
   ];
@@ -286,7 +343,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
     // Check size limit (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('Photo file size exceeds 10MB limit.');
+      alert(isAm ? 'የፎቶው መጠን ከ10MB ገደብ በላይ ነው።' : 'Photo file size exceeds 10MB limit.');
       return;
     }
 
@@ -359,10 +416,12 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
   );
 
   const handleDraftFromInvestigation = (rep: ReportItem) => {
-    setTitle(`Verified Investigation: ${rep.title}`);
+    setTitle(isAm ? `የተረጋገጠ ምርመራ፦ ${rep.title}` : `Verified Investigation: ${rep.title}`);
     setDescription(
       rep.investigationFindings
-        ? `${rep.investigationFindings}\n\n[Incident Details: ${rep.description}]`
+        ? isAm
+          ? `${rep.investigationFindings}\n\n[የክስተቱ ዝርዝር፦ ${rep.description}]`
+          : `${rep.investigationFindings}\n\n[Incident Details: ${rep.description}]`
         : rep.description
     );
     setCategory(rep.category);
@@ -485,7 +544,11 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
       setLinkedReportId(null);
     }
 
-    setSuccessMsg('Trending news published successfully with direct social media linkage!');
+    setSuccessMsg(
+      isAm
+        ? 'ወቅታዊ ዜናው ከቀጥታ የማህበራዊ ሚዲያ ትስስር ጋር በተሳካ ሁኔታ ታትሟል!'
+        : 'Trending news published successfully with direct social media linkage!'
+    );
     setTitle('');
     setDescription('');
     setImageUrl('');
@@ -507,9 +570,13 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-sm block">First-Time Security Setup Required</span>
+              <span className="font-bold text-sm block">
+                {isAm ? 'የመጀመሪያ ጊዜ የደህንነት ማስተካከያ ያስፈልጋል' : 'First-Time Security Setup Required'}
+              </span>
               <p className="text-amber-800 dark:text-amber-300 mt-0.5">
-                Your Publisher account is currently active with a system default password. Please update to a private, strong password before continuing.
+                {isAm
+                  ? 'የአሳታሚ አካውንትዎ በሲስተም ነባሪ የይለፍ ቃል ስራ ላይ ነው። እባክዎ ከመቀጠልዎ በፊት አዲስ ጠንካራ የይለፍ ቃል ይቀይሩ።'
+                  : 'Your Publisher account is currently active with a system default password. Please update to a private, strong password before continuing.'}
               </p>
             </div>
           </div>
@@ -518,7 +585,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 shrink-0"
           >
             <Key className="w-3.5 h-3.5" />
-            <span>Change Password Now</span>
+            <span>{isAm ? 'የይለፍ ቃል አሁኑኑ ቀይር' : 'Change Password Now'}</span>
           </button>
         </div>
       )}
@@ -528,7 +595,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
         <div className="space-y-2 relative z-10">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-mono font-bold">
             <Building2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-            <span>{isPublisher ? 'Publisher Portal' : 'Institution Portal'}</span>
+            <span>
+              {isPublisher ? (isAm ? 'የአሳታሚ (ሚዲያ) ፖርታል' : 'Publisher Portal') : (isAm ? 'የተቋም ፖርታል' : 'Institution Portal')}
+            </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -538,7 +607,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono pt-1">
             <span className="flex items-center space-x-1">
               <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-              <span>{currentUser.institutionCategory || 'Regional Agency'}</span>
+              <span>{currentUser.institutionCategory || (isAm ? 'ክልላዊ ተቋም' : 'Regional Agency')}</span>
             </span>
             <span>•</span>
             <span className="flex items-center space-x-1">
@@ -548,7 +617,11 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             <span>•</span>
             <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{isPublisher ? 'Verified Publisher Account' : 'Verified Institution Account'}</span>
+              <span>
+                {isPublisher
+                  ? (isAm ? 'የተረጋገጠ የአሳታሚ አካውንት' : 'Verified Publisher Account')
+                  : (isAm ? 'የተረጋገጠ የተቋም አካውንት' : 'Verified Institution Account')}
+              </span>
             </span>
           </div>
         </div>
@@ -559,12 +632,12 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             {isApproved ? (
               <div className="px-4 py-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center space-x-2 shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>News Publishing Enabled</span>
+                <span>{isAm ? 'ዜና ማተም ነጻ ነው' : 'News Publishing Enabled'}</span>
               </div>
             ) : (
               <div className="px-4 py-2 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold flex items-center space-x-2 shadow-xs">
                 <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Pending Admin Approval</span>
+                <span>{isAm ? 'የአስተዳዳሪ ማረጋገጫ በመጠባበቅ ላይ' : 'Pending Admin Approval'}</span>
               </div>
             )}
           </div>
@@ -574,12 +647,12 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             disabled={!isApproved}
             className={`px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center space-x-2 shadow-lg transition-transform active:scale-95 ${
               isApproved
-                ? 'bg-white hover:bg-slate-100 text-black cursor-pointer'
+                ? 'bg-[#005BAC] hover:bg-blue-800 text-white cursor-pointer'
                 : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-60'
             }`}
           >
-            <PlusCircle className="w-4 h-4 text-[#005BAC]" />
-            <span>Publish Trending News</span>
+            <PlusCircle className="w-4 h-4 text-amber-300" />
+            <span>{isAm ? 'ወቅታዊ ዜና አሳትም' : 'Publish Trending News'}</span>
           </button>
         </div>
       </div>
@@ -589,9 +662,13 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
         <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs flex items-center space-x-3 shadow-md">
           <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0" />
           <div>
-            <span className="font-bold block text-sm">Account Pending Admin Approval</span>
+            <span className="font-bold block text-sm">
+              {isAm ? 'አካውንት በአስተዳዳሪ ማረጋገጫ በመጠባበቅ ላይ ነው' : 'Account Pending Admin Approval'}
+            </span>
             <p className="text-amber-700 dark:text-amber-300">
-              Your {isPublisher ? 'Publisher account' : 'institutional account'} is currently under Administrator verification. Once approved by AMECO Editorial Administrators, you will be able to publish trending news and official bulletins directly to citizens.
+              {isAm
+                ? `የእርስዎ ${isPublisher ? 'የአሳታሚ አካውንት' : 'የተቋም አካውንት'} በአስተዳዳሪ ማረጋገጫ ሂደት ላይ ነው። በአሜኮ ኤዲቶሪያል አስተዳዳሪዎች እንደተረጋገጠ ይፋዊ ዜናዎችን በቀጥታ ለዜጎች ማተም ይችላሉ።`
+                : `Your ${isPublisher ? 'Publisher account' : 'institutional account'} is currently under Administrator verification. Once approved by AMECO Editorial Administrators, you will be able to publish trending news and official bulletins directly to citizens.`}
             </p>
           </div>
         </div>
@@ -609,7 +686,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            <span>My Published Bulletins ({myNewsList.length})</span>
+            <span>{isAm ? `የታተሙ ዜናዎች (${myNewsList.length})` : `My Published Bulletins (${myNewsList.length})`}</span>
           </button>
 
           <button
@@ -622,7 +699,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             }`}
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Create & Publish News</span>
+            <span>{isAm ? 'ዜና ፍጠር እና አሳትም' : 'Create & Publish News'}</span>
           </button>
 
           <button
@@ -635,7 +712,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             }`}
           >
             <Share2 className="w-4 h-4 text-emerald-500" />
-            <span>Official Channels ({myChannels.length})</span>
+            <span>{isAm ? `ይፋዊ የማህበራዊ ገጾች (${myChannels.length})` : `Official Channels (${myChannels.length})`}</span>
           </button>
 
           <button
@@ -648,7 +725,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             }`}
           >
             <MessageSquare className="w-4 h-4 text-amber-400" />
-            <span>Admin Communications Desk</span>
+            <span>{isAm ? 'የአስተዳዳሪ ግንኙነቶች' : 'Admin Communications Desk'}</span>
           </button>
         </div>
 
@@ -659,7 +736,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search news..."
+              placeholder={isAm ? 'ዜና ፈልግ...' : 'Search news...'}
               className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[#005BAC]"
             />
           </div>
@@ -675,15 +752,23 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 <div>
                   <h2 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-amber-500" />
-                    {isPublisher ? 'Completed Cases for Review' : 'Assigned Investigation Cases'} ({institutionCases.length})
+                    {isPublisher
+                      ? (isAm ? 'ለግምገማ የቀረቡ የተጠናቀቁ መዝገቦች' : 'Completed Cases for Review')
+                      : (isAm ? 'የተመደቡ የምርመራ መዝገቦች' : 'Assigned Investigation Cases')} ({institutionCases.length})
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {isPublisher ? 'Review completed investigations and communicate directly with the assigned investigator. Assignment and reassignment are managed by AMECO administrators.' : 'Review case progress and communicate directly with the assigned investigator. Assignment and reassignment are managed by AMECO administrators.'}
+                    {isPublisher
+                      ? (isAm
+                          ? 'የተጠናቀቁ ምርመራዎችን ይገምግሙ እና ከተመደበው መርማሪ ጋር በቀጥታ ይወያዩ። ምደባ እና ድጋሚ ምደባ በአሚኮ አስተዳዳሪዎች የሚተዳደር ነው።'
+                          : 'Review completed investigations and communicate directly with the assigned investigator. Assignment and reassignment are managed by AMECO administrators.')
+                      : (isAm
+                          ? 'የጉዳይ ሂደቱን ይገምግሙ እና ከተመደበው መርማሪ ጋር በቀጥታ ይወያዩ። ምደባ እና ድጋሚ ምደባ በአሚኮ አስተዳዳሪዎች የሚተዳደር ነው።'
+                          : 'Review case progress and communicate directly with the assigned investigator. Assignment and reassignment are managed by AMECO administrators.')}
                   </p>
                 </div>
                 {completedInstitutionCases.length > 0 && (
                   <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold shrink-0">
-                    {completedInstitutionCases.length} Completed
+                    {completedInstitutionCases.length} {isAm ? 'የተጠናቀቁ' : 'Completed'}
                   </span>
                 )}
               </div>
@@ -691,50 +776,64 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               <div className="space-y-3">
                 {institutionCases.map((caseItem) => {
                   const caseMessages = messages.filter((message) => message.reportId === caseItem.id);
+                  const displayStatus = isAm
+                    ? caseItem.status === 'Investigation Completed'
+                      ? 'ምርመራው ተጠናቋል'
+                      : caseItem.status === 'Published'
+                      ? 'ታትሟል'
+                      : caseItem.status === 'Closed'
+                      ? 'ተዘግቷል'
+                      : caseItem.status === 'Assigned'
+                      ? 'የተመደበ'
+                      : caseItem.status === 'Investigation in Progress'
+                      ? 'ምርመራ በሂደት ላይ'
+                      : caseItem.status
+                    : caseItem.status;
+
                   return (
                     <div key={caseItem.id} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-zinc-950/40 p-4 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono text-[10px] font-bold text-[#005BAC] dark:text-blue-300">{caseItem.id}</span>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">{caseItem.status}</span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">{displayStatus}</span>
                           </div>
                           <h3 className="font-bold text-sm text-slate-900 dark:text-white mt-1">{caseItem.title}</h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                            Investigator: {caseItem.assignedTo?.responsiblePersonName || 'Pending assignment'}
+                            {isAm ? 'መርማሪ ባለሙያ' : 'Investigator'}: {caseItem.assignedTo?.responsiblePersonName || (isAm ? 'ምደባ በመጠባበቅ ላይ' : 'Pending assignment')}
                           </p>
                           {['Investigation Completed', 'Published', 'Closed'].includes(caseItem.status) && (
                             <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/30">
                               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>Completed Case Review</span>
+                                <span>{isAm ? 'የተጠናቀቀ ጉዳይ ግምገማ' : 'Completed Case Review'}</span>
                               </div>
                               <p className="mt-1.5 text-xs leading-relaxed text-slate-700 dark:text-slate-200">
-                                {caseItem.investigationFindings || 'The investigator marked this case complete. No additional findings were provided.'}
+                                {caseItem.investigationFindings || (isAm ? 'መርማሪው ይህንን ጉዳይ ተጠናቋል ብሎታል፤ ተጨማሪ ግኝት አልተሰጠም።' : 'The investigator marked this case complete. No additional findings were provided.')}
                               </p>
                               <div className="mt-3 border-t border-emerald-200/80 pt-3 dark:border-emerald-900/60">
                                 <div className="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                                  Registered Identity
+                                  {isAm ? 'የተመዘገበ ማንነት' : 'Registered Identity'}
                                 </div>
                                 {caseItem.isAnonymous || caseItem.isGuest ? (
                                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                                    Protected anonymous or guest submission. Personal identity is not available.
+                                    {isAm ? 'ጥበቃ የሚደረግለት ማንነቱ ያልታወቀ ወይም የእንግዳ ጥቆማ። የግል ማንነት አይገኝም።' : 'Protected anonymous or guest submission. Personal identity is not available.'}
                                   </p>
                                 ) : (
                                   <div className="mt-1 grid grid-cols-1 gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-200 sm:grid-cols-2">
-                                    <span><strong>Citizen ID:</strong> {caseItem.citizenId || 'Not provided'}</span>
+                                    <span><strong>{isAm ? 'የዜጋ መለያ' : 'Citizen ID'}:</strong> {caseItem.citizenId || (isAm ? 'አልተገለጸም' : 'Not provided')}</span>
                                   </div>
                                 )}
                               </div>
                               <div className="mt-3 border-t border-emerald-200/80 pt-3 dark:border-emerald-900/60">
                                 <div className="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                                  Case Location
+                                  {isAm ? 'የክስተቱ ቦታ' : 'Case Location'}
                                 </div>
                                 <div className="mt-1 grid grid-cols-1 gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-200 sm:grid-cols-2">
-                                  <span><strong>Region:</strong> {caseItem.region || 'Not provided'}</span>
-                                  <span><strong>Zone:</strong> {caseItem.zone || 'Not provided'}</span>
-                                  <span><strong>Woreda:</strong> {caseItem.woreda || 'Not provided'}</span>
-                                  <span><strong>Specific Place:</strong> {caseItem.specificLocation || 'Not provided'}</span>
+                                  <span><strong>{isAm ? 'ክልል' : 'Region'}:</strong> {caseItem.region || (isAm ? 'አልተገለጸም' : 'Not provided')}</span>
+                                  <span><strong>{isAm ? 'ዞን' : 'Zone'}:</strong> {caseItem.zone || (isAm ? 'አልተገለጸም' : 'Not provided')}</span>
+                                  <span><strong>{isAm ? 'ወረዳ' : 'Woreda'}:</strong> {caseItem.woreda || (isAm ? 'አልተገለጸም' : 'Not provided')}</span>
+                                  <span><strong>{isAm ? 'ልዩ ቦታ' : 'Specific Place'}:</strong> {caseItem.specificLocation || (isAm ? 'አልተገለጸም' : 'Not provided')}</span>
                                 </div>
                               </div>
                             </div>
@@ -748,13 +847,13 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                                 className="w-full py-2.5 px-4 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow cursor-pointer transition-all"
                               >
                                 <Newspaper className="w-4 h-4" />
-                                <span>Draft Official News Story from Verified Findings & Publish</span>
+                                <span>{isAm ? 'ከተረጋገጠው ግኝት ይፋዊ የዜና ዘገባ አዘጋጅ እና አሳትም' : 'Draft Official News Story from Verified Findings & Publish'}</span>
                               </button>
                             </div>
                           )}
                         </div>
                         <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 shrink-0">
-                          Updated {caseItem.updatedAt}
+                          {isAm ? 'የተሻሻለው' : 'Updated'} {caseItem.updatedAt}
                         </span>
                       </div>
 
@@ -762,7 +861,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                         <>
                           <div className="max-h-40 overflow-y-auto space-y-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3">
                             {caseMessages.length === 0 ? (
-                              <p className="text-xs text-slate-400 text-center py-2">No case messages yet.</p>
+                              <p className="text-xs text-slate-400 text-center py-2">{isAm ? 'እስካሁን ምንም የጉዳይ መልዕክቶች የሉም።' : 'No case messages yet.'}</p>
                             ) : (
                               caseMessages.map((message) => (
                                 <div key={message.id} className={`flex flex-col ${message.senderId === currentUser.id ? 'items-end' : 'items-start'}`}>
@@ -777,8 +876,8 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                           </div>
                           <ChatComposer
                             onSend={(text, attachment) => onSendCaseMessage?.(caseItem.id, text, caseItem.assignedTo!.responsiblePersonId, attachment)}
-                            placeholder={`Message ${caseItem.assignedTo.responsiblePersonName} about this case...`}
-                            sendLabel="Send to Investigator"
+                            placeholder={isAm ? `ስለዚህ ጉዳይ ለ${caseItem.assignedTo.responsiblePersonName} መልዕክት ይጻፉ...` : `Message ${caseItem.assignedTo.responsiblePersonName} about this case...`}
+                            sendLabel={isAm ? 'ለመረጃ መርማሪው ላክ' : 'Send to Investigator'}
                             className="border-t border-slate-200 dark:border-zinc-800 pt-2"
                           />
                         </>
@@ -793,16 +892,24 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
           {filteredNews.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
               <Newspaper className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto" />
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Published News Yet</h3>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                {isAm ? 'እስካሁን የታተመ ዜና የለም' : 'No Published News Yet'}
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                {isPublisher ? 'You have not published any trending news bulletins yet. Click "Create & Publish News" to publish your first public release.' : 'Your institution has not published any trending news bulletins yet. Click "Create & Publish News" to publish your first public release.'}
+                {isPublisher
+                  ? (isAm
+                      ? 'እስካሁን ምንም ወቅታዊ ዜና አላተሙም። የመጀመሪያውን ይፋዊ ዜና ለማተም «ዜና ፍጠር እና አሳትም» የሚለውን ይጫኑ።'
+                      : 'You have not published any trending news bulletins yet. Click "Create & Publish News" to publish your first public release.')
+                  : (isAm
+                      ? 'ተቋምዎ እስካሁን ምንም ወቅታዊ ዜና አላተመም። የመጀመሪያውን ይፋዊ ዜና ለማተም «ዜና ፍጠር እና አሳትም» የሚለውን ይጫኑ።'
+                      : 'Your institution has not published any trending news bulletins yet. Click "Create & Publish News" to publish your first public release.')}
               </p>
               {isApproved && (
                 <button
                   onClick={() => setActiveTab('create')}
                   className="px-4 py-2 bg-[#005BAC] hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-transform active:scale-95"
                 >
-                  Publish First News Post
+                  {isAm ? 'የመጀመሪያውን ዜና አሳትም' : 'Publish First News Post'}
                 </button>
               )}
             </div>
@@ -864,7 +971,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                                 />
                               )}
                               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-200">
-                                {news.category}
+                                {getCategoryLabel(news.category)}
                               </span>
                             </div>
                             <span className="text-xs font-bold line-clamp-2">{news.title}</span>
@@ -878,7 +985,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                                   className="w-3 h-3"
                                 />
                               )}
-                              <span>Click to open post</span>
+                              <span>{isAm ? 'ይዘቱን ለመክፈት ይጫኑ' : 'Click to open post'}</span>
                               <ExternalLink className="w-2.5 h-2.5" />
                             </div>
                           )}
@@ -901,7 +1008,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                                 <Radio className="w-4 h-4 text-[#005BAC]" />
                               )}
                               <span className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400">
-                                {news.category}
+                                {getCategoryLabel(news.category)}
                               </span>
                             </div>
                             {targetPlatform && (
@@ -918,7 +1025,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
                       <div className="flex items-center justify-between">
                         <span className="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/80 text-[#005BAC] dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] font-bold">
-                          {news.category}
+                          {getCategoryLabel(news.category)}
                         </span>
                         <span className="text-[11px] text-slate-500 font-mono flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
@@ -942,7 +1049,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                       {/* Attached Media Previews */}
                       {attachedMedia.length > 0 && (
                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                          <span className="text-[10px] font-bold text-slate-400">Attached Media & Links:</span>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            {isAm ? 'የተያያዙ የሚዲያ ሊንኮች፦' : 'Attached Media & Links:'}
+                          </span>
                           <div className="flex flex-wrap items-center gap-1.5">
                             {attachedMedia.map((m) => (
                               <a
@@ -952,7 +1061,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[11px] text-slate-800 dark:text-slate-200 font-medium border border-blue-100 dark:border-zinc-700 transition-colors shadow-2xs"
-                                title={`Open ${m.platform} link in new tab`}
+                                title={isAm ? `የ${m.platform} ሊንክ በአዲስ ታብ ክፈት` : `Open ${m.platform} link in new tab`}
                               >
                                 <PlatformIcon platform={m.platform} className="w-3.5 h-3.5" />
                                 <span className="truncate max-w-[120px]">{m.title}</span>
@@ -983,18 +1092,18 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                             )}
                             <span>
                               {targetPlatform === 'youtube'
-                                ? 'Watch on YouTube'
+                                ? (isAm ? 'በYouTube ይመልከቱ' : 'Watch on YouTube')
                                 : targetPlatform === 'telegram'
-                                ? 'Open Telegram'
+                                ? (isAm ? 'ቴሌግራም ክፈት' : 'Open Telegram')
                                 : targetPlatform === 'facebook'
-                                ? 'View Facebook'
+                                ? (isAm ? 'ፌስቡክ ተመልከት' : 'View Facebook')
                                 : targetPlatform === 'tiktok'
-                                ? 'Watch on TikTok'
+                                ? (isAm ? 'በTikTok ይመልከቱ' : 'Watch on TikTok')
                                 : targetPlatform === 'instagram'
-                                ? 'View Instagram'
+                                ? (isAm ? 'በInstagram ተመልከት' : 'View Instagram')
                                 : targetPlatform === 'x'
-                                ? 'View on X'
-                                : 'Open Social Media Link'}
+                                ? (isAm ? 'በX ተመልከት' : 'View on X')
+                                : (isAm ? 'የማህበራዊ ሚዲያ ሊንክ ክፈት' : 'Open Social Media Link')}
                             </span>
                             <ExternalLink className="w-3 h-3 ml-0.5 opacity-80" />
                           </a>
@@ -1005,7 +1114,11 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                           className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#005BAC] dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 font-bold rounded-xl flex items-center space-x-1 cursor-pointer transition-colors text-xs"
                         >
                           <Share2 className="w-3.5 h-3.5" />
-                          <span>{targetSocialUrl ? 'Manage Media' : 'Attach Media'}</span>
+                          <span>
+                            {targetSocialUrl
+                              ? (isAm ? 'ሚዲያ አስተዳድር' : 'Manage Media')
+                              : (isAm ? 'ሚዲያ አያይዝ' : 'Attach Media')}
+                          </span>
                         </button>
                       </div>
 
@@ -1014,7 +1127,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                         className="text-red-500 hover:text-red-700 dark:hover:text-red-400 font-bold flex items-center space-x-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>Unpublish</span>
+                        <span>{isAm ? 'ህትመቱን አንሳ' : 'Unpublish'}</span>
                       </button>
                     </div>
                   </div>
@@ -1045,10 +1158,16 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
-                <span>{isPublisher ? 'Publish Trending News' : 'Publish Institutional Trending News'}</span>
+              <span>
+                {isPublisher
+                  ? (isAm ? 'ወቅታዊ ዜና አሳትም' : 'Publish Trending News')
+                  : (isAm ? 'የተቋም ወቅታዊ ዜና አሳትም' : 'Publish Institutional Trending News')}
+              </span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              News items published here will be displayed immediately to regional citizens on the Citizens Portal and link directly to your official social media posts/videos.
+              {isAm
+                ? 'እዚህ የሚታተሙ ዜናዎች በዜጎች ፖርታል ላይ ወዲያውኑ ለክልሉ ህዝብ የሚታዩ ሲሆን ከይፋዊ የማህበራዊ ሚዲያ ፖስቶችዎ/ቪዲዮዎችዎ ጋር በቀጥታ ይገናኛሉ።'
+                : 'News items published here will be displayed immediately to regional citizens on the Citizens Portal and link directly to your official social media posts/videos.'}
             </p>
           </div>
 
@@ -1061,36 +1180,48 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
           <form onSubmit={handleSubmitNews} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-300 block">News Headline / Title *</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                {isAm ? 'የዜናው ዋና አርእስት *' : 'News Headline / Title *'}
+              </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={isPublisher ? 'e.g., Bruk Afrem Releases a Seasonal Health Advisory...' : 'e.g., Amhara Public Health Institute Releases Seasonal Health Advisory...'}
+                placeholder={
+                  isAm
+                    ? 'ለምሳሌ፡ የአማራ የህብረተሰብ ጤና ኢንስቲትዩት ወቅታዊ የጤና ማሳሰቢያ አወጣ...'
+                    : isPublisher
+                    ? 'e.g., Bruk Afrem Releases a Seasonal Health Advisory...'
+                    : 'e.g., Amhara Public Health Institute Releases Seasonal Health Advisory...'
+                }
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC]"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">News Category *</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                  {isAm ? 'የዜና ምድብ *' : 'News Category *'}
+                </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC]"
                 >
-                  <option value="Public Health">Public Health & Disease Control</option>
-                  <option value="Education & Innovation">Education & Research</option>
-                  <option value="Environment & Water">Environment & Water Resources</option>
-                  <option value="Infrastructure">Infrastructure & Energy</option>
-                  <option value="Public Safety">Public Safety & Advisories</option>
-                  <option value="Agriculture">Agriculture & Food Security</option>
+                  <option value="Public Health">{isAm ? 'የህዝብ ጤና እና በሽታ መከላከል' : 'Public Health & Disease Control'}</option>
+                  <option value="Education & Innovation">{isAm ? 'ትምህርት እና ምርምር' : 'Education & Research'}</option>
+                  <option value="Environment & Water">{isAm ? 'አካባቢ እና የውሃ ሀብት' : 'Environment & Water Resources'}</option>
+                  <option value="Infrastructure">{isAm ? 'መሰረተ ልማት እና ኢነርጂ' : 'Infrastructure & Energy'}</option>
+                  <option value="Public Safety">{isAm ? 'የህዝብ ደህንነት እና ማሳሰቢያዎች' : 'Public Safety & Advisories'}</option>
+                  <option value="Agriculture">{isAm ? 'ግብርና እና የምግብ ዋስትና' : 'Agriculture & Food Security'}</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block">Target Zone / Region *</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                  {isAm ? 'የታለመው ዞን / ክልል *' : 'Target Zone / Region *'}
+                </label>
                 <select
                   value={zone}
                   onChange={(e) => setZone(e.target.value)}
@@ -1098,7 +1229,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 >
                   {REGIONAL_ZONES.map((z) => (
                     <option key={z.value} value={z.value}>
-                      {z.label}
+                      {isAm ? getZoneLabel(z.value, z.label) : z.label}
                     </option>
                   ))}
                 </select>
@@ -1110,12 +1241,14 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5 text-xs">
                   <LinkIcon className="w-4 h-4 text-[#005BAC] dark:text-blue-400" />
-                  <span>Official Social Media Post / Video Link (Optional)</span>
+                  <span>{isAm ? 'ይፋዊ የማህበራዊ ሚዲያ ፖስት / የቪዲዮ ሊንክ (አማራጭ)' : 'Official Social Media Post / Video Link (Optional)'}</span>
                 </label>
                 {detectedPlatform && (
                   <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#005BAC] text-white shadow-xs">
                     <PlatformIcon platform={detectedPlatform} className="w-3 h-3 text-white" />
-                    <span className="capitalize">{detectedPlatform} link detected</span>
+                    <span className="capitalize">
+                      {isAm ? `የ${detectedPlatform} ሊንክ ተገኝቷል` : `${detectedPlatform} link detected`}
+                    </span>
                   </span>
                 )}
               </div>
@@ -1131,7 +1264,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                         handleAutoFetchBanner(sourceUrl);
                       }
                     }}
-                    placeholder="https://youtube.com/watch?v=... or https://t.me/... or https://facebook.com/..."
+                    placeholder={isAm ? 'https://youtube.com/watch?v=... ወይም https://t.me/... ወይም https://facebook.com/...' : 'https://youtube.com/watch?v=... or https://t.me/... or https://facebook.com/...'}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC] text-xs font-mono"
                   />
                   {sourceUrl && (
@@ -1153,24 +1286,32 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                   disabled={!sourceUrl || isFetchingBanner}
                   onClick={() => handleAutoFetchBanner(sourceUrl)}
                   className="px-3.5 py-2.5 bg-[#005BAC] hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all shrink-0 cursor-pointer"
-                  title="Extract real banner photo and post metadata from URL"
+                  title={isAm ? 'ከሊንኩ ላይ እውነተኛውን ፎቶ እና መረጃ ስቦ አምጣ' : 'Extract real banner photo and post metadata from URL'}
                 >
                   {isFetchingBanner ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   )}
-                  <span>{isFetchingBanner ? 'Extracting...' : 'Fetch Banner & Info'}</span>
+                  <span>
+                    {isFetchingBanner
+                      ? (isAm ? 'በማምጣት ላይ...' : 'Extracting...')
+                      : (isAm ? 'ፎቶ እና መረጃ አምጣ' : 'Fetch Banner & Info')}
+                  </span>
                 </button>
               </div>
 
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                When citizens click on this news card or the "Watch / Open on Social Media" button, they will be navigated directly to your social media post.
+                {isAm
+                  ? 'ዜጎች ይህን የዜና ካርድ ወይም «በማህበራዊ ሚዲያ ተመልከት» የሚለውን ሲጫኑ በቀጥታ ወደ ማህበራዊ ሚዲያ ፖስትዎ ይወሰዳሉ።'
+                  : 'When citizens click on this news card or the "Watch / Open on Social Media" button, they will be navigated directly to your social media post.'}
               </p>
 
               {/* Preset quick buttons */}
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                <span className="text-[10px] text-slate-400 font-bold">Quick Examples:</span>
+                <span className="text-[10px] text-slate-400 font-bold">
+                  {isAm ? 'ፈጣን ምሳሌዎች፦' : 'Quick Examples:'}
+                </span>
                 {[
                   { label: 'YouTube', domain: 'https://youtube.com/watch?v=' },
                   { label: 'Telegram', domain: 'https://t.me/' },
@@ -1184,7 +1325,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     onClick={() => {
                       if (!sourceUrl) setSourceUrl(p.domain);
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md text-[10px] font-medium hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    className="px-2 py-0.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md text-[10px] font-medium hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
                   >
                     {p.label}
                   </button>
@@ -1197,7 +1338,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Extracted Real Social Media Banner & Info</span>
+                      <span>{isAm ? 'ከማህበራዊ ሚዲያው የተገኘ እውነተኛ ፎቶ እና መረጃ' : 'Extracted Real Social Media Banner & Info'}</span>
                     </span>
                     {fetchedBannerInfo.platform && (
                       <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 rounded text-[#005BAC] dark:text-blue-300">
@@ -1231,36 +1372,36 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                       )}
                       {fetchedBannerInfo.authorName && (
                         <p className="text-[10px] text-slate-400">
-                          Channel / Author: <strong>{fetchedBannerInfo.authorName}</strong>
+                          {isAm ? 'ቻናል / ደራሲ፦' : 'Channel / Author:'} <strong>{fetchedBannerInfo.authorName}</strong>
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2 pt-1">
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
                         {fetchedBannerInfo.imageUrl && imageUrl !== fetchedBannerInfo.imageUrl && (
                           <button
                             type="button"
                             onClick={() => setImageUrl(fetchedBannerInfo.imageUrl!)}
-                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950 text-[#005BAC] dark:text-blue-300 text-[10px] font-bold rounded-lg hover:bg-blue-100 transition-colors"
+                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950 text-[#005BAC] dark:text-blue-300 text-[10px] font-bold rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
                           >
-                            Use as Cover Image
+                            {isAm ? 'እንደ ሽፋን ፎቶ ተጠቀም' : 'Use as Cover Image'}
                           </button>
                         )}
                         {fetchedBannerInfo.title && title !== fetchedBannerInfo.title && (
                           <button
                             type="button"
                             onClick={() => setTitle(fetchedBannerInfo.title!)}
-                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg hover:bg-slate-200 transition-colors"
+                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
                           >
-                            Use Title
+                            {isAm ? 'አርእስቱን ተጠቀም' : 'Use Title'}
                           </button>
                         )}
                         {fetchedBannerInfo.description && description !== fetchedBannerInfo.description && (
                           <button
                             type="button"
                             onClick={() => setDescription(fetchedBannerInfo.description!)}
-                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg hover:bg-slate-200 transition-colors"
+                            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
                           >
-                            Use Body Text
+                            {isAm ? 'ጽሁፉን ተጠቀም' : 'Use Body Text'}
                           </button>
                         )}
                       </div>
@@ -1275,7 +1416,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs">
                   <ImageIcon className="w-4 h-4 text-[#005BAC] dark:text-blue-400" />
-                  <span>Cover Banner Photo / Image</span>
+                  <span>{isAm ? 'የሽፋን ባነር ፎቶ / ምስል' : 'Cover Banner Photo / Image'}</span>
                 </label>
                 {imageUrl && (
                   <button
@@ -1284,7 +1425,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     className="text-[11px] text-red-500 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span>Remove Image</span>
+                    <span>{isAm ? 'ምስሉን አጥፋ' : 'Remove Image'}</span>
                   </button>
                 )}
               </div>
@@ -1295,13 +1436,13 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                   type="url"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Paste direct photo URL (https://...)"
+                  placeholder={isAm ? 'ቀጥተኛ የፎቶ ሊንክ ይለጥፉ (https://...)' : 'Paste direct photo URL (https://...)'}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC] text-xs font-mono"
                 />
 
                 <label className="px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shrink-0 shadow-2xs">
                   <Upload className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                  <span>Upload Photo File</span>
+                  <span>{isAm ? 'የፎቶ ፋይል ጫን' : 'Upload Photo File'}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1313,7 +1454,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
               {/* Regional Photo Presets */}
               <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] text-slate-400 font-bold">Or Select Regional Topic Photo Preset:</span>
+                <span className="text-[10px] text-slate-400 font-bold">
+                  {isAm ? 'ወይም ከተዘጋጁት ክልላዊ የርዕስ ፎቶዎች አንዱን ይምረጡ፦' : 'Or Select Regional Topic Photo Preset:'}
+                </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {REGIONAL_BANNER_PRESETS.map((preset) => (
                     <button
@@ -1328,13 +1471,13 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     >
                       <img
                         src={preset.url}
-                        alt={preset.label}
+                        alt={isAm ? preset.labelAm : preset.label}
                         className="w-8 h-8 rounded-lg object-cover shrink-0"
                         referrerPolicy="no-referrer"
                       />
                       <div className="overflow-hidden">
-                        <span className="text-[11px] font-bold block truncate">{preset.label}</span>
-                        <span className="text-[9px] text-slate-400 block truncate">{preset.category}</span>
+                        <span className="text-[11px] font-bold block truncate">{isAm ? preset.labelAm : preset.label}</span>
+                        <span className="text-[9px] text-slate-400 block truncate">{isAm ? preset.categoryAm : preset.category}</span>
                       </div>
                     </button>
                   ))}
@@ -1344,7 +1487,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
               {/* Active Image Preview */}
               {imageUrl && (
                 <div className="pt-2">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-1.5">Banner Image Preview:</span>
+                  <span className="text-[10px] font-bold text-slate-400 block mb-1.5">
+                    {isAm ? 'የባነር ምስል ቅድመ እይታ፦' : 'Banner Image Preview:'}
+                  </span>
                   <div className="h-44 w-full rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-700 shadow-sm group">
                     <img
                       src={imageUrl}
@@ -1354,9 +1499,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300">
-                        {category} • {zone}
+                        {getCategoryLabel(category)} • {getZoneLabel(zone)}
                       </span>
-                      <p className="font-bold text-sm line-clamp-1">{title || 'Your Headline Here'}</p>
+                      <p className="font-bold text-sm line-clamp-1">{title || (isAm ? 'የዜናው አርእስት እዚህ ይታያል' : 'Your Headline Here')}</p>
                     </div>
                   </div>
                 </div>
@@ -1364,13 +1509,15 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-300 block">News Release Body / Description *</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                {isAm ? 'የዜናው ዝርዝር ዘገባ / መግለጫ *' : 'News Release Body / Description *'}
+              </label>
               <textarea
                 required
                 rows={6}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Provide detailed information regarding the official announcement..."
+                placeholder={isAm ? 'ስለ ይፋዊ መግለጫው ወይም ዜናው ዝርዝር መረጃ እዚህ ያስገቡ...' : 'Provide detailed information regarding the official announcement...'}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC] leading-relaxed"
               ></textarea>
             </div>
@@ -1381,7 +1528,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 onClick={() => setActiveTab('published')}
                 className="px-5 py-2.5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
               >
-                Cancel
+                {isAm ? 'ሰርዝ' : 'Cancel'}
               </button>
 
               <button
@@ -1389,7 +1536,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 className="px-6 py-2.5 bg-[#005BAC] hover:bg-blue-800 text-white font-extrabold rounded-xl shadow-lg flex items-center space-x-2 transition-transform active:scale-95 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
-                <span>Publish to Citizens Portal</span>
+                <span>{isAm ? 'በዜጎች ፖርታል ላይ አሳትም' : 'Publish to Citizens Portal'}</span>
               </button>
             </div>
           </form>
@@ -1419,17 +1566,19 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                    {currentUser.isDefaultPassword ? 'Update Default Password' : 'Change Account Password'}
+                    {currentUser.isDefaultPassword
+                      ? (isAm ? 'ነባሪውን የይለፍ ቃል ያዘምኑ' : 'Update Default Password')
+                      : (isAm ? 'የአካውንት የይለፍ ቃል ቀይር' : 'Change Account Password')}
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {isPublisher ? 'Publisher' : 'Institution'}: <strong className="text-slate-700 dark:text-slate-300 font-mono">{publisherDisplayName}</strong>
+                    {isPublisher ? (isAm ? 'አሳታሚ' : 'Publisher') : (isAm ? 'ተቋም' : 'Institution')}: <strong className="text-slate-700 dark:text-slate-300 font-mono">{publisherDisplayName}</strong>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer transition-colors"
-                title="Close"
+                title={isAm ? 'ዝጋ' : 'Close'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1437,7 +1586,15 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
             {currentUser.isDefaultPassword && (
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 rounded-xl text-xs leading-relaxed">
-                <strong>First-Time Security Setup:</strong> As a verified regional {isPublisher ? 'Publisher' : 'institution'} partner, please replace your initial default password with a secure, private password before continuing.
+                {isAm ? (
+                  <>
+                    <strong>የመጀመሪያ ጊዜ የደህንነት ማስተካከያ፦</strong> የተረጋገጠ ክልላዊ {isPublisher ? 'አሳታሚ' : 'ተቋም'} አጋር እንደመሆንዎ፣ ከመቀጠልዎ በፊት የመጀመሪያውን ነባሪ የይለፍ ቃል በአዲስ እና ሚስጥራዊ የይለፍ ቃል ይተኩ።
+                  </>
+                ) : (
+                  <>
+                    <strong>First-Time Security Setup:</strong> As a verified regional {isPublisher ? 'Publisher' : 'institution'} partner, please replace your initial default password with a secure, private password before continuing.
+                  </>
+                )}
               </div>
             )}
 
@@ -1458,14 +1615,14 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
             <form onSubmit={handleChangePasswordSubmit} className="space-y-3.5 text-xs">
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                  Current / Default Password *
+                  {isAm ? 'የአሁኑ / ነባሪ የይለፍ ቃል *' : 'Current / Default Password *'}
                 </label>
                 <div className="relative">
                   <input
                     type={showOldPass ? 'text' : 'password'}
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder="Enter current / default password"
+                    placeholder={isAm ? 'የአሁኑን / ነባሪ የይለፍ ቃል ያስገቡ' : 'Enter current / default password'}
                     className="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                   />
                   <button
@@ -1480,7 +1637,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                  New Private Password *
+                  {isAm ? 'አዲስ የግል የይለፍ ቃል *' : 'New Private Password *'}
                 </label>
                 <div className="relative">
                   <input
@@ -1488,7 +1645,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 6-8+ characters"
+                    placeholder={isAm ? 'ቢያንስ 6-8+ ፊደላት' : 'Min 6-8+ characters'}
                     className="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                   />
                   <button
@@ -1503,7 +1660,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 {newPassword && (
                   <div className="space-y-1 pt-1">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-400">Password Strength:</span>
+                      <span className="text-slate-400">{isAm ? 'የይለፍ ቃል ጥንካሬ፦' : 'Password Strength:'}</span>
                       <span className={`font-bold ${passStrength.color}`}>{passStrength.label}</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex gap-1">
@@ -1520,14 +1677,14 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
 
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 dark:text-slate-300 block">
-                  Confirm New Password *
+                  {isAm ? 'አዲሱን የይለፍ ቃል ያረጋግጡ *' : 'Confirm New Password *'}
                 </label>
                 <input
                   type="password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
+                  placeholder={isAm ? 'አዲሱን የይለፍ ቃል ይድገሙ' : 'Repeat new password'}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
                 />
               </div>
@@ -1539,7 +1696,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                     onClick={() => setShowPasswordModal(false)}
                     className="px-4 py-2 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors"
                   >
-                    Cancel
+                    {isAm ? 'ሰርዝ' : 'Cancel'}
                   </button>
                 )}
                 <button
@@ -1547,7 +1704,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                   disabled={isChangingPassword || !newPassword}
                   className="px-5 py-2 bg-[#005BAC] hover:bg-blue-800 disabled:opacity-50 text-white font-bold rounded-xl shadow cursor-pointer transition-colors"
                 >
-                  {isChangingPassword ? 'Saving Password...' : 'Save & Secure Account'}
+                  {isChangingPassword
+                    ? (isAm ? 'በማስቀመጥ ላይ...' : 'Saving Password...')
+                    : (isAm ? 'አስቀምጥ እና አካውንቱን ጠብቅ' : 'Save & Secure Account')}
                 </button>
               </div>
             </form>
@@ -1561,7 +1720,9 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
-                <span className="text-xs font-bold text-[#005BAC] dark:text-blue-400">Media Publications Manager</span>
+                <span className="text-xs font-bold text-[#005BAC] dark:text-blue-400">
+                  {isAm ? 'የሚዲያ ህትመቶች አስተዳዳሪ' : 'Media Publications Manager'}
+                </span>
                 <h3 className="font-bold text-base text-slate-900 dark:text-white line-clamp-1">
                   {selectedNewsForMedia.title}
                 </h3>
@@ -1594,7 +1755,7 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                 onClick={() => setSelectedNewsForMedia(null)}
                 className="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-slate-200 text-white font-bold text-xs rounded-xl cursor-pointer"
               >
-                Done
+                {isAm ? 'ተጠናቋል' : 'Done'}
               </button>
             </div>
           </div>

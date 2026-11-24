@@ -23,7 +23,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('ameco_language');
     if (saved === 'en' || saved === 'am') return saved;
-    return 'en';
+    return 'am';
   });
 
   const setLanguage = (lang: Language) => {

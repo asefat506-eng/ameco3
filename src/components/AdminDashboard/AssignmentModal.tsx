@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ReportItem, UserProfile, Department, PriorityLevel } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   UserCheck,
   Calendar,
@@ -100,6 +101,9 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
   reports = [],
   onAssignReport,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   // Extract initial location from report
   const initialLocation = useMemo(() => {
     if (!report) return 'Debre Markos';
@@ -373,16 +377,22 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-base sm:text-lg font-bold tracking-tight">
-                  {isAlreadyAssigned ? 'Reassign Investigation Unit' : 'Assign Investigation Unit'}
+                  {isAlreadyAssigned
+                    ? (isAm ? 'የምርመራ ቡድን በድጋሚ መድብ' : 'Reassign Investigation Unit')
+                    : (isAm ? 'የምርመራ ቡድን መድብ' : 'Assign Investigation Unit')}
                 </h2>
                 <span className="px-2 py-0.5 bg-black/30 text-amber-300 text-[10px] font-bold uppercase tracking-wider rounded-md border border-amber-300/30">
-                  {isAlreadyAssigned ? 'Case Reassignment' : 'Dispatch Console'}
+                  {isAlreadyAssigned ? (isAm ? 'ድጋሚ ምደባ' : 'Case Reassignment') : (isAm ? 'የምደባ መቆጣጠሪያ' : 'Dispatch Console')}
                 </span>
               </div>
               <p className="text-xs text-blue-100/90">
                 {isAlreadyAssigned
-                  ? `Currently assigned to ${report.assignedTo?.responsiblePersonName || 'Lead'}. Select new investigator or updated directives below.`
-                  : 'Search by investigator name or department desk to assign field lead.'}
+                  ? (isAm
+                      ? `በአሁኑ ሰዓት ለ${report.assignedTo?.responsiblePersonName || 'መርማሪ'} ተመድቧል። አዲስ መርማሪ ወይም አዳዲስ መመሪያዎችን ከታች ይምረጡ።`
+                      : `Currently assigned to ${report.assignedTo?.responsiblePersonName || 'Lead'}. Select new investigator or updated directives below.`)
+                  : (isAm
+                      ? 'የመስክ መርማሪ ለመመደብ በመርማሪ ስም ወይም በዲፓርትመንት ዴስክ ይፈልጉ።'
+                      : 'Search by investigator name or department desk to assign field lead.')}
               </p>
             </div>
           </div>
@@ -412,14 +422,14 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                 <div className="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400">
                   <span>{report.category}</span>
                   <span>•</span>
-                  <span>{report.zone || 'Amhara'}</span>
+                  <span>{report.zone || (isAm ? 'አማራ ክልል' : 'Amhara')}</span>
                 </div>
               </div>
             </div>
 
             <div className="shrink-0 flex items-center space-x-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-bold rounded-lg border border-emerald-200 dark:border-emerald-800/60 text-[10px]">
               <Shield className="w-3 h-3" />
-              <span>Whistleblower</span>
+              <span>{isAm ? 'ሚስጥራዊ ጥቆማ' : 'Whistleblower'}</span>
             </div>
           </div>
 
@@ -428,10 +438,10 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
                 <Filter className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                <span>Search & Filter Field Investigators</span>
+                <span>{isAm ? 'የመስክ መርማሪዎችን ይፈልጉ እና ያጣሩ' : 'Search & Filter Field Investigators'}</span>
               </span>
               <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                {filteredInvestigators.length} matching officer{filteredInvestigators.length === 1 ? '' : 's'}
+                {filteredInvestigators.length} {isAm ? 'የተገኙ መርማሪዎች' : (filteredInvestigators.length === 1 ? 'matching officer' : 'matching officers')}
               </span>
             </div>
 
@@ -446,7 +456,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                   type="text"
                   value={nameSearch}
                   onChange={(e) => setNameSearch(e.target.value)}
-                  placeholder="Search investigator name..."
+                  placeholder={isAm ? 'የመርማሪውን ስም ፈልግ...' : 'Search investigator name...'}
                   className="w-full pl-8.5 pr-7 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-[#005BAC]"
                 />
                 {nameSearch && (
@@ -469,7 +479,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                   onChange={(e) => setSelectedDepartment(e.target.value)}
                   className="w-full pl-8.5 pr-7 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-[#005BAC] appearance-none cursor-pointer"
                 >
-                  <option value="ALL">All Department Desks</option>
+                  <option value="ALL">{isAm ? 'ሁሉም የዲፓርትመንት ዴስኮች' : 'All Department Desks'}</option>
                   {departmentOptions.map((dept) => (
                     <option key={dept} value={dept}>
                       {dept}
@@ -488,7 +498,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                 >
                   <div className="flex items-center space-x-1.5 truncate">
                     <MapPin className="w-3.5 h-3.5 text-[#005BAC] shrink-0" />
-                    <span className="truncate">{locationScope === 'all' ? 'All Locations' : selectedLocation}</span>
+                    <span className="truncate">{locationScope === 'all' ? (isAm ? 'ሁሉም አካባቢዎች' : 'All Locations') : selectedLocation}</span>
                   </div>
                   <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-1" />
                 </button>
@@ -509,7 +519,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                         }`}
                       >
-                        Stationed Locally
+                        {isAm ? 'በአካባቢው የተመደበ' : 'Stationed Locally'}
                       </button>
                       <button
                         type="button"
@@ -523,7 +533,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                         }`}
                       >
-                        All Regions
+                        {isAm ? 'ሁሉም ዞኖች' : 'All Regions'}
                       </button>
                     </div>
 
@@ -533,7 +543,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                         type="text"
                         value={locationSearch}
                         onChange={(e) => setLocationSearch(e.target.value)}
-                        placeholder="Search city/town..."
+                        placeholder={isAm ? 'ከተማ / ወረዳ ፈልግ...' : 'Search city/town...'}
                         className="w-full pl-7 pr-2 py-1 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none"
                       />
                     </div>
@@ -572,7 +582,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
             <div className="flex items-center justify-between">
               <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
                 <Users className="w-4 h-4 text-[#005BAC] dark:text-blue-400" />
-                <span>Select Lead Investigator</span>
+                <span>{isAm ? 'ዋና መርማሪ ይምረጡ' : 'Select Lead Investigator'}</span>
               </label>
               {(nameSearch || selectedDepartment !== 'ALL' || locationScope === 'all') && (
                 <button
@@ -584,7 +594,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                   }}
                   className="text-[10px] text-[#005BAC] dark:text-blue-400 font-bold hover:underline cursor-pointer"
                 >
-                  Reset Filters
+                  {isAm ? 'ማጣሪያዎችን አጽዳ' : 'Reset Filters'}
                 </button>
               )}
             </div>
@@ -593,10 +603,10 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
               <div className="p-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-2">
                 <AlertCircle className="w-6 h-6 text-amber-500 mx-auto" />
                 <p className="font-bold text-xs text-slate-800 dark:text-slate-200">
-                  No investigators match your current filters.
+                  {isAm ? 'ከመረጧቸው ማጣሪያዎች ጋር የሚዛመድ መርማሪ አልተገኘም።' : 'No investigators match your current filters.'}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Try clearing the search query, selecting "All Department Desks", or switching to "All Regions".
+                  {isAm ? 'የፍለጋ ቃሉን ያጥፉ፣ ወይም "ሁሉንም ዞኖች" ይምረጡ።' : 'Try clearing the search query, selecting "All Department Desks", or switching to "All Regions".'}
                 </p>
                 <button
                   type="button"
@@ -607,7 +617,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                   }}
                   className="px-3 py-1.5 bg-[#005BAC] text-white rounded-lg font-bold text-xs hover:bg-blue-700 cursor-pointer inline-block"
                 >
-                  View All Regional Investigators
+                  {isAm ? 'ሁሉንም የክልል መርማሪዎች ተመልከት' : 'View All Regional Investigators'}
                 </button>
               </div>
             ) : (
@@ -670,7 +680,9 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                                 : 'bg-slate-400'
                             }`}
                           />
-                          <span>{availability}</span>
+                          <span>
+                            {availability === 'Available' ? (isAm ? 'ዝግጁ' : 'Available') : (availability === 'Busy' ? (isAm ? 'ስራ ላይ' : 'Busy') : availability)}
+                          </span>
                         </span>
                       </div>
 
@@ -683,12 +695,12 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                           <span className="flex items-center space-x-1 truncate">
                             <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                             <span className="truncate">
-                              {inv.city || inv.cityTown || inv.zone || 'Amhara'}
-                              {inTargetLocation && ' (Stationed)'}
+                              {inv.city || inv.cityTown || inv.zone || (isAm ? 'አማራ ክልል' : 'Amhara')}
+                              {inTargetLocation && (isAm ? ' (በአካባቢው)' : ' (Stationed)')}
                             </span>
                           </span>
                           <span className="font-mono font-bold shrink-0 ml-1">
-                            {activeCases} active case{activeCases === 1 ? '' : 's'}
+                            {activeCases} {isAm ? 'ጉዳዮች' : `active case${activeCases === 1 ? '' : 's'}`}
                           </span>
                         </div>
                       </div>
@@ -696,7 +708,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                       {/* Selected check */}
                       {isSelected && (
                         <div className="pt-1 border-t border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-[#005BAC] dark:text-blue-400 text-[10px] font-bold">
-                          <span>Selected Assignee</span>
+                          <span>{isAm ? 'የተመረጠ መርማሪ' : 'Selected Assignee'}</span>
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
                         </div>
                       )}
@@ -734,15 +746,15 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
 
               <div className="flex items-center space-x-3 shrink-0 text-[11px] border-t sm:border-t-0 pt-2 sm:pt-0 border-blue-200 dark:border-slate-700">
                 <div>
-                  <span className="text-slate-400 text-[10px] block">Location</span>
+                  <span className="text-slate-400 text-[10px] block">{isAm ? 'አካባቢ' : 'Location'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
                     {selectedInvestigator.city || selectedInvestigator.cityTown || selectedInvestigator.zone}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[10px] block">Active Workload</span>
+                  <span className="text-slate-400 text-[10px] block">{isAm ? 'የስራ ጫና' : 'Active Workload'}</span>
                   <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
-                    {getInvestigatorActiveCases(selectedInvestigator)} Cases
+                    {getInvestigatorActiveCases(selectedInvestigator)} {isAm ? 'ጉዳዮች' : 'Cases'}
                   </span>
                 </div>
               </div>
@@ -756,33 +768,42 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
             <div className="space-y-1.5">
               <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
                 <Flame className="w-3.5 h-3.5 text-red-500" />
-                <span>Priority Level *</span>
+                <span>{isAm ? 'የቅድሚያ ደረጃ *' : 'Priority Level *'}</span>
               </label>
 
               <div className="grid grid-cols-4 gap-1.5">
-                {(['Critical', 'High', 'Medium', 'Low'] as PriorityLevel[]).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      setPriority(p);
-                      setDeadline(getDefaultDeadline(p));
-                    }}
-                    className={`py-1.5 px-1 text-center rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                      priority === p
-                        ? p === 'Critical'
-                          ? 'bg-red-600 text-white shadow-xs'
-                          : p === 'High'
-                          ? 'bg-orange-600 text-white shadow-xs'
-                          : p === 'Medium'
-                          ? 'bg-amber-600 text-white shadow-xs'
-                          : 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                {(['Critical', 'High', 'Medium', 'Low'] as PriorityLevel[]).map((p) => {
+                  const getPriorityLabel = (lvl: PriorityLevel) => {
+                    if (!isAm) return lvl;
+                    if (lvl === 'Critical') return 'ወሳኝ';
+                    if (lvl === 'High') return 'ከፍተኛ';
+                    if (lvl === 'Medium') return 'መካከለኛ';
+                    return 'ዝቅተኛ';
+                  };
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setPriority(p);
+                        setDeadline(getDefaultDeadline(p));
+                      }}
+                      className={`py-1.5 px-1 text-center rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                        priority === p
+                          ? p === 'Critical'
+                            ? 'bg-red-600 text-white shadow-xs'
+                            : p === 'High'
+                            ? 'bg-orange-600 text-white shadow-xs'
+                            : p === 'Medium'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {getPriorityLabel(p)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -791,7 +812,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                  <span>Investigation Deadline *</span>
+                  <span>{isAm ? 'የማጠናቀቂያ ቀን *' : 'Investigation Deadline *'}</span>
                 </label>
                 <div className="flex items-center space-x-1">
                   <button
@@ -832,14 +853,14 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
           <div className="space-y-1.5">
             <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
               <FileText className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-              <span>Investigation Directives & Dispatch Notes (Optional)</span>
+              <span>{isAm ? 'የምርመራ መመሪያዎች እና ማስታወሻዎች (አማራጭ)' : 'Investigation Directives & Dispatch Notes (Optional)'}</span>
             </label>
 
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Conduct discrete on-site interviews with witnesses. Cross-reference municipal invoices & serial numbers."
+              placeholder={isAm ? 'ለምሳሌ፡ ከመስክ ምስክሮች ጋር ጥንቃቄ የተሞላበት ቃለ-መጠይቅ ያድርጉ። የሰነድ ማስረጃዎችን ያረጋግጡ...' : 'e.g. Conduct discrete on-site interviews with witnesses. Cross-reference municipal invoices & serial numbers.'}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC] text-xs"
             />
           </div>
@@ -848,7 +869,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
             <div className="flex items-center space-x-1 text-slate-500 dark:text-slate-400 text-[11px]">
               <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span className="hidden sm:inline">Protected by End-to-End Encryption</span>
+              <span className="hidden sm:inline">{isAm ? 'ከጫፍ እስከ ጫፍ በሚስጥር የተጠበቀ' : 'Protected by End-to-End Encryption'}</span>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -857,7 +878,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                 onClick={onClose}
                 className="px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               >
-                Cancel
+                {isAm ? 'ሰርዝ' : 'Cancel'}
               </button>
               <button
                 id="btn-confirm-dispatch-assignment"
@@ -874,12 +895,12 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
                 {isAlreadyAssigned ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Confirm Reassignment</span>
+                    <span>{isAm ? 'ድጋሚ ምደባውን አረጋግጥ' : 'Confirm Reassignment'}</span>
                   </>
                 ) : (
                   <>
                     <Check className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Confirm & Dispatch Unit</span>
+                    <span>{isAm ? 'አረጋግጥና ቡድኑን መድብ' : 'Confirm & Dispatch Unit'}</span>
                   </>
                 )}
               </button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, ChevronDown, Check, Search, Globe, Building2, AlertCircle } from 'lucide-react';
 import { ETHIOPIAN_REGIONS, REGION_ZONES_MAP, getZonesForRegion } from '../../data/zones';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface RegionZoneSelectorProps {
   selectedRegion: string;
@@ -29,12 +30,22 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
   required = true,
   size = 'md',
   layout = 'grid',
-  regionLabel = 'National Region / City Administration',
-  zoneLabel = 'Administrative Zone / Sub-City',
+  regionLabel,
+  zoneLabel,
   showCustomZoneInput = true,
   disabled = false,
   className = '',
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
+  const finalRegionLabel = regionLabel !== undefined
+    ? regionLabel
+    : (isAm ? 'ብሔራዊ ክልል / ከተማ አስተዳደር' : 'National Region / City Administration');
+  const finalZoneLabel = zoneLabel !== undefined
+    ? zoneLabel
+    : (isAm ? 'አስተዳደራዊ ዞን / ክፍለ ከተማ' : 'Administrative Zone / Sub-City');
+
   const [zoneSearch, setZoneSearch] = useState('');
   const [isZoneComboOpen, setIsZoneComboOpen] = useState(false);
   const comboRef = useRef<HTMLDivElement>(null);
@@ -87,7 +98,7 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
           <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-              <span>{regionLabel}</span>
+              <span>{finalRegionLabel}</span>
               {required && <span className="text-red-500">*</span>}
             </span>
           </label>
@@ -112,11 +123,11 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
           <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{zoneLabel}</span>
+              <span>{finalZoneLabel}</span>
               {required && <span className="text-red-500">*</span>}
             </span>
             <span className="text-[10px] text-slate-400 font-normal">
-              {availableZones.length} {selectedRegion.includes('Addis') || selectedRegion.includes('Dire') ? 'Sub-cities' : 'Zones'}
+              {availableZones.length} {selectedRegion.includes('Addis') || selectedRegion.includes('Dire') ? (isAm ? 'ክፍለ ከተሞች' : 'Sub-cities') : (isAm ? 'ዞኖች' : 'Zones')}
             </span>
           </label>
 
@@ -130,7 +141,7 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
             <div className="flex items-center space-x-2 truncate pr-2">
               <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span className="font-semibold truncate">
-                {selectedZone || 'Select Zone / Sub-City'}
+                {selectedZone || (isAm ? 'ዞን / ክፍለ ከተማ ይምረጡ' : 'Select Zone / Sub-City')}
               </span>
             </div>
             <ChevronDown
@@ -150,7 +161,7 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
                   <input
                     type="text"
                     autoFocus
-                    placeholder={`Search ${selectedRegion.replace('Region', '').trim()} zones...`}
+                    placeholder={isAm ? `${selectedRegion.replace('Region', '').trim()} ዞኖችን ይፈልጉ...` : `Search ${selectedRegion.replace('Region', '').trim()} zones...`}
                     value={zoneSearch}
                     onChange={(e) => setZoneSearch(e.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-emerald-500"
@@ -162,7 +173,7 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
               <div className="max-h-56 overflow-y-auto p-1 space-y-0.5 custom-scrollbar">
                 {filteredZones.length === 0 ? (
                   <div className="p-3 text-center text-xs text-slate-400">
-                    No matching zones found. Select "Others..." to type custom.
+                    {isAm ? 'የሚዛመድ ዞን አልተገኘም። በእጅ ለመጻፍ "Others..." የሚለውን ይምረጡ።' : 'No matching zones found. Select "Others..." to type custom.'}
                   </div>
                 ) : (
                   filteredZones.map((zoneName) => {
@@ -195,9 +206,9 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
 
               {/* Footer hint */}
               <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                <span>Region: {selectedRegion}</span>
+                <span>{isAm ? 'ክልል' : 'Region'}: {selectedRegion}</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {filteredZones.length} available
+                  {filteredZones.length} {isAm ? 'አማራጮች' : 'available'}
                 </span>
               </div>
             </div>
@@ -210,14 +221,14 @@ export const RegionZoneSelector: React.FC<RegionZoneSelectorProps> = ({
         <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/60 space-y-1 animate-in fade-in duration-200">
           <label className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-            <span>Specify Custom Location, Woreda, Sub-City, or Diaspora City *</span>
+            <span>{isAm ? 'ልዩ አካባቢ፣ ወረዳ፣ ክፍለ ከተማ ወይም የዲያስፖራ ከተማ በግልጽ ይግለጹ *' : 'Specify Custom Location, Woreda, Sub-City, or Diaspora City *'}</span>
           </label>
           <input
             type="text"
             required
             value={customZoneValue}
             onChange={(e) => onCustomZoneChange(e.target.value)}
-            placeholder="e.g. Adama Center, Hawassa Tabor Sub-city, Gambella Itang, or Washington DC"
+            placeholder={isAm ? 'ምሳሌ፡ አዳማ ማዕከል፣ ሐዋሳ ታቦር ክፍለ ከተማ፣ ጋምቤላ ኢታንግ፣ ወይም ዋሽንግተን ዲሲ' : 'e.g. Adama Center, Hawassa Tabor Sub-city, Gambella Itang, or Washington DC'}
             className="w-full px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-400"
           />
         </div>

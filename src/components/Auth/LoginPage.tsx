@@ -55,6 +55,7 @@ import {
 
 interface LoginPageProps {
   users: UserProfile[];
+  departments?: any[];
   onLoginSuccess: (user: UserProfile) => void;
   onGuestAccess: () => void;
   onRegisterUser: (newUser: UserProfile) => void;
@@ -62,6 +63,7 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({
   users,
+  departments = [],
   onLoginSuccess,
   onGuestAccess,
   onRegisterUser,
@@ -115,6 +117,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [regRegion, setRegRegion] = useState('Addis Abeba');
   const [regZone, setRegZone] = useState('Bole Sub-City');
   const [customZone, setCustomZone] = useState('');
+  const [regDepartment, setRegDepartment] = useState('');
+  const [regCustomDepartment, setRegCustomDepartment] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
@@ -399,39 +403,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setRegSuccessMessage('');
 
     if (!regFirstName.trim() || !regLastName.trim() || !regEmail.trim() || !regPassword.trim() || !regPhone.trim()) {
-      setRegError('Please fill in all required fields, including your email address.');
+      setRegError(isAm ? 'እባክዎ የኢሜይል አድራሻን ጨምሮ ሁሉንም አስፈላጊ መረጃዎች በትክክል ይሙሉ!' : 'Please fill in all required fields, including your email address.');
       return;
     }
 
     // Validate First Name (Amharic or English text - letters only)
-    const firstNameValidation = validateName(regFirstName, 'First Name');
+    const firstNameValidation = validateName(regFirstName, isAm ? 'የመጀመሪያ ስም' : 'First Name');
     if (!firstNameValidation.isValid) {
-      setRegError(firstNameValidation.error || 'First Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.');
+      setRegError(firstNameValidation.error || (isAm ? 'ስም ፊደላትን ብቻ መያዝ አለበት። ቁጥሮችና ምልክቶች አይፈቀዱም።' : 'First Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.'));
       return;
     }
 
     // Validate Last Name (Amharic or English text - letters only)
-    const lastNameValidation = validateName(regLastName, 'Last Name');
+    const lastNameValidation = validateName(regLastName, isAm ? 'የአባት ስም' : 'Last Name');
     if (!lastNameValidation.isValid) {
-      setRegError(lastNameValidation.error || 'Last Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.');
+      setRegError(lastNameValidation.error || (isAm ? 'የአባት ስም ፊደላትን ብቻ መያዝ አለበት። ቁጥሮችና ምልክቶች አይፈቀዱም።' : 'Last Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.'));
       return;
     }
 
     // Formal Email validation
     const emailValidation = validateEmail(regEmail);
     if (!emailValidation.isValid) {
-      setRegError(emailValidation.error || 'Please enter a valid formal email address (e.g. name@domain.com).');
+      setRegError(emailValidation.error || (isAm ? 'እባክዎ ትክክለኛ መደበኛ የኢሜይል አድራሻ ያስገቡ (ለምሳሌ፡ name@domain.com)።' : 'Please enter a valid formal email address (e.g. name@domain.com).'));
       return;
     }
 
-    // Check if email already registered in existing user list
+    // Check if email already registered in existing user list (Enforce Unique Email)
     const normalizedEmail = regEmail.trim().toLowerCase();
     const existingEmailUser = users.find(
       (u) => (u.email || '').trim().toLowerCase() === normalizedEmail
     );
     if (existingEmailUser) {
       setRegError(
-        'This account is already registered. Please sign in to continue.'
+        isAm
+          ? 'ይህ የኢሜይል አድራሻ አስቀድሞ ተመዝግቧል። እባክዎ በቀጥታ ይግቡ ወይም የይለፍ ቃልዎን ይቀይሩ።'
+          : 'This account is already registered. Please sign in to continue.'
       );
       return;
     }
@@ -439,21 +445,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     // Strong password validation - enforce 8+ chars, upper, lower, number, special
     const strongPassCheck = validateStrongPassword(regPassword);
     if (!strongPassCheck.isValid) {
-      setRegError(strongPassCheck.error || 'Please create a strong password meeting all security requirements.');
+      setRegError(strongPassCheck.error || (isAm ? 'እባክዎ ሁሉንም የደህንነት መስፈርቶች የሚያሟላ ጠንካራ የይለፍ ቃል ይፍጠሩ።' : 'Please create a strong password meeting all security requirements.'));
       return;
     }
 
     // Password confirmation match validation
     const matchCheck = validatePasswordMatch(regPassword, regConfirmPassword);
     if (!matchCheck.isValid) {
-      setRegError(matchCheck.error || 'Passwords do not match. Please ensure both passwords match.');
+      setRegError(isAm ? 'የይለፍ ቃሎች አልተዛመዱም። እባክዎ ሁለቱም የይለፍ ቃሎች ተመሳሳይ መሆናቸውን ያረጋግጡ።' : matchCheck.error || 'Passwords do not match. Please ensure both passwords match.');
       return;
     }
 
     // International Phone validation (Supports Ethiopia and any country worldwide)
     const phoneValidation = validateInternationalPhone(regPhone);
     if (!phoneValidation.isValid) {
-      setRegError(phoneValidation.error || 'Please enter a valid international phone number.');
+      setRegError(phoneValidation.error || (isAm ? 'እባክዎ ትክክለኛ ዓለም አቀፍ የስልክ ቁጥር ያስገቡ።' : 'Please enter a valid international phone number.'));
       return;
     }
 
@@ -471,7 +477,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       });
       if (existingPhoneUser) {
         setRegError(
-          'This account is already registered. Please sign in to continue.'
+          isAm
+            ? 'ይህ ስልክ ቁጥር አስቀድሞ ተመዝግቧል። እባክዎ በቀጥታ ይግቡ።'
+            : 'This account is already registered. Please sign in to continue.'
         );
         return;
       }
@@ -480,13 +488,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     // Check if zone is custom and require custom input
     const isCustom = regZone.startsWith('Others') || regRegion === 'Others...';
     if (isCustom && !customZone.trim()) {
-      setRegError('Please specify your custom Region / Zone / City / Woreda in the location box.');
+      setRegError(isAm ? 'እባክዎ ክልል፣ ዞን፣ ከተማ ወይም ወረዳዎን በቦታው ሳጥን ውስጥ በእጅ ይግለጹ።' : 'Please specify your custom Region / Zone / City / Woreda in the location box.');
       return;
     }
 
     // Security CAPTCHA verification check
     if (!isRegCaptchaVerified) {
-      setRegCaptchaError('Please complete the security CAPTCHA verification before creating your account.');
+      setRegCaptchaError(isAm ? 'አካውንትዎን ከመፍጠርዎ በፊት እባክዎ የደህንነት ማረጋገጫውን (CAPTCHA) ያጠናቅቁ።' : 'Please complete the security CAPTCHA verification before creating your account.');
       return;
     }
 
@@ -506,7 +514,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     );
 
     if (!hasAtLeastOneAnswer) {
-      setRegSecurityError('Please answer at least one security recovery question to secure your account for password recovery.');
+      setRegSecurityError(isAm ? 'የይለፍ ቃልዎን መልሰው ለማግኘት ቢያንስ አንዱን የደህንነት ጥያቄ ይመልሱ።' : 'Please answer at least one security recovery question to secure your account for password recovery.');
       return;
     }
 
@@ -517,7 +525,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       const finalZone = isCustom ? (customZone.trim() || 'Custom Location') : regZone;
       const cleanPhoneDigits = regPhone.replace(/[\s\-\(\)]/g, '');
 
-      // Register citizen account directly with security questions
+      // Register citizen account directly with security questions (Strict Citizen Role Security)
       const regResult = await registerCitizenApi({
         fullName: `${regFirstName.trim()} ${regLastName.trim()}`,
         email: regEmail.trim(),
@@ -536,13 +544,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       if (regResult.success && regResult.user) {
         setShowRegSecurityModal(false);
         onRegisterUser(regResult.user);
-        setRegSuccessMessage(`Account ${regResult.user.id} created successfully! Logging you in...`);
+        setRegSuccessMessage(
+          isAm
+            ? `የተጠቃሚ መለያ ${regResult.user.id} በተሳካ ሁኔታ ተፈጥሯል! በማስገባት ላይ...`
+            : `Account ${regResult.user.id} created successfully! Logging you in...`
+        );
         setTimeout(() => {
           onLoginSuccess(regResult.user);
         }, 600);
       }
     } catch (err: any) {
-      setRegSecurityError(err.message || 'Registration failed. Please check your information and try again.');
+      setRegSecurityError(err.message || (isAm ? 'ምዝገባው አልተሳካም። እባክዎ መረጃዎን አረጋግጠው በድጋሚ ይሞክሩ።' : 'Registration failed. Please check your information and try again.'));
     } finally {
       setIsSubmittingReg(false);
     }
@@ -992,9 +1004,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             {activeTab === 'register' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Sign Up for Verified Citizen Account</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    {isAm ? 'የተረጋገጠ የዜጋ አካውንት ለመክፈት ይመዝገቡ' : 'Sign Up for Verified Citizen Account'}
+                  </h3>
                   <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5">
-                    Enter your personal details and create a strong password to access the portal.
+                    {isAm
+                      ? 'ወደ መድረኩ ለመግባት የግል መረጃዎን ያስገቡ እና ጠንካራ የይለፍ ቃል ይፍጠሩ።'
+                      : 'Enter your personal details and create a strong password to access the portal.'}
                   </p>
                 </div>
 
@@ -1004,7 +1020,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
                       <span className="leading-relaxed font-medium">{regError}</span>
                     </div>
-                    {(regError.toLowerCase().includes('already registered') || regError.toLowerCase().includes('already exists') || regError.toLowerCase().includes('sign in') || regError.includes('ተመዝግቧል')) && (
+                    {(regError.toLowerCase().includes('already registered') || regError.toLowerCase().includes('already exists') || regError.toLowerCase().includes('sign in') || regError.includes('ተመዝግቧል') || regError.includes('ይግቡ')) && (
                       <div className="pt-1">
                         <button
                           type="button"
@@ -1016,7 +1032,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                           className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] flex items-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
                         >
                           <Lock className="w-3.5 h-3.5" />
-                          <span>Go to Sign In</span>
+                          <span>{isAm ? 'ወደ መግቢያ ገጽ ሂድ' : 'Go to Sign In'}</span>
                           <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                         </button>
                       </div>
@@ -1036,32 +1052,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <ValidatedNameInput
                       id="reg-first-name"
-                      label="First Name"
+                      label={isAm ? 'ስም' : 'First Name'}
                       required
                       value={regFirstName}
                       onChange={setRegFirstName}
-                      placeholder="Enter first name"
+                      placeholder={isAm ? 'የመጀመሪያ ስም ያስገቡ' : 'Enter first name'}
                     />
 
                     <ValidatedNameInput
                       id="reg-last-name"
-                      label="Last Name"
+                      label={isAm ? 'የአባት ስም' : 'Last Name'}
                       required
                       value={regLastName}
                       onChange={setRegLastName}
-                      placeholder="Enter last name"
+                      placeholder={isAm ? 'የአባት ስም ያስገቡ' : 'Enter last name'}
                     />
                   </div>
 
                   {/* Formal Email field (MANDATORY & Validated) */}
                   <FormalEmailInput
                     id="reg-email"
-                    label="Email Address"
+                    label={isAm ? 'የኢሜይል አድራሻ' : 'Email Address'}
                     required
                     value={regEmail}
                     onChange={setRegEmail}
-                    placeholder="e.g. name@domain.com or user@ameco.et"
-                    requiredBadgeText="Mandatory"
+                    placeholder={isAm ? 'ለምሳሌ፡ name@domain.com ወይም user@ameco.et' : 'e.g. name@domain.com or user@ameco.et'}
+                    requiredBadgeText={isAm ? 'ግዴታ' : 'Mandatory'}
                   />
 
                   {/* Phone number field (International & Ethiopia) */}
@@ -1069,24 +1085,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     value={regPhone}
                     onChange={setRegPhone}
                     required
-                    label="Phone Number"
+                    label={isAm ? 'የስልክ ቁጥር' : 'Phone Number'}
                   />
+
 
                   {/* Password with Strong Password Generator and Strength Meter */}
                   <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-zinc-900/70 rounded-2xl border border-slate-200 dark:border-zinc-800">
                     <div className="flex items-center justify-between">
                       <label className="font-bold text-slate-700 dark:text-zinc-300 flex items-center space-x-1.5">
                         <KeyRound className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Create Password *</span>
+                        <span>{isAm ? 'የይለፍ ቃል ይፍጠሩ *' : 'Create Password *'}</span>
                       </label>
                       <button
                         type="button"
                         onClick={handleGeneratePassword}
                         className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#005BAC] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-[11px] flex items-center space-x-1 transition-colors"
-                        title="Generate strong recommended password"
+                        title={isAm ? 'ጠንካራ የይለፍ ቃል አዘጋጅ' : 'Generate strong recommended password'}
                       >
                         <Sparkles className="w-3 h-3 text-amber-500" />
-                        <span>Recommend Strong Password</span>
+                        <span>{isAm ? 'ጠንካራ የይለፍ ቃል ምከር' : 'Recommend Strong Password'}</span>
                       </button>
                     </div>
 
@@ -1096,13 +1113,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         required
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="Create strong password (min 8 chars, mixed case, symbol)"
+                        placeholder={isAm ? 'ጠንካራ የይለፍ ቃል ይፍጠሩ (ቢያንስ 8 ፊደላት፣ ካፒታል፣ ምልክት)' : 'Create strong password (min 8 chars, mixed case, symbol)'}
                         className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white dark:bg-zinc-950 border border-slate-300 dark:border-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400 font-mono text-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegPassword(!showRegPassword)}
-                        className="absolute right-3 top-2.5 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                        className="absolute right-3 top-2.5 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                       >
                         {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1111,7 +1128,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     {passwordCopied && (
                       <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1">
                         <Check className="w-3.5 h-3.5" />
-                        <span>Strong password generated & copied to clipboard!</span>
+                        <span>{isAm ? 'ጠንካራ የይለፍ ቃል ተፈጥሮ ወደ ቅንጥብ ሰሌዳ ተቀድቷል!' : 'Strong password generated & copied to clipboard!'}</span>
                       </div>
                     )}
 
@@ -1119,9 +1136,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     {regPassword.length > 0 && (
                       <div className="space-y-1.5 pt-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-slate-500 dark:text-zinc-400">Password Strength:</span>
+                          <span className="text-slate-500 dark:text-zinc-400">
+                            {isAm ? 'የይለፍ ቃል ጥንካሬ፡' : 'Password Strength:'}
+                          </span>
                           <span className={`font-bold ${passwordStrength.color}`}>
-                            {passwordStrength.label}
+                            {isAm
+                              ? passwordStrength.score === 4
+                                ? 'በጣም ጠንካራ'
+                                : passwordStrength.score === 3
+                                ? 'ጠንካራ'
+                                : passwordStrength.score === 2
+                                ? 'መካከለኛ'
+                                : 'ደካማ'
+                              : passwordStrength.label}
                           </span>
                         </div>
                         <div className="w-full bg-slate-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden flex gap-1">
@@ -1147,19 +1174,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-500 dark:text-zinc-400 pt-1">
                           <span className={`flex items-center space-x-1 ${passwordStrength.hasMinLength ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
                             <Check className={`w-3 h-3 ${passwordStrength.hasMinLength ? 'opacity-100' : 'opacity-30'}`} />
-                            <span>8+ Characters</span>
+                            <span>{isAm ? '8+ ፊደላት' : '8+ Characters'}</span>
                           </span>
                           <span className={`flex items-center space-x-1 ${passwordStrength.hasUpper ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
                             <Check className={`w-3 h-3 ${passwordStrength.hasUpper ? 'opacity-100' : 'opacity-30'}`} />
-                            <span>Uppercase (A-Z)</span>
+                            <span>{isAm ? 'ትልቅ ፊደል (A-Z)' : 'Uppercase (A-Z)'}</span>
                           </span>
                           <span className={`flex items-center space-x-1 ${passwordStrength.hasNumber ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
                             <Check className={`w-3 h-3 ${passwordStrength.hasNumber ? 'opacity-100' : 'opacity-30'}`} />
-                            <span>Number (0-9)</span>
+                            <span>{isAm ? 'ቁጥር (0-9)' : 'Number (0-9)'}</span>
                           </span>
                           <span className={`flex items-center space-x-1 ${passwordStrength.hasSpecial ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
                             <Check className={`w-3 h-3 ${passwordStrength.hasSpecial ? 'opacity-100' : 'opacity-30'}`} />
-                            <span>Symbol (!@#$)</span>
+                            <span>{isAm ? 'ምልክት (!@#$)' : 'Symbol (!@#$)'}</span>
                           </span>
                         </div>
                       </div>
@@ -1171,7 +1198,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     <div className="flex items-center justify-between">
                       <label className="font-bold text-slate-700 dark:text-zinc-300 flex items-center space-x-1.5 text-xs">
                         <Lock className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                        <span>Confirm Password *</span>
+                        <span>{isAm ? 'የይለፍ ቃል አረጋግጥ *' : 'Confirm Password *'}</span>
                       </label>
                       {regConfirmPassword.length > 0 && (
                         <span
@@ -1184,12 +1211,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                           {passwordsMatch ? (
                             <>
                               <Check className="w-3 h-3" />
-                              <span>Passwords Match</span>
+                              <span>{isAm ? 'የይለፍ ቃሎች ተዛምደዋል' : 'Passwords Match'}</span>
                             </>
                           ) : (
                             <>
                               <AlertCircle className="w-3 h-3" />
-                              <span>Passwords Do Not Match</span>
+                              <span>{isAm ? 'የይለፍ ቃሎች አልተዛመዱም' : 'Passwords Do Not Match'}</span>
                             </>
                           )}
                         </span>
@@ -1202,7 +1229,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         required
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
-                        placeholder="Re-enter your strong password to confirm"
+                        placeholder={isAm ? 'ያረጋገጡትን የይለፍ ቃል በድጋሚ ያስገቡ' : 'Re-enter your strong password to confirm'}
                         className={`w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white dark:bg-zinc-950 border text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 font-mono text-xs ${
                           regConfirmPassword.length > 0
                             ? passwordsMatch
@@ -1214,7 +1241,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                        className="absolute right-3 top-2.5 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                        className="absolute right-3 top-2.5 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                       >
                         {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1223,7 +1250,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     {passwordsMismatch && (
                       <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center space-x-1 pt-0.5">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>The entered passwords must be strictly identical.</span>
+                        <span>{isAm ? 'የገቡት የይለፍ ቃሎች በትክክል አንድ አይነት መሆን አለባቸው።' : 'The entered passwords must be strictly identical.'}</span>
                       </p>
                     )}
                   </div>
@@ -1258,7 +1285,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black font-extrabold shadow-lg flex items-center justify-center space-x-2 transition-all transform hover:-translate-y-0.5 mt-2 disabled:opacity-50 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4" />
-                    <span>Create Account</span>
+                    <span>{isAm ? 'አካውንት ፍጠር' : 'Create Account'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -1298,10 +1325,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Set Security Recovery Questions
+                    {isAm ? 'የመለያ መልሶ ማግኛ የደህንነት ጥያቄዎች' : 'Set Security Recovery Questions'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400">
-                    Just one answer is enough to protect your account
+                    {isAm
+                      ? 'አካውንትዎን ለመጠበቅ ቢያንስ የአንዱን መልስ መሙላት በቂ ነው'
+                      : 'Just one answer is enough to protect your account'}
                   </p>
                 </div>
               </div>
@@ -1327,18 +1356,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 flex items-start space-x-2.5">
                 <HelpCircle className="w-4 h-4 text-[#005BAC] dark:text-blue-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">
-                  If you ever forget your password, you will be able to recover your account by answering your security question. <strong>Answering at least 1 question is sufficient</strong> (or answer more if you'd like).
+                  {isAm ? (
+                    <>የይለፍ ቃልዎን ቢረሱ እንኳ፣ የመረጡትን የደህንነት ጥያቄ በመመለስ መለያዎን በቀላሉ ማግኘት ይችላሉ። <strong>ቢያንስ 1 ጥያቄ መመለስ በቂ ነው</strong> (ከፈለጉ ተጨማሪ ጥያቄዎችን መመለስ ይችላሉ)።</>
+                  ) : (
+                    <>If you ever forget your password, you will be able to recover your account by answering your security question. <strong>Answering at least 1 question is sufficient</strong> (or answer more if you'd like).</>
+                  )}
                 </p>
               </div>
 
               {/* Question 1: Favourite Number */}
               <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-zinc-950/60 rounded-2xl border border-slate-200 dark:border-zinc-800">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
-                  <span>1. What is your favourite number?</span>
+                  <span>{isAm ? '1. የምትወዱት ቁጥር ስንት ነው?' : '1. What is your favourite number?'}</span>
                   {regSecurityAnswer1.trim() && (
                     <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                       <Check className="w-3 h-3" />
-                      <span>Answered</span>
+                      <span>{isAm ? 'ተመልሷል' : 'Answered'}</span>
                     </span>
                   )}
                 </label>
@@ -1348,7 +1381,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     type="text"
                     value={regSecurityAnswer1}
                     onChange={(e) => setRegSecurityAnswer1(e.target.value)}
-                    placeholder="e.g. 7 or 42 (optional if you answer another question)"
+                    placeholder={isAm ? 'ለምሳሌ፡ 7 ወይም 42 (አማራጭ)' : 'e.g. 7 or 42 (optional if you answer another question)'}
                     className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                   />
                 </div>
@@ -1357,11 +1390,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               {/* Question 2: Nickname */}
               <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-zinc-950/60 rounded-2xl border border-slate-200 dark:border-zinc-800">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
-                  <span>2. What is your childhood nickname / nickname?</span>
+                  <span>{isAm ? '2. የልጅነት ቅጽል ስምዎ ማን ይባላል?' : '2. What is your childhood nickname / nickname?'}</span>
                   {regSecurityAnswer2.trim() && (
                     <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                       <Check className="w-3 h-3" />
-                      <span>Answered</span>
+                      <span>{isAm ? 'ተመልሷል' : 'Answered'}</span>
                     </span>
                   )}
                 </label>
@@ -1371,7 +1404,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     type="text"
                     value={regSecurityAnswer2}
                     onChange={(e) => setRegSecurityAnswer2(e.target.value)}
-                    placeholder="e.g. Abebe or Mickey (optional if you answer another question)"
+                    placeholder={isAm ? 'ለምሳሌ፡ አቤ ወይም ሚኪ (አማራጭ)' : 'e.g. Abebe or Mickey (optional if you answer another question)'}
                     className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                   />
                 </div>
@@ -1380,11 +1413,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               {/* Question 3: Favourite Place */}
               <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-zinc-950/60 rounded-2xl border border-slate-200 dark:border-zinc-800">
                 <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
-                  <span>3. What is your favourite place or city?</span>
+                  <span>{isAm ? '3. የምትወዱት ከተማ ወይም ቦታ የት ነው?' : '3. What is your favourite place or city?'}</span>
                   {regSecurityAnswer3.trim() && (
                     <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center space-x-0.5">
                       <Check className="w-3 h-3" />
-                      <span>Answered</span>
+                      <span>{isAm ? 'ተመልሷል' : 'Answered'}</span>
                     </span>
                   )}
                 </label>
@@ -1394,7 +1427,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     type="text"
                     value={regSecurityAnswer3}
                     onChange={(e) => setRegSecurityAnswer3(e.target.value)}
-                    placeholder="e.g. Bahir Dar, Gondar, Lalibela (optional if you answer another question)"
+                    placeholder={isAm ? 'ለምሳሌ፡ ባህር ዳር፣ ጎንደር፣ ላሊበላ (አማራጭ)' : 'e.g. Bahir Dar, Gondar, Lalibela (optional if you answer another question)'}
                     className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-zinc-400"
                   />
                 </div>
@@ -1408,7 +1441,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Form</span>
+                  <span>{isAm ? 'ወደ ፎርሙ ተመለስ' : 'Back to Form'}</span>
                 </button>
 
                 <button
@@ -1419,11 +1452,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   {isSubmittingReg ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Creating Account...</span>
+                      <span>{isAm ? 'አካውንት በመፍጠር ላይ...' : 'Creating Account...'}</span>
                     </>
                   ) : (
                     <>
-                      <span>Complete & Create Account</span>
+                      <span>{isAm ? 'ምዝገባውን አጠናቅቅ' : 'Complete & Create Account'}</span>
                       <Check className="w-4 h-4" />
                     </>
                   )}

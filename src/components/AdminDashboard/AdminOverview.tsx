@@ -170,19 +170,33 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
         <div>
           <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-            <span>AMECO Central Editorial & Administration Command</span>
+            <span>
+              {language === 'am'
+                ? 'የአሜኮ ማዕከላዊ የኤዲቶሪያል እና የአስተዳደር መምሪያ'
+                : 'AMECO Central Editorial & Administration Command'}
+            </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Administrator Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            {language === 'am' ? 'የአስተዳዳሪ ዳሽቦርድ' : 'Administrator Dashboard'}
+          </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Regional report management system • Submissions grouped by Zone with direct evidence inspection.
+            {language === 'am'
+              ? 'የክልል ሪፖርት አስተዳደር ስርዓት • ጥቆማዎች በየዞኑ ተደራጅተው በቀጥታ ከነማስረጃዎቻቸው የሚመረመሩበት።'
+              : 'Regional report management system • Submissions grouped by Zone with direct evidence inspection.'}
           </p>
         </div>
 
         <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
           <Sparkles className="w-5 h-5 text-amber-500 dark:text-amber-400" />
           <div className="text-xs">
-            <p className="font-bold text-slate-900 dark:text-white">Gemini AI Moderation</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">100% Automated Zone Classification Active</p>
+            <p className="font-bold text-slate-900 dark:text-white">
+              {language === 'am' ? 'የጄሚኒ AI ማጣሪያ' : 'Gemini AI Moderation'}
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {language === 'am'
+                ? '100% አውቶማቲክ የዞን ምደባ ንቁ ነው'
+                : '100% Automated Zone Classification Active'}
+            </p>
           </div>
         </div>
       </div>
@@ -407,16 +421,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
           </div>
           <div className="flex items-center justify-between text-[10px]">
             <span className={statusFilter === 'Published' ? 'text-teal-100' : 'text-teal-700 dark:text-teal-400'}>
-              Public Bulletins
+              {language === 'am' ? 'የህዝብ ጋዜጣዊ መግለጫዎች' : 'Public Bulletins'}
             </span>
             <span className={`font-bold flex items-center space-x-1 ${statusFilter === 'Published' ? 'text-teal-100' : 'text-teal-800'}`}>
               {statusFilter === 'Published' ? (
                 <>
                   <Check className="w-3 h-3" />
-                  <span>Filtered</span>
+                  <span>{language === 'am' ? 'ተጣርቷል' : 'Filtered'}</span>
                 </>
               ) : (
-                <span>Filter</span>
+                <span>{language === 'am' ? 'አጣራ' : 'Filter'}</span>
               )}
             </span>
           </div>
@@ -429,15 +443,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
           <div className="flex items-center space-x-2">
             <MapPin className="w-4 h-4 text-[#005BAC]" />
             <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              Select Zone to Filter Submissions ({allZones.length} Regional Zones)
+              {language === 'am'
+                ? `ጥቆማዎችን ለማጣራት ዞን ይምረጡ (${allZones.length} ክልላዊ ዞኖች)`
+                : `Select Zone to Filter Submissions (${allZones.length} Regional Zones)`}
             </h3>
           </div>
           {zoneFilter !== 'All' && (
             <button
               onClick={() => setZoneFilter('All')}
-              className="text-xs text-[#005BAC] hover:underline font-bold flex items-center space-x-1"
+              className="text-xs text-[#005BAC] hover:underline font-bold flex items-center space-x-1 cursor-pointer"
             >
-              <span>Show All Zones ({totalReports} Reports)</span>
+              <span>{language === 'am' ? `ሁሉንም ዞኖች አሳይ (${totalReports} ሪፖርቶች)` : `Show All Zones (${totalReports} Reports)`}</span>
             </button>
           )}
         </div>
@@ -459,7 +475,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                   setZoneFilter(isSelected ? 'All' : zoneName);
                   setViewMode('grouped');
                 }}
-                className={`p-3.5 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between space-y-2 card-hover-lift ${
+                className={`p-3.5 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between space-y-2 card-hover-lift cursor-pointer ${
                   isSelected
                     ? 'bg-[#005BAC] text-white border-[#005BAC] shadow-md ring-2 ring-blue-400'
                     : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-800 hover:border-blue-300'
@@ -483,7 +499,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
 
                 <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-100 dark:border-slate-800/80">
                   <span className={isSelected ? 'text-blue-100' : 'text-slate-500'}>
-                    {pendingInZone > 0 ? `${pendingInZone} Pending` : 'All Reviewed'}
+                    {pendingInZone > 0
+                      ? (language === 'am' ? `${pendingInZone} ያልተገመገሙ` : `${pendingInZone} Pending`)
+                      : (language === 'am' ? 'ሁሉም ተገምግመዋል' : 'All Reviewed')}
                   </span>
                   {criticalInZone > 0 && (
                     <span
@@ -491,7 +509,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                         isSelected ? 'bg-red-500 text-white' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
                       }`}
                     >
-                      {criticalInZone} Critical
+                      {criticalInZone} {language === 'am' ? 'ወሳኝ' : 'Critical'}
                     </span>
                   )}
                 </div>
@@ -509,11 +527,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             <div className="flex items-center space-x-2">
               <Layers className="w-5 h-5 text-[#005BAC]" />
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Submitted Reports Review Queue
+                {language === 'am' ? 'የቀረቡ ጥቆማዎች መገምገሚያ ሰሌዳ' : 'Submitted Reports Review Queue'}
               </h2>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Reports organized by Zone/Region for easy high-volume administration
+              {language === 'am'
+                ? 'ጥቆማዎች በቀላሉ ለማስተዳደር በየዞኑ ተመድበዋል'
+                : 'Reports organized by Zone/Region for easy high-volume administration'}
             </p>
           </div>
 
@@ -523,26 +543,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => setViewMode('grouped')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center space-x-1.5 cursor-pointer ${
                   viewMode === 'grouped'
                     ? 'bg-[#005BAC] text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                 }`}
               >
                 <Folder className="w-3.5 h-3.5" />
-                <span>Grouped by Zone</span>
+                <span>{language === 'am' ? 'በዞን ተመድበው' : 'Grouped by Zone'}</span>
               </button>
 
               <button
                 onClick={() => setViewMode('table')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center space-x-1.5 cursor-pointer ${
                   viewMode === 'table'
                     ? 'bg-[#005BAC] text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Flat Table View</span>
+                <span>{language === 'am' ? 'ጠፍጣፋ የሰንጠረዥ እይታ' : 'Flat Table View'}</span>
               </button>
             </div>
 
@@ -553,7 +573,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search reports or zones..."
+                placeholder={language === 'am' ? 'ሪፖርቶችን ወይም ዞኖችን ፈልግ...' : 'Search reports or zones...'}
                 className="pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs focus:ring-2 focus:ring-[#005BAC] outline-none"
               />
             </div>
@@ -564,7 +584,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
               onChange={(e) => setZoneFilter(e.target.value)}
               className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs outline-none"
             >
-              <option value="All">All Zones ({allZones.length})</option>
+              <option value="All">{language === 'am' ? `ሁሉም ዞኖች (${allZones.length})` : `All Zones (${allZones.length})`}</option>
               {allZones.map((zone) => (
                 <option key={zone} value={zone}>
                   {zone}
@@ -578,15 +598,15 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs outline-none font-semibold"
             >
-              <option value="All">All Statuses</option>
-              <option value="Pending Review">Pending Review ({pendingReports})</option>
-              <option value="Assigned Cases">Assigned Cases ({assignedReports})</option>
-              <option value="Completed">Completed ({completedReports})</option>
-              <option value="Submitted">Submitted</option>
-              <option value="Under Administrator Review">Under Administrator Review</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Investigation in Progress">Investigation in Progress</option>
-              <option value="Published">Published</option>
+              <option value="All">{language === 'am' ? 'ሁሉም ሁኔታዎች' : 'All Statuses'}</option>
+              <option value="Pending Review">{language === 'am' ? `በግምገማ ላይ (${pendingReports})` : `Pending Review (${pendingReports})`}</option>
+              <option value="Assigned Cases">{language === 'am' ? `የተመደቡ ጉዳዮች (${assignedReports})` : `Assigned Cases (${assignedReports})`}</option>
+              <option value="Completed">{language === 'am' ? `የተጠናቀቁ (${completedReports})` : `Completed (${completedReports})`}</option>
+              <option value="Submitted">{language === 'am' ? 'የቀረበ' : 'Submitted'}</option>
+              <option value="Under Administrator Review">{language === 'am' ? 'በአስተዳዳሪ ግምገማ ላይ' : 'Under Administrator Review'}</option>
+              <option value="Assigned">{language === 'am' ? 'የተመደበ' : 'Assigned'}</option>
+              <option value="Investigation in Progress">{language === 'am' ? 'ምርመራ በሂደት ላይ' : 'Investigation in Progress'}</option>
+              <option value="Published">{language === 'am' ? 'የታተመ' : 'Published'}</option>
             </select>
 
             {/* Priority Filter */}
@@ -595,21 +615,21 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
               onChange={(e) => setPriorityFilter(e.target.value)}
               className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 text-xs outline-none"
             >
-              <option value="All">All Priorities</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
+              <option value="All">{language === 'am' ? 'ሁሉም ቅድሚያዎች' : 'All Priorities'}</option>
+              <option value="Critical">{language === 'am' ? 'ወሳኝ' : 'Critical'}</option>
+              <option value="High">{language === 'am' ? 'ከፍተኛ' : 'High'}</option>
+              <option value="Medium">{language === 'am' ? 'መካከለኛ' : 'Medium'}</option>
+              <option value="Low">{language === 'am' ? 'ዝቅተኛ' : 'Low'}</option>
             </select>
 
             {/* Export CSV Button */}
             <button
               onClick={() => exportReportsToCSV(filteredReports, `ameco_reports_queue_${new Date().toISOString().split('T')[0]}.csv`)}
-              className="px-3 py-1.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-lg text-xs shadow-xs flex items-center space-x-1.5 transition-transform active:scale-95"
-              title="Export filtered reports queue to CSV"
+              className="px-3 py-1.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-lg text-xs shadow-xs flex items-center space-x-1.5 transition-transform active:scale-95 cursor-pointer"
+              title={language === 'am' ? 'ሪፖርቶችን በCSV አውርድ' : 'Export filtered reports queue to CSV'}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              <span>{language === 'am' ? 'CSV አውርድ' : 'Export CSV'}</span>
             </button>
           </div>
         </div>
@@ -620,22 +640,24 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             <div className="flex items-center space-x-2">
               <MapPin className="w-4 h-4 text-[#005BAC]" />
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                Displaying {Object.keys(reportsByZone).length} Zones with matching submissions ({filteredReports.length} total reports)
+                {language === 'am'
+                  ? `${Object.keys(reportsByZone).length} ዞኖች ከጥቆማዎቻቸው ጋር እየታዩ ነው (${filteredReports.length} ጠቅላላ ሪፖርቶች)`
+                  : `Displaying ${Object.keys(reportsByZone).length} Zones with matching submissions (${filteredReports.length} total reports)`}
               </span>
             </div>
 
             <div className="flex items-center space-x-2">
               <button
                 onClick={expandAll}
-                className="px-2.5 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-100 font-semibold text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-100 font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
-                Expand All
+                {language === 'am' ? 'ሁሉንም ዘርጋ' : 'Expand All'}
               </button>
               <button
                 onClick={collapseAll}
-                className="px-2.5 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-100 font-semibold text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-100 font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
               >
-                Collapse All
+                {language === 'am' ? 'ሁሉንም አሳንስ' : 'Collapse All'}
               </button>
             </div>
           </div>
@@ -753,18 +775,18 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                   <div className="flex items-center space-x-2 text-emerald-900 dark:text-emerald-200">
                                     <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                     <span className="font-bold">
-                                      Assigned Lead: {report.assignedTo?.responsiblePersonName || 'AMECO Field Investigator'}
+                                      {language === 'am' ? 'የተመደበ መርማሪ:' : 'Assigned Lead:'} {report.assignedTo?.responsiblePersonName || (language === 'am' ? 'የአሜኮ የመስክ መርማሪ' : 'AMECO Field Investigator')}
                                     </span>
                                     <span className="text-emerald-700 dark:text-emerald-300 text-[11px]">
-                                      ({report.assignedTo?.department || 'Special Taskforce'})
+                                      ({report.assignedTo?.department || (language === 'am' ? 'ልዩ ግብረ ሃይል' : 'Special Taskforce')})
                                     </span>
                                   </div>
                                   <div className="flex items-center space-x-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-mono">
                                     {report.assignedTo?.deadline && (
-                                      <span>Deadline: <strong>{report.assignedTo.deadline}</strong></span>
+                                      <span>{language === 'am' ? 'የማጠናቀቂያ ቀን:' : 'Deadline:'} <strong>{report.assignedTo.deadline}</strong></span>
                                     )}
                                     <span className="px-1.5 py-0.2 bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 rounded text-[10px] font-bold">
-                                      ASSIGNED
+                                      {language === 'am' ? 'ተመድቧል' : 'ASSIGNED'}
                                     </span>
                                   </div>
                                 </div>
@@ -791,18 +813,18 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                     {report.type === 'tipoff' ? (
                                       <>
                                         <Lock className="w-3 h-3" />
-                                        <span>Confidential Tip-Off</span>
+                                        <span>{language === 'am' ? 'ሚስጥራዊ ጥቆማ' : 'Confidential Tip-Off'}</span>
                                       </>
                                     ) : (
                                       <>
                                         <Newspaper className="w-3 h-3" />
-                                        <span>News Report</span>
+                                        <span>{language === 'am' ? 'የዜና ሪፖርት' : 'News Report'}</span>
                                       </>
                                     )}
                                   </span>
 
                                   <span className="text-slate-400 text-[11px]">
-                                    Submitted: {report.createdAt}
+                                    {language === 'am' ? 'የቀረበበት:' : 'Submitted:'} {report.createdAt}
                                   </span>
                                 </div>
 
@@ -841,7 +863,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                         : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
                                     }`}
                                   >
-                                    Priority: {report.priority}
+                                    {language === 'am' ? `ቅድሚያ፡ ${translatePriority(report.priority)}` : `Priority: ${report.priority}`}
                                   </span>
 
                                   {/* Status Pill */}
@@ -850,13 +872,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                       ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-700'
                                       : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-600'
                                   }`}>
-                                    {report.status}
+                                    {translateStatus(report.status)}
                                   </span>
 
                                   {/* Evidence Icons */}
                                   {report.evidence.length > 0 && (
                                     <div className="flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-300">
-                                      <span className="font-bold text-slate-700 dark:text-slate-300">Evidence:</span>
+                                      <span className="font-bold text-slate-700 dark:text-slate-300">{language === 'am' ? 'ማስረጃዎች:' : 'Evidence:'}</span>
                                       {imageCount > 0 && (
                                         <span className="flex items-center text-blue-600 dark:text-blue-400 font-mono text-[10px]" title={`${imageCount} Photos`}>
                                           <ImageIcon className="w-3 h-3 mr-0.5" />{imageCount}
@@ -888,17 +910,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                     className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-[#005BAC] dark:text-blue-300 font-bold rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
                                   >
                                     <Eye className="w-3.5 h-3.5" />
-                                    <span>Review Details & Evidence</span>
+                                    <span>{language === 'am' ? 'ዝርዝር እና ማስረጃዎችን መርምር' : 'Review Details & Evidence'}</span>
                                   </button>
 
                                   {isAssigned ? (
                                     <button
                                       onClick={() => onOpenAssignModal(report)}
                                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer active:scale-95"
-                                      title="Reassign this report to another investigator or department"
+                                      title={language === 'am' ? 'ይህንን ሪፖርት በድጋሚ ለሌላ መርማሪ ወይም ዲፓርትመንት መድብ' : 'Reassign this report to another investigator or department'}
                                     >
                                       <RefreshCw className="w-3.5 h-3.5" />
-                                      <span>Reassign</span>
+                                      <span>{language === 'am' ? 'በድጋሚ መድብ' : 'Reassign'}</span>
                                     </button>
                                   ) : (
                                     <button
@@ -906,7 +928,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                       className="px-3 py-1.5 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-lg transition-colors shadow-xs flex items-center space-x-1 cursor-pointer"
                                     >
                                       <UserPlus className="w-3.5 h-3.5" />
-                                      <span>Assign</span>
+                                      <span>{language === 'am' ? 'መድብ' : 'Assign'}</span>
                                     </button>
                                   )}
                                 </div>
@@ -929,19 +951,19 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="p-3">Report ID / Type</th>
-                  <th className="p-3">Title & Summary</th>
-                  <th className="p-3">Zone / Location</th>
-                  <th className="p-3">AI Priority</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-3">{language === 'am' ? 'የሪፖርት መለያ / ዓይነት' : 'Report ID / Type'}</th>
+                  <th className="p-3">{language === 'am' ? 'ርዕስ እና ማጠቃለያ' : 'Title & Summary'}</th>
+                  <th className="p-3">{language === 'am' ? 'ዞን / አካባቢ' : 'Zone / Location'}</th>
+                  <th className="p-3">{language === 'am' ? 'የAI ቅድሚያ' : 'AI Priority'}</th>
+                  <th className="p-3">{language === 'am' ? 'ሁኔታ' : 'Status'}</th>
+                  <th className="p-3 text-right">{language === 'am' ? 'እርምጃዎች' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredReports.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-400">
-                      No reports match the current search filters.
+                      {language === 'am' ? 'ከተመረጠው ማጣሪያ ጋር የሚስማማ ምንም ሪፖርት አልተገኘም።' : 'No reports match the current search filters.'}
                     </td>
                   </tr>
                 ) : (
@@ -970,7 +992,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                               r.type === 'tipoff' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                             }`}
                           >
-                            {r.type === 'tipoff' ? 'Tip-Off' : 'News'}
+                            {r.type === 'tipoff' ? (language === 'am' ? 'ጥቆማ' : 'Tip-Off') : (language === 'am' ? 'ዜና' : 'News')}
                           </span>
                         </td>
 
@@ -980,7 +1002,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                           {isAssigned && r.assignedTo && (
                             <div className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mt-0.5 flex items-center space-x-1">
                               <UserCheck className="w-3 h-3 text-emerald-600 inline" />
-                              <span>Lead: {r.assignedTo.responsiblePersonName} ({r.assignedTo.department || 'Desk'})</span>
+                              <span>{language === 'am' ? 'መርማሪ:' : 'Lead:'} {r.assignedTo.responsiblePersonName} ({r.assignedTo.department || 'Desk'})</span>
                             </div>
                           )}
                         </td>
@@ -1000,7 +1022,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                                 : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
                             }`}
                           >
-                            {r.priority}
+                            {translatePriority(r.priority)}
                           </span>
                         </td>
 
@@ -1010,7 +1032,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                               ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-700'
                               : 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200'
                           }`}>
-                            {r.status}
+                            {translateStatus(r.status)}
                           </span>
                         </td>
 
@@ -1019,17 +1041,17 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                             onClick={() => onOpenReviewModal(r)}
                             className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-[#005BAC] dark:text-blue-300 font-bold rounded-lg transition-colors cursor-pointer"
                           >
-                            Review & Evidence
+                            {language === 'am' ? 'ዝርዝር እና ማስረጃ' : 'Review & Evidence'}
                           </button>
 
                           {isAssigned ? (
                             <button
                               onClick={() => onOpenAssignModal(r)}
                               className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all shadow-xs inline-flex items-center space-x-1 cursor-pointer active:scale-95"
-                              title="Reassign report"
+                              title={language === 'am' ? 'ሪፖርቱን በድጋሚ መድብ' : 'Reassign report'}
                             >
                               <RefreshCw className="w-3 h-3" />
-                              <span>Reassign</span>
+                              <span>{language === 'am' ? 'በድጋሚ መድብ' : 'Reassign'}</span>
                             </button>
                           ) : (
                             <button
@@ -1037,7 +1059,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                               className="px-2.5 py-1 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-lg transition-colors shadow-xs inline-flex items-center space-x-1 cursor-pointer"
                             >
                               <UserPlus className="w-3 h-3" />
-                              <span>Assign</span>
+                              <span>{language === 'am' ? 'መድብ' : 'Assign'}</span>
                             </button>
                           )}
                         </td>

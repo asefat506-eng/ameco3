@@ -7,6 +7,7 @@ import {
   CategoryItem,
   SystemConfigItem,
 } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   INITIAL_NEWS_CATEGORIES,
   INITIAL_TIPOFF_CATEGORIES,
@@ -117,6 +118,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   onUpdateTipoffCategories,
   onUpdateSystemConfigs,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   // Navigation Tab Group: 'investigators' | 'citizens' | 'administrators' | 'departments' | 'categories-settings'
   const [activeGroupTab, setActiveGroupTab] = useState<
     'investigators' | 'citizens' | 'administrators' | 'departments' | 'categories-settings' | 'institutions'
@@ -202,6 +206,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [editRole, setEditRole] = useState<UserRole>('ResponsiblePerson');
   const [editStatus, setEditStatus] = useState<'active' | 'suspended' | 'banned' | 'deactivated' | 'pending'>('active');
   const [editDepartment, setEditDepartment] = useState('');
+  const [editCustomDepartment, setEditCustomDepartment] = useState('');
   const [editRegion, setEditRegion] = useState('Amhara Region');
   const [editZone, setEditZone] = useState('Bahir Dar Special Zone');
   const [editCustomZone, setEditCustomZone] = useState('');
@@ -239,7 +244,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setEditPhone(user.phone || '');
     setEditRole(user.role);
     setEditStatus(user.status || 'active');
-    setEditDepartment(user.department || 'Anti-Corruption & Financial Crime Unit');
+    const deptMatch = departments.some((d) => d.name === user.department);
+    if (user.department && !deptMatch) {
+      setEditDepartment('Other');
+      setEditCustomDepartment(user.department);
+    } else {
+      setEditDepartment(user.department || (departments[0]?.name || 'Anti-Corruption & Financial Crime Unit'));
+      setEditCustomDepartment('');
+    }
     setEditPassword(getUserEffectivePassword(user));
     setShowEditPassword(false);
     
@@ -295,6 +307,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     const isCustom = editZone.startsWith('Others') || editRegion === 'Others...';
     const effectiveZone = isCustom ? (editCustomZone.trim() || 'Custom Location') : editZone;
 
+    const finalEditDept = editDepartment === 'Other' ? (editCustomDepartment.trim() || 'General Operations') : editDepartment;
+    if (editDepartment === 'Other' && editCustomDepartment.trim()) {
+      const exists = departments.some((d) => d.name.toLowerCase() === editCustomDepartment.trim().toLowerCase());
+      if (!exists && onAddDepartment) {
+        onAddDepartment({
+          id: `DEP-${Math.floor(100 + Math.random() * 900)}`,
+          name: editCustomDepartment.trim(),
+          head: editFullName.trim() || 'Assigned Lead Officer',
+          reportCount: 0,
+          description: `Custom investigative desk: ${editCustomDepartment.trim()}`,
+        });
+      }
+    }
+
     const updatedUser: UserProfile = {
       ...editingUser,
       fullName: editFullName.trim(),
@@ -302,7 +328,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       phone: editPhone.trim(),
       role: editRole,
       status: editStatus,
-      department: editDepartment,
+      department: finalEditDept,
       region: editRegion,
       zone: effectiveZone,
       woreda: editWoreda,
@@ -362,6 +388,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>('ResponsiblePerson');
   const [department, setDepartment] = useState('Anti-Corruption & Financial Crime Unit');
+  const [customDepartment, setCustomDepartment] = useState('');
   const [region, setRegion] = useState('Amhara Region');
   const [zone, setZone] = useState('Bahir Dar Special Zone');
   const [customZone, setCustomZone] = useState('');
@@ -524,12 +551,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setDeptFormContactEmail(dept.contactEmail || '');
     setDeptFormPhoneExtension(dept.phoneExtension || '');
     setDeptFormReportCount(dept.reportCount || 0);
+    setIsAddDeptModalOpen(true);
   };
 
   const handleSaveDepartmentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deptFormName.trim()) {
-      showToast('Please provide a valid Department Desk Name');
+      showToast(isAm ? 'እባክዎ ትክክለኛ የዲፓርትመንት ዴስክ ስም ያስገቡ' : 'Please provide a valid Department Desk Name');
       return;
     }
 
@@ -538,8 +566,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const generatedId = deptFormId.trim() || `DEP-${Math.floor(100 + Math.random() * 900)}`;
+
     const updatedDept: Department = {
-      id: deptFormId.trim() || `DEP-${Date.now().toString().slice(-3)}`,
+      id: generatedId,
       name: deptFormName.trim(),
       head: deptFormHead.trim() || 'Assigned Lead Officer',
       reportCount: deptFormReportCount,
@@ -555,14 +585,24 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       } else if (onAddDepartment) {
         onAddDepartment(updatedDept);
       }
-      showToast(`Updated Department Desk "${updatedDept.name}" [${updatedDept.id}]`);
+      showToast(
+        isAm
+          ? `የዲፓርትመንት ዴስክ "${updatedDept.name}" [${updatedDept.id}] መረጃ ተዘምኗል`
+          : `Updated Department Desk "${updatedDept.name}" [${updatedDept.id}]`
+      );
       setEditingDepartment(null);
+      setIsAddDeptModalOpen(false);
     } else {
       if (onAddDepartment) {
         onAddDepartment(updatedDept);
       }
-      showToast(`Provisioned New Department Desk "${updatedDept.name}" [${updatedDept.id}]`);
+      showToast(
+        isAm
+          ? `አዲስ የዲፓርትመንት ዴስክ "${updatedDept.name}" [${updatedDept.id}] በተሳካ ሁኔታ ተፈጥሯል`
+          : `Provisioned New Department Desk "${updatedDept.name}" [${updatedDept.id}]`
+      );
       setIsAddDeptModalOpen(false);
+      setEditingDepartment(null);
     }
   };
 
@@ -915,6 +955,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     const isCustom = zone.startsWith('Others') || region === 'Others...';
     const effectiveZone = isCustom ? (customZone.trim() || 'Custom Location') : zone;
 
+    const finalDepartment = department === 'Other' ? (customDepartment.trim() || 'General Desk') : department;
+    if (department === 'Other' && customDepartment.trim()) {
+      const exists = departments.some((d) => d.name.toLowerCase() === customDepartment.trim().toLowerCase());
+      if (!exists && onAddDepartment) {
+        onAddDepartment({
+          id: `DEP-${Math.floor(100 + Math.random() * 900)}`,
+          name: customDepartment.trim(),
+          head: fullName.trim() || 'Assigned Lead Officer',
+          reportCount: 0,
+          description: `Custom investigative desk: ${customDepartment.trim()}`,
+        });
+      }
+    }
+
     const newUser: UserProfile = {
       id: newId,
       password: effectivePassword,
@@ -927,7 +981,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       zone: effectiveZone,
       woreda,
       address,
-      department: role === 'Institution' ? organizationType : (role !== 'Citizen' ? department : undefined),
+      department: role === 'Institution' ? organizationType : (role !== 'Citizen' ? finalDepartment : undefined),
       avatarUrl: `https://images.unsplash.com/photo-${
         role === 'Citizen'
           ? '1534528741775-53994a69daeb'
@@ -1016,13 +1070,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>User Accounts & RBAC Governance</span>
+                <span>{isAm ? 'የተጠቃሚዎች አስተዳደር እና የሚና ቁጥጥር' : 'User Accounts & RBAC Governance'}</span>
                 <span className="text-[10px] font-mono uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                  High Scale Multi-Role Management
+                  {isAm ? 'የደህንነት ቁጥጥር' : 'High Scale Multi-Role Management'}
                 </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Manage registered Citizens, AMECO Investigative Field Officers, Administrators, and Department Desks.
+                {isAm
+                  ? 'የተመዘገቡ ዜጎችን፣ የአሜኮ መርማሪ ጋዜጠኞችን፣ አሳታሚዎችን፣ አስተዳዳሪዎችን እና የዲፓርትመንት ዴስኮችን ያስተዳድሩ።'
+                  : 'Manage registered Citizens, AMECO Investigative Field Officers, Administrators, and Department Desks.'}
               </p>
             </div>
           </div>
@@ -1044,9 +1100,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <ShieldCheck className={`w-4 h-4 ${activeGroupTab === 'investigators' ? 'text-amber-300' : 'text-[#005BAC]'}`} />
               <div className="text-left">
-                <div className="leading-tight">Investigators</div>
+                <div className="leading-tight">{isAm ? 'መርማሪዎች' : 'Investigators'}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'investigators' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  Staff Officers
+                  {isAm ? 'የመስክ መኮንኖች' : 'Staff Officers'}
                 </div>
               </div>
             </div>
@@ -1073,9 +1129,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <Users className={`w-4 h-4 ${activeGroupTab === 'citizens' ? 'text-emerald-300' : 'text-emerald-600'}`} />
               <div className="text-left">
-                <div className="leading-tight">Citizens</div>
+                <div className="leading-tight">{isAm ? 'ዜጎች' : 'Citizens'}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'citizens' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  Public Accounts
+                  {isAm ? 'የህዝብ አካውንቶች' : 'Public Accounts'}
                 </div>
               </div>
             </div>
@@ -1102,9 +1158,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <Radio className={`w-4 h-4 ${activeGroupTab === 'institutions' ? 'text-cyan-300' : 'text-[#005BAC]'}`} />
               <div className="text-left">
-                <div className="leading-tight">{institutionGroupLabel}</div>
+                <div className="leading-tight">{isAm ? 'አሳታሚዎች (ሚዲያ)' : institutionGroupLabel}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'institutions' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  News Publishers
+                  {isAm ? 'ዜና አሳታሚዎች' : 'News Publishers'}
                 </div>
               </div>
             </div>
@@ -1131,9 +1187,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <Shield className={`w-4 h-4 ${activeGroupTab === 'administrators' ? 'text-red-300' : 'text-red-600'}`} />
               <div className="text-left">
-                <div className="leading-tight">Admins</div>
+                <div className="leading-tight">{isAm ? 'አስተዳዳሪዎች' : 'Admins'}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'administrators' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  Root Editorial
+                  {isAm ? 'ዋና ኤዲቶሪያል' : 'Root Editorial'}
                 </div>
               </div>
             </div>
@@ -1160,9 +1216,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <Building2 className={`w-4 h-4 ${activeGroupTab === 'departments' ? 'text-amber-300' : 'text-purple-600'}`} />
               <div className="text-left">
-                <div className="leading-tight">Department Desks</div>
+                <div className="leading-tight">{isAm ? 'የዲፓርትመንት ዴስኮች' : 'Department Desks'}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'departments' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  AMECO Units ({departments.length})
+                  {isAm ? `የአሜኮ ክፍሎች (${departments.length})` : `AMECO Units (${departments.length})`}
                 </div>
               </div>
             </div>
@@ -1189,9 +1245,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <div className="flex items-center space-x-2.5">
               <SlidersHorizontal className={`w-4 h-4 ${activeGroupTab === 'categories-settings' ? 'text-cyan-300' : 'text-cyan-600'}`} />
               <div className="text-left">
-                <div className="leading-tight">Categories & Config</div>
+                <div className="leading-tight">{isAm ? 'ምድቦች እና ቅንብሮች' : 'Categories & Config'}</div>
                 <div className={`text-[10px] font-normal ${activeGroupTab === 'categories-settings' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  FR-18 System Settings
+                  {isAm ? 'የሲስተም ቅንብሮች' : 'FR-18 System Settings'}
                 </div>
               </div>
             </div>
@@ -1212,37 +1268,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {activeGroupTab === 'investigators' && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Active Investigators</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'ንቁ መርማሪዎች' : 'Active Investigators'}
+            </span>
             <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1 block font-mono">
               {activeInvestigatorsCount}
             </span>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 block">
-              100% Regional Coverage
+              {isAm ? '100% የክልል ሽፋን' : '100% Regional Coverage'}
             </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Department Desks</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'የዲፓርትመንት ዴስኮች' : 'Department Desks'}
+            </span>
             <span className="text-2xl font-extrabold text-[#005BAC] dark:text-blue-400 mt-1 block font-mono">
               {departments.length}
             </span>
-            <span className="text-[10px] text-slate-500 block">Assigned Lead Officers</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'የተመደቡ ኃላፊ መኮንኖች' : 'Assigned Lead Officers'}
+            </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Active Assigned Cases</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'በምርመራ ላይ ያሉ ጉዳዮች' : 'Active Assigned Cases'}
+            </span>
             <span className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block font-mono">
               {totalAssignedCases}
             </span>
-            <span className="text-[10px] text-slate-500 block">Under Active Investigation</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'በንቁ ምርመራ ስር' : 'Under Active Investigation'}
+            </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Security Clearances</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'የደህንነት ፈቃዶች' : 'Security Clearances'}
+            </span>
             <span className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1 block font-mono">
               Level 3-4
             </span>
-            <span className="text-[10px] text-slate-500 block">Confidential Protection</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'ሚስጥራዊ ጥበቃ' : 'Confidential Protection'}
+            </span>
           </div>
         </div>
       )}
@@ -1250,37 +1320,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {activeGroupTab === 'citizens' && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Total Registered Citizens</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'አጠቃላይ የተመዘገቡ ዜጎች' : 'Total Registered Citizens'}
+            </span>
             <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1 block font-mono">
               {citizens.length}
             </span>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
-              Scalable for 10,000+ Users
+              {isAm ? 'ለ10,000+ ተጠቃሚዎች ዝግጁ' : 'Scalable for 10,000+ Users'}
             </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Verified Accounts</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'የተረጋገጡ አካውንቶች' : 'Verified Accounts'}
+            </span>
             <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block font-mono">
               {verifiedCitizensCount}
             </span>
-            <span className="text-[10px] text-slate-500 block">Identity Badge Confirmed</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'የማንነት ባጅ የተረጋገጠ' : 'Identity Badge Confirmed'}
+            </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Active Accounts</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'ንቁ አካውንቶች' : 'Active Accounts'}
+            </span>
             <span className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1 block font-mono">
               {activeCitizensCount}
             </span>
-            <span className="text-[10px] text-slate-500 block">Can File Tip-offs</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'ጥቆማዎችን ማቅረብ ይችላሉ' : 'Can File Tip-offs'}
+            </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Suspended / Banned</span>
+            <span className="text-slate-400 font-bold block text-[10px] uppercase">
+              {isAm ? 'የታገዱ / የተሰረዙ' : 'Suspended / Banned'}
+            </span>
             <span className="text-2xl font-extrabold text-red-600 dark:text-red-400 mt-1 block font-mono">
               {suspendedCitizensCount + bannedCitizensCount}
             </span>
-            <span className="text-[10px] text-slate-500 block">Restricted Access</span>
+            <span className="text-[10px] text-slate-500 block">
+              {isAm ? 'የተገደበ መዳረሻ' : 'Restricted Access'}
+            </span>
           </div>
         </div>
       )}
@@ -1295,7 +1379,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${activeGroupTab} by name, ID, phone, woreda...`}
+              placeholder={isAm ? 'በስም፣ መለያ፣ ስልክ ወይም ወረዳ ፈልግ...' : `Search ${activeGroupTab} by name, ID, phone, woreda...`}
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-[#005BAC] outline-none transition-all"
             />
           </div>
@@ -1314,7 +1398,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="bg-[#005BAC] hover:bg-blue-800 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1.5 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Register New Investigator</span>
+                <span>{isAm ? 'አዲስ መርማሪ መዝግብ' : 'Register New Investigator'}</span>
               </button>
             )}
 
@@ -1329,7 +1413,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="bg-[#005BAC] hover:bg-blue-800 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1.5 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Register New Institution</span>
+                <span>{isAm ? 'አዲስ ተቋም / አሳታሚ መዝግብ' : 'Register New Institution'}</span>
               </button>
             )}
 
@@ -1344,7 +1428,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="bg-red-600 hover:bg-red-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1.5 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Register Administrator</span>
+                <span>{isAm ? 'አዲስ አስተዳዳሪ መዝግብ' : 'Register Administrator'}</span>
               </button>
             )}
 
@@ -1355,7 +1439,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 onChange={(e) => setZoneFilter(e.target.value)}
                 className="bg-transparent text-slate-800 dark:text-slate-200 text-xs font-semibold outline-none cursor-pointer"
               >
-                <option value="All">All Regions & Zones</option>
+                <option value="All">{isAm ? 'ሁሉም ክልሎችና ዞኖች' : 'All Regions & Zones'}</option>
                 {REGIONAL_ZONES.map((z) => (
                   <option key={z.value} value={z.value}>
                     {z.label}
@@ -1371,10 +1455,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-transparent text-slate-800 dark:text-slate-200 text-xs font-semibold outline-none cursor-pointer"
               >
-                <option value="All">All Statuses</option>
-                <option value="active">Active Only</option>
-                <option value="suspended">Suspended Only</option>
-                <option value="banned">Banned Only</option>
+                <option value="All">{isAm ? 'ሁሉም ሁኔታዎች' : 'All Statuses'}</option>
+                <option value="active">{isAm ? 'ንቁ ብቻ' : 'Active Only'}</option>
+                <option value="suspended">{isAm ? 'የታገደ ብቻ' : 'Suspended Only'}</option>
+                <option value="banned">{isAm ? 'የተሰረዘ ብቻ' : 'Banned Only'}</option>
               </select>
             </div>
 
@@ -1411,8 +1495,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {filteredUsers.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
               <ShieldCheck className="w-10 h-10 mx-auto text-slate-300" />
-              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">No Investigators Found</h3>
-              <p className="text-xs text-slate-400">Try clearing your search query or zone filters.</p>
+              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                {isAm ? 'ምንም መርማሪ አልተገኘም' : 'No Investigators Found'}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {isAm ? 'የፍለጋ ቃሉን ወይም የዞን ማጣሪያውን ይቀይሩ።' : 'Try clearing your search query or zone filters.'}
+              </p>
             </div>
           ) : viewMode === 'grid' ? (
             /* Investigators Grid Cards */
@@ -1443,7 +1531,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                 {inv.email}
                               </span>
                               <span className="font-mono text-[10px] text-slate-400 block">
-                                Badge: {inv.badgeNumber || inv.id}
+                                {isAm ? 'ባጅ፡' : 'Badge:'} {inv.badgeNumber || inv.id}
                               </span>
                             </div>
                           </div>
@@ -1459,7 +1547,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                 : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
                             }`}
                           >
-                            {inv.status}
+                            {inv.status === 'active' ? (isAm ? 'ንቁ' : 'active') : inv.status === 'suspended' ? (isAm ? 'የታገደ' : 'suspended') : (isAm ? 'የተሰረዘ' : 'banned')}
                           </span>
                           {inv.isDefaultPassword ? (
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 flex items-center gap-1">
@@ -1479,14 +1567,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs space-y-1.5">
                         <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold">
                           <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                            <Briefcase className="w-3 h-3 text-[#005BAC]" /> Department Desk
+                            <Briefcase className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'የዲፓርትመንት ዴስክ' : 'Department Desk'}
                           </span>
                           <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-[#005BAC] dark:text-blue-300 font-bold px-2 py-0.5 rounded font-mono">
-                            {assignedCases.length} Active Cases
+                            {assignedCases.length} {isAm ? 'ንቁ ጉዳዮች' : 'Active Cases'}
                           </span>
                         </div>
                         <p className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                          {inv.department || 'General Investigation Unit'}
+                          {inv.department || (isAm ? 'አጠቃላይ የምርመራ ክፍል' : 'General Investigation Unit')}
                         </p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-red-500" />
@@ -1513,18 +1601,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <button
                           onClick={() => setSelectedInvestigator(inv)}
                           className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-[#005BAC] dark:text-blue-300 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                          title="View Investigator Dossier & Assigned Cases"
+                          title={isAm ? 'የመርማሪውን ማህደርና ጉዳዮች ተመልከት' : 'View Investigator Dossier & Assigned Cases'}
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Dossier</span>
+                          <span>{isAm ? 'ማህደር' : 'Dossier'}</span>
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(inv)}
                           className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                          title="Update Profile & Department Desk"
+                          title={isAm ? 'መገለጫና ዴስክ አዘምን' : 'Update Profile & Department Desk'}
                         >
                           <Edit className="w-3.5 h-3.5 text-blue-600" />
-                          <span>Edit</span>
+                          <span>{isAm ? 'አርትዕ' : 'Edit'}</span>
                         </button>
                       </div>
 
@@ -1533,23 +1621,23 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <button
                             onClick={() => handleToggleStatus(inv, 'suspended')}
                             className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-                            title="Suspend Investigator Access"
+                            title={isAm ? 'የመርማሪውን ፈቃድ አግድ' : 'Suspend Investigator Access'}
                           >
-                            Suspend
+                            {isAm ? 'አግድ' : 'Suspend'}
                           </button>
                         ) : (
                           <button
                             onClick={() => handleToggleStatus(inv, 'active')}
                             className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                           >
-                            Reactivate
+                            {isAm ? 'አንቃ' : 'Reactivate'}
                           </button>
                         )}
 
                         <button
                           onClick={() => setDeletingUser(inv)}
                           className="p-1.5 rounded-xl bg-red-50 dark:bg-red-950/50 hover:bg-red-100 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
-                          title="Delete Account Permanently"
+                          title={isAm ? 'አካውንቱን በቋሚነት ሰርዝ' : 'Delete Account Permanently'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1566,13 +1654,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <table className="w-full text-left text-xs text-slate-700 dark:text-slate-200">
                   <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="p-3.5">Investigator Officer</th>
-                      <th className="p-3.5">Department Desk</th>
-                      <th className="p-3.5">Zone / Woreda</th>
-                      <th className="p-3.5">Contact Details</th>
-                      <th className="p-3.5">Active Cases</th>
-                      <th className="p-3.5">Status</th>
-                      <th className="p-3.5 text-right">Actions</th>
+                      <th className="p-3.5">{isAm ? 'መርማሪ መኮንን' : 'Investigator Officer'}</th>
+                      <th className="p-3.5">{isAm ? 'የዲፓርትመንት ዴስክ' : 'Department Desk'}</th>
+                      <th className="p-3.5">{isAm ? 'ዞን / ወረዳ' : 'Zone / Woreda'}</th>
+                      <th className="p-3.5">{isAm ? 'የመገናኛ መረጃ' : 'Contact Details'}</th>
+                      <th className="p-3.5">{isAm ? 'ንቁ ጉዳዮች' : 'Active Cases'}</th>
+                      <th className="p-3.5">{isAm ? 'ሁኔታ' : 'Status'}</th>
+                      <th className="p-3.5 text-right">{isAm ? 'እርምጃዎች' : 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1599,7 +1687,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           </td>
 
                           <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">
-                            {inv.department || 'General Desk'}
+                            {inv.department || (isAm ? 'አጠቃላይ ዴስክ' : 'General Desk')}
                           </td>
 
                           <td className="p-3.5 font-medium text-slate-600 dark:text-slate-400">
@@ -1613,7 +1701,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                           <td className="p-3.5">
                             <span className="px-2 py-0.5 rounded font-mono font-bold bg-blue-100 dark:bg-blue-950 text-[#005BAC] dark:text-blue-300 text-[10px]">
-                              {caseCount} Cases
+                              {caseCount} {isAm ? 'ጉዳዮች' : 'Cases'}
                             </span>
                           </td>
 
@@ -1621,37 +1709,37 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                               inv.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                             }`}>
-                              {inv.status}
+                              {inv.status === 'active' ? (isAm ? 'ንቁ' : 'active') : (isAm ? 'የታገደ' : inv.status)}
                             </span>
                           </td>
 
                           <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                             <button
                               onClick={() => setSelectedInvestigator(inv)}
-                              className="px-2 py-1 bg-blue-50 text-[#005BAC] font-bold rounded text-[11px] hover:bg-blue-100 transition-colors"
-                              title="View Details"
+                              className="px-2 py-1 bg-blue-50 text-[#005BAC] font-bold rounded text-[11px] hover:bg-blue-100 transition-colors cursor-pointer"
+                              title={isAm ? 'ዝርዝር መረጃ' : 'View Details'}
                             >
-                              Details
+                              {isAm ? 'ዝርዝር' : 'Details'}
                             </button>
                             <button
                               onClick={() => handleOpenEditModal(inv)}
-                              className="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded text-[11px] hover:bg-slate-200 transition-colors"
-                              title="Edit Profile"
+                              className="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded text-[11px] hover:bg-slate-200 transition-colors cursor-pointer"
+                              title={isAm ? 'መገለጫ አርትዕ' : 'Edit Profile'}
                             >
-                              Edit
+                              {isAm ? 'አርትዕ' : 'Edit'}
                             </button>
                             <button
                               onClick={() => handleToggleStatus(inv, inv.status === 'active' ? 'suspended' : 'active')}
-                              className="px-2 py-1 bg-amber-50 text-amber-800 font-bold rounded text-[11px] hover:bg-amber-100 transition-colors"
+                              className="px-2 py-1 bg-amber-50 text-amber-800 font-bold rounded text-[11px] hover:bg-amber-100 transition-colors cursor-pointer"
                             >
-                              {inv.status === 'active' ? 'Suspend' : 'Activate'}
+                              {inv.status === 'active' ? (isAm ? 'አግድ' : 'Suspend') : (isAm ? 'አንቃ' : 'Activate')}
                             </button>
                             <button
                               onClick={() => setDeletingUser(inv)}
-                              className="px-2 py-1 bg-red-50 text-red-700 font-bold rounded text-[11px] hover:bg-red-100 transition-colors"
-                              title="Delete Permanently"
+                              className="px-2 py-1 bg-red-50 text-red-700 font-bold rounded text-[11px] hover:bg-red-100 transition-colors cursor-pointer"
+                              title={isAm ? 'በቋሚነት ሰርዝ' : 'Delete Permanently'}
                             >
-                              Delete
+                              {isAm ? 'ሰርዝ' : 'Delete'}
                             </button>
                           </td>
                         </tr>
@@ -1676,17 +1764,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </div>
               <div>
                 <p className="font-bold text-emerald-900 dark:text-emerald-100">
-                  Citizen Accounts Directory & Public Identity Records
+                  {isAm ? 'የተመዘገቡ ዜጎች ማውጫ እና የህዝብ ማንነት መዝገብ' : 'Citizen Accounts Directory & Public Identity Records'}
                 </p>
                 <p className="text-emerald-700 dark:text-emerald-300 text-[11px]">
-                  Showing {filteredUsers.length} registered citizens. Click any citizen profile to inspect full personal address, woreda, phone contact, and submitted tip-off histories.
+                  {isAm
+                    ? `${filteredUsers.length} የተመዘገቡ ዜጎች እየታዩ ነው። ሙሉ አድራሻ፣ ወረዳ፣ ስልክ እና የቀረቡ የጥቆማ ታሪኮችን ለማየት በማንኛውም መገለጫ ላይ ይጫኑ።`
+                    : `Showing ${filteredUsers.length} registered citizens. Click any citizen profile to inspect full personal address, woreda, phone contact, and submitted tip-off histories.`}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2 self-end sm:self-auto">
               <span className="text-[10px] font-mono bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 font-bold px-2.5 py-1 rounded-lg">
-                Verified Database Security
+                {isAm ? 'የተረጋገጠ የዳታቤዝ ደህንነት' : 'Verified Database Security'}
               </span>
             </div>
           </div>
@@ -1694,8 +1784,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {filteredUsers.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
               <Users className="w-10 h-10 mx-auto text-slate-300" />
-              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">No Citizens Found</h3>
-              <p className="text-xs text-slate-400">Try adjusting your search criteria or zone filters.</p>
+              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                {isAm ? 'ምንም የተመዘገበ ዜጋ አልተገኘም' : 'No Citizens Found'}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {isAm ? 'የፍለጋ ቃሉን ወይም የዞን ማጣሪያውን ይቀይሩ።' : 'Try adjusting your search criteria or zone filters.'}
+              </p>
             </div>
           ) : viewMode === 'grid' ? (
             /* Citizens Grid Cards */
@@ -1723,7 +1817,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               )}
                             </h3>
                             <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 block">
-                              Citizen ID: {czn.id}
+                              {isAm ? 'የዜጋ መለያ' : 'Citizen ID'}: {czn.id}
                             </span>
                           </div>
                         </div>
@@ -1737,7 +1831,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
                           }`}
                         >
-                          {czn.status}
+                          {czn.status === 'active' ? (isAm ? 'ንቁ' : 'active') : (isAm ? 'የታገደ' : czn.status)}
                         </span>
                       </div>
 
@@ -1745,17 +1839,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-[#005BAC]" /> Saved Residence
+                            <MapPin className="w-3 h-3 text-[#005BAC]" /> {isAm ? 'የመኖሪያ አድራሻ' : 'Saved Residence'}
                           </span>
                           <span className="text-[10px] font-bold font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded">
-                            {submittedCount} Submissions
+                            {submittedCount} {isAm ? 'ጥቆማዎች' : 'Submissions'}
                           </span>
                         </div>
                         <p className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                          {czn.woreda || 'Bahir Dar Zuria Woreda'}, {czn.zone}
+                          {czn.woreda || (isAm ? 'ባህር ዳር ዙሪያ ወረዳ' : 'Bahir Dar Zuria Woreda')}, {czn.zone}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {czn.address || 'Registered Amhara Citizen Residence'}
+                          {czn.address || (isAm ? 'የተመዘገበ የአማራ ክልል ነዋሪ' : 'Registered Amhara Citizen Residence')}
                         </p>
                       </div>
 
@@ -1771,7 +1865,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
                         <div className="flex items-center space-x-2 text-[10px] text-slate-400 pt-1">
                           <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>Joined: {czn.joinedDate || '2025-11-10'}</span>
+                          <span>{isAm ? 'የተመዘገበበት፡' : 'Joined:'} {czn.joinedDate || '2025-11-10'}</span>
                         </div>
                       </div>
                     </div>
@@ -1782,18 +1876,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <button
                           onClick={() => setSelectedCitizen(czn)}
                           className="px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                          title="View Personal Details"
+                          title={isAm ? 'የግል መረጃዎችን ተመልከት' : 'View Personal Details'}
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Details</span>
+                          <span>{isAm ? 'ዝርዝር' : 'Details'}</span>
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(czn)}
                           className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                          title="Update Profile"
+                          title={isAm ? 'መገለጫ አርትዕ' : 'Update Profile'}
                         >
                           <Edit className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Edit</span>
+                          <span>{isAm ? 'አርትዕ' : 'Edit'}</span>
                         </button>
                       </div>
 
@@ -1802,23 +1896,23 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <button
                             onClick={() => handleToggleStatus(czn, 'suspended')}
                             className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-                            title="Suspend Citizen Account"
+                            title={isAm ? 'የዜጋውን አካውንት አግድ' : 'Suspend Citizen Account'}
                           >
-                            Suspend
+                            {isAm ? 'አግድ' : 'Suspend'}
                           </button>
                         ) : (
                           <button
                             onClick={() => handleToggleStatus(czn, 'active')}
                             className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                           >
-                            Reactivate
+                            {isAm ? 'አንቃ' : 'Reactivate'}
                           </button>
                         )}
 
                         <button
                           onClick={() => setDeletingUser(czn)}
                           className="p-1.5 rounded-xl bg-red-50 dark:bg-red-950/50 hover:bg-red-100 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
-                          title="Delete Account Permanently"
+                          title={isAm ? 'አካውንቱን በቋሚነት ሰርዝ' : 'Delete Account Permanently'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1835,12 +1929,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <table className="w-full text-left text-xs text-slate-700 dark:text-slate-200">
                   <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="p-3.5">Citizen Profile</th>
-                      <th className="p-3.5">Verified Identity</th>
-                      <th className="p-3.5">Woreda / Zone Location</th>
-                      <th className="p-3.5">Contact Phone & Email</th>
-                      <th className="p-3.5">Status</th>
-                      <th className="p-3.5 text-right">Actions</th>
+                      <th className="p-3.5">{isAm ? 'የዜጋ መገለጫ' : 'Citizen Profile'}</th>
+                      <th className="p-3.5">{isAm ? 'የማንነት ማረጋገጫ' : 'Verified Identity'}</th>
+                      <th className="p-3.5">{isAm ? 'ወረዳ / ዞን' : 'Woreda / Zone Location'}</th>
+                      <th className="p-3.5">{isAm ? 'ስልክ እና ኢሜይል' : 'Contact Phone & Email'}</th>
+                      <th className="p-3.5">{isAm ? 'ሁኔታ' : 'Status'}</th>
+                      <th className="p-3.5 text-right">{isAm ? 'እርምጃዎች' : 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1865,12 +1959,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             }`}
                           >
                             <CheckCircle2 className="w-3 h-3" />
-                            <span>{czn.verified ? 'Verified Citizen' : 'Unverified'}</span>
+                            <span>{czn.verified ? (isAm ? 'የተረጋገጠ ዜጋ' : 'Verified Citizen') : (isAm ? 'ያልተረጋገጠ' : 'Unverified')}</span>
                           </span>
                         </td>
 
                         <td className="p-3.5 font-medium text-slate-800 dark:text-slate-200">
-                          {czn.woreda || 'Bahir Dar Zuria'}, {czn.zone}
+                          {czn.woreda || (isAm ? 'ባህር ዳር ዙሪያ' : 'Bahir Dar Zuria')}, {czn.zone}
                         </td>
 
                         <td className="p-3.5">
@@ -1888,7 +1982,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                 : 'bg-red-100 text-red-800'
                             }`}
                           >
-                            {czn.status}
+                            {czn.status === 'active' ? (isAm ? 'ንቁ' : 'active') : (isAm ? 'የታገደ' : czn.status)}
                           </span>
                         </td>
 
@@ -1896,29 +1990,29 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <button
                             onClick={() => setSelectedCitizen(czn)}
                             className="px-2 py-1 bg-emerald-50 text-emerald-800 font-bold rounded text-[11px] hover:bg-emerald-100 transition-colors cursor-pointer"
-                            title="View Info"
+                            title={isAm ? 'መረጃ ተመልከት' : 'View Info'}
                           >
-                            Details
+                            {isAm ? 'ዝርዝር' : 'Details'}
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(czn)}
                             className="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded text-[11px] hover:bg-slate-200 transition-colors cursor-pointer"
-                            title="Edit Profile"
+                            title={isAm ? 'መገለጫ አርትዕ' : 'Edit Profile'}
                           >
-                            Edit
+                            {isAm ? 'አርትዕ' : 'Edit'}
                           </button>
                           <button
                             onClick={() => handleToggleStatus(czn, czn.status === 'active' ? 'suspended' : 'active')}
                             className="px-2.5 py-1 bg-amber-50 text-amber-800 font-bold rounded text-[11px] hover:bg-amber-100 transition-colors cursor-pointer"
                           >
-                            {czn.status === 'active' ? 'Suspend' : 'Activate'}
+                            {czn.status === 'active' ? (isAm ? 'አግድ' : 'Suspend') : (isAm ? 'አንቃ' : 'Activate')}
                           </button>
                           <button
                             onClick={() => setDeletingUser(czn)}
                             className="px-2 py-1 bg-red-50 text-red-700 font-bold rounded text-[11px] hover:bg-red-100 transition-colors cursor-pointer"
-                            title="Delete Permanently"
+                            title={isAm ? 'በቋሚነት ሰርዝ' : 'Delete Permanently'}
                           >
-                            Delete
+                            {isAm ? 'ሰርዝ' : 'Delete'}
                           </button>
                         </td>
                       </tr>
@@ -1941,10 +2035,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </div>
               <div>
                 <p className="font-bold text-blue-900 dark:text-blue-100">
-                  Approved {hasInstitutionAccounts ? 'Institutional Accounts' : 'Publisher Accounts'} & Trending News Publishers
+                  {isAm
+                    ? 'የተፈቀደላቸው የሚዲያ ተቋማት እና ወቅታዊ ዜና አሳታሚዎች'
+                    : `Approved ${hasInstitutionAccounts ? 'Institutional Accounts' : 'Publisher Accounts'} & Trending News Publishers`}
                 </p>
                 <p className="text-blue-700 dark:text-blue-300 text-[11px]">
-                  Administrators create and manage official {hasInstitutionAccounts ? 'institution' : 'publisher'} accounts. Only approved accounts can broadcast verified trending news bulletins to citizens.
+                  {isAm
+                    ? 'አስተዳዳሪዎች ኦፊሴላዊ የተቋም / አሳታሚ አካውንቶችን ያዘጋጃሉ ያስተዳድራሉ። ፈቃድ የተሰጣቸው ብቻ የተረጋገጡ ዜናዎችን ለህዝብ ማሰራጨት ይችላሉ።'
+                    : `Administrators create and manage official ${hasInstitutionAccounts ? 'institution' : 'publisher'} accounts. Only approved accounts can broadcast verified trending news bulletins to citizens.`}
                 </p>
               </div>
             </div>
@@ -1953,8 +2051,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {institutions.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
               <Radio className="w-10 h-10 mx-auto text-slate-300" />
-              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">No {institutionGroupLabel} Registered</h3>
-              <p className="text-xs text-slate-400">Click below to provision an official institutional publisher account.</p>
+              <h3 className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                {isAm ? 'ምንም የተመዘገበ ተቋም አልተገኘም' : `No ${institutionGroupLabel} Registered`}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {isAm ? 'ኦፊሴላዊ የተቋም አሳታሚ አካውንት ለመፍጠር ከዚህ በታች ያለውን ይጫኑ።' : 'Click below to provision an official institutional publisher account.'}
+              </p>
               <button
                 type="button"
                 onClick={() => {
@@ -1965,7 +2067,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer mt-2"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Register New Institution</span>
+                <span>{isAm ? 'አዲስ ተቋም / አሳታሚ መዝግብ' : 'Register New Institution'}</span>
               </button>
             </div>
           ) : (
@@ -1992,7 +2094,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               )}
                             </h3>
                             <span className="font-mono text-[11px] text-slate-500 block">
-                              ID: {inst.id}
+                              {isAm ? 'መለያ' : 'ID'}: {inst.id}
                             </span>
                           </div>
                         </div>
@@ -2004,32 +2106,32 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                           }`}
                         >
-                          {isApproved ? 'Approved' : 'Pending Approval'}
+                          {isApproved ? (isAm ? 'የተረጋገጠ' : 'Approved') : (isAm ? 'በማረጋገጥ ላይ' : 'Pending Approval')}
                         </span>
                       </div>
 
                       <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-1">
                         <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 font-bold uppercase">
-                          <span>Category</span>
+                          <span>{isAm ? 'ምድብ' : 'Category'}</span>
                           <span>{inst.registrationNumber || 'REG-AMECO-2026'}</span>
                         </div>
                         <p className="font-bold text-[#005BAC] dark:text-blue-300">
-                          {inst.institutionCategory || 'Public Media & Civil Agency'}
+                          {inst.institutionCategory || (isAm ? 'የህዝብ ሚዲያና ሲቪክ ኤጀንሲ' : 'Public Media & Civil Agency')}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Zone: <strong className="text-slate-800 dark:text-slate-200">{inst.zone}</strong>
+                          {isAm ? 'ዞን፡' : 'Zone:'} <strong className="text-slate-800 dark:text-slate-200">{inst.zone}</strong>
                         </p>
                       </div>
 
                       <div className="text-xs space-y-1 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
-                        <div>Email: {inst.email}</div>
-                        <div>Phone: {inst.phone || '+251 91 000 0000'}</div>
+                        <div>{isAm ? 'ኢሜይል፡' : 'Email:'} {inst.email}</div>
+                        <div>{isAm ? 'ስልክ፡' : 'Phone:'} {inst.phone || '+251 91 000 0000'}</div>
                         {inst.focalPersonName && (
-                          <div>Contact: <span className="text-slate-800 dark:text-slate-200 font-semibold">{inst.focalPersonName}</span></div>
+                          <div>{isAm ? 'ተጠሪ ሰው፡' : 'Contact:'} <span className="text-slate-800 dark:text-slate-200 font-semibold">{inst.focalPersonName}</span></div>
                         )}
                         {(inst.officialWebsite || inst.website) && (
                           <div className="truncate">
-                            Web: <a href={inst.officialWebsite || inst.website} target="_blank" rel="noreferrer" className="text-[#005BAC] dark:text-blue-400 hover:underline font-sans">{inst.officialWebsite || inst.website}</a>
+                            {isAm ? 'ድረ-ገጽ፡' : 'Web:'} <a href={inst.officialWebsite || inst.website} target="_blank" rel="noreferrer" className="text-[#005BAC] dark:text-blue-400 hover:underline font-sans">{inst.officialWebsite || inst.website}</a>
                           </div>
                         )}
                       </div>
@@ -2043,7 +2145,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           title="View Info"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Info</span>
+                          <span>{isAm ? 'መረጃ' : 'Info'}</span>
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(inst)}
@@ -2051,7 +2153,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           title="Edit Profile"
                         >
                           <Edit className="w-3.5 h-3.5 text-blue-600" />
-                          <span>Edit</span>
+                          <span>{isAm ? 'አርትዕ' : 'Edit'}</span>
                         </button>
                       </div>
 
@@ -2060,7 +2162,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           onClick={() => {
                             const updated = !isApproved;
                             onAddUser({ ...inst, isApprovedInstitution: updated });
-                            showToast(`${updated ? 'Approved' : 'Revoked approval for'} ${inst.fullName}`);
+                            showToast(
+                              isAm
+                                ? `${inst.fullName} ${updated ? 'የማተም ፈቃድ ተሰጥቶታል' : 'የማተም ፈቃድ ተነስቷል'}`
+                                : `${updated ? 'Approved' : 'Revoked approval for'} ${inst.fullName}`
+                            );
                           }}
                           className={`px-2 py-1 font-bold rounded-xl text-[11px] flex items-center space-x-1 transition-colors cursor-pointer ${
                             isApproved
@@ -2068,20 +2174,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               : 'bg-emerald-600 text-white hover:bg-emerald-700'
                           }`}
                         >
-                          <span>{isApproved ? 'Revoke' : 'Approve'}</span>
+                          <span>{isApproved ? (isAm ? 'ፈቃድ አንሳ' : 'Revoke') : (isAm ? 'ፈቃድ ስጥ' : 'Approve')}</span>
                         </button>
 
                         <button
                           onClick={() => handleToggleStatus(inst, inst.status === 'active' ? 'suspended' : 'active')}
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[11px] cursor-pointer"
                         >
-                          {inst.status === 'active' ? 'Suspend' : 'Activate'}
+                          {inst.status === 'active' ? (isAm ? 'አግድ' : 'Suspend') : (isAm ? 'አንቃ' : 'Activate')}
                         </button>
 
                         <button
                           onClick={() => setDeletingUser(inst)}
                           className="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                          title="Delete Account Permanently"
+                          title={isAm ? 'አካውንቱን በቋሚነት ሰርዝ' : 'Delete Account Permanently'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -2102,10 +2208,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             <Shield className="w-5 h-5 text-red-600 shrink-0" />
             <div>
               <p className="font-bold text-red-900 dark:text-red-200">
-                System Root Administration Officers
+                {isAm ? 'የስርዓቱ ዋና ስራ አስኪያጅና አስተዳዳሪ መኮንኖች' : 'System Root Administration Officers'}
               </p>
               <p className="text-red-800 dark:text-red-300 text-[11px]">
-                Administrators hold root access over system workflows, audit logs, identity unmasking, and department assignments.
+                {isAm
+                  ? 'አስተዳዳሪዎች በሲስተሙ የስራ ፍሰት፣ የኦዲት መዝገብ፣ ማንነትን ማረጋገጥ እና የዲፓርትመንት ምደባዎች ላይ ሙሉ ስልጣን አላቸው።'
+                  : 'Administrators hold root access over system workflows, audit logs, identity unmasking, and department assignments.'}
               </p>
             </div>
           </div>
@@ -2122,7 +2230,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
-                      <span>{adm.fullName}</span>
+                      <span>{adm.fullName === 'Admin' || adm.fullName === 'Administrator' ? (isAm ? 'ዋና አስተዳዳሪ' : adm.fullName) : adm.fullName}</span>
                       <Shield className="w-4 h-4 text-red-600" />
                     </h3>
                     <span className="font-mono text-[11px] text-slate-500">{adm.badgeNumber || adm.id}</span>
@@ -2130,10 +2238,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-1">
-                  <p className="font-bold text-slate-900 dark:text-slate-100">{adm.department || 'AMECO Executive Board'}</p>
+                  <p className="font-bold text-slate-900 dark:text-slate-100">{adm.department || (isAm ? 'የአሚኮ ስራ አስፈፃሚ ቦርድ' : 'AMECO Executive Board')}</p>
                   <p className="text-slate-500 text-[11px]">{adm.email} | {adm.phone}</p>
                   <p className="text-[10px] text-red-600 dark:text-red-400 font-bold uppercase pt-1">
-                    Clearance: {adm.clearanceLevel || 'Level 5 - Root Admin'}
+                    {isAm ? 'የፈቃድ ደረጃ፡' : 'Clearance:'} {adm.clearanceLevel || (isAm ? 'ደረጃ 5 - ዋና አስተዳዳሪ' : 'Level 5 - Root Admin')}
                   </p>
                 </div>
 
@@ -2144,14 +2252,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       className="px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>View Info</span>
+                      <span>{isAm ? 'ዝርዝር መረጃ' : 'View Info'}</span>
                     </button>
                     <button
                       onClick={() => handleOpenEditModal(adm)}
                       className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center space-x-1 transition-colors cursor-pointer"
                     >
                       <Edit className="w-3.5 h-3.5 text-red-600" />
-                      <span>Edit</span>
+                      <span>{isAm ? 'አርትዕ' : 'Edit'}</span>
                     </button>
                   </div>
 
@@ -2160,13 +2268,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       onClick={() => handleToggleStatus(adm, adm.status === 'active' ? 'suspended' : 'active')}
                       className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs cursor-pointer"
                     >
-                      {adm.status === 'active' ? 'Suspend' : 'Activate'}
+                      {adm.status === 'active' ? (isAm ? 'አግድ' : 'Suspend') : (isAm ? 'አንቃ' : 'Activate')}
                     </button>
 
                     <button
                       onClick={() => setDeletingUser(adm)}
                       className="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                      title="Delete Account Permanently"
+                      title={isAm ? 'አካውንቱን በቋሚነት ሰርዝ' : 'Delete Account Permanently'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -2187,14 +2295,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <div className="flex items-center space-x-2">
                 <Building2 className="w-5 h-5 text-[#005BAC]" />
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                  AMECO Specialized Department Desks
+                  {isAm ? 'የአሚኮ ልዩ የዲፓርትመንት ዴስኮች' : 'AMECO Specialized Department Desks'}
                 </h3>
                 <span className="bg-blue-100 dark:bg-blue-950 text-[#005BAC] dark:text-blue-300 font-mono text-xs font-bold px-2 py-0.5 rounded-full">
-                  {departments.length} Units Active
+                  {isAm ? `${departments.length} ንቁ ክፍሎች` : `${departments.length} Units Active`}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Organize investigative jurisdictional units, designate lead officers, and route incoming tip-offs.
+                {isAm
+                  ? 'የምርመራ የስራ ክፍሎችን ያደራጁ፣ መሪ መኮንኖችን ይመድቡ እና የሚመጡ ጥቆማዎችን በቀጥታ ያሰራጩ።'
+                  : 'Organize investigative jurisdictional units, designate lead officers, and route incoming tip-offs.'}
               </p>
             </div>
 
@@ -2203,7 +2313,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
-                  placeholder="Search desk name, ID, or lead..."
+                  placeholder={isAm ? 'በዴስክ ስም፣ መለያ ወይም መሪ ፈልግ...' : 'Search desk name, ID, or lead...'}
                   value={departmentSearch}
                   onChange={(e) => setDepartmentSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-[#005BAC] text-slate-900 dark:text-slate-100"
@@ -2223,7 +2333,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="px-4 py-2 bg-[#005BAC] hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer transition-all hover:shadow-lg"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Department Desk</span>
+                <span>{isAm ? 'አዲስ ዴስክ ፍጠር' : 'Add Department Desk'}</span>
               </button>
             </div>
           </div>
@@ -2231,37 +2341,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <span className="text-slate-400 font-bold block text-[10px] uppercase">Active Department Desks</span>
+              <span className="text-slate-400 font-bold block text-[10px] uppercase">
+                {isAm ? 'ንቁ የዲፓርትመንት ዴስኮች' : 'Active Department Desks'}
+              </span>
               <span className="text-2xl font-extrabold text-[#005BAC] dark:text-blue-400 mt-1 block font-mono">
                 {departments.length}
               </span>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 block">
-                100% Operational
+                {isAm ? '100% ንቁ የስራ ዝግጁነት' : '100% Operational'}
               </span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <span className="text-slate-400 font-bold block text-[10px] uppercase">Total Reports Handled</span>
+              <span className="text-slate-400 font-bold block text-[10px] uppercase">
+                {isAm ? 'የተስተናገዱ ሪፖርቶች' : 'Total Reports Handled'}
+              </span>
               <span className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1 block font-mono">
                 {departments.reduce((acc, d) => acc + (d.reportCount || 0), 0)}
               </span>
-              <span className="text-[10px] text-slate-500 block">Across all units</span>
+              <span className="text-[10px] text-slate-500 block">
+                {isAm ? 'በሁሉም ክፍሎች ድምር' : 'Across all units'}
+              </span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <span className="text-slate-400 font-bold block text-[10px] uppercase">Designated Lead Officers</span>
+              <span className="text-slate-400 font-bold block text-[10px] uppercase">
+                {isAm ? 'የተመደቡ መሪ መኮንኖች' : 'Designated Lead Officers'}
+              </span>
               <span className="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1 block font-mono">
                 {new Set(departments.map((d) => d.head)).size}
               </span>
-              <span className="text-[10px] text-slate-500 block">Assigned Investigators</span>
+              <span className="text-[10px] text-slate-500 block">
+                {isAm ? 'ኃላፊ መርማሪዎች' : 'Assigned Investigators'}
+              </span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <span className="text-slate-400 font-bold block text-[10px] uppercase">Regional Authority</span>
+              <span className="text-slate-400 font-bold block text-[10px] uppercase">
+                {isAm ? 'የክልል ማዕከል' : 'Regional Authority'}
+              </span>
               <span className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block font-mono">
                 AMECO-HQ
               </span>
-              <span className="text-[10px] text-slate-500 block">Bahir Dar Central</span>
+              <span className="text-[10px] text-slate-500 block">
+                {isAm ? 'ባህር ዳር ዋና መሥሪያ ቤት' : 'Bahir Dar Central'}
+              </span>
             </div>
           </div>
 
@@ -2292,7 +2416,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </span>
                       <span className="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{d.reportCount || 0} Reports</span>
+                        <span>{d.reportCount || 0} {isAm ? 'ሪፖርቶች' : 'Reports'}</span>
                       </span>
                     </div>
 
@@ -2312,12 +2436,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     {/* Desk Lead & Contact Details */}
                     <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400 text-[11px] font-semibold">Desk Lead Officer:</span>
+                        <span className="text-slate-400 text-[11px] font-semibold">{isAm ? 'የዴስክ ኃላፊ መኮንን፡' : 'Desk Lead Officer:'}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">{d.head}</span>
                       </div>
                       {d.contactEmail && (
                         <div className="flex items-center justify-between text-[11px] text-slate-500">
-                          <span>Email:</span>
+                          <span>{isAm ? 'ኢሜይል፡' : 'Email:'}</span>
                           <span className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
                             {d.contactEmail}
                           </span>
@@ -2325,7 +2449,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       )}
                       {d.phoneExtension && (
                         <div className="flex items-center justify-between text-[11px] text-slate-500">
-                          <span>Phone / Ext:</span>
+                          <span>{isAm ? 'ስልክ / የውስጥ መስመር፡' : 'Phone / Ext:'}</span>
                           <span className="font-mono text-slate-700 dark:text-slate-300">{d.phoneExtension}</span>
                         </div>
                       )}
@@ -2335,7 +2459,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     {d.focusAreas && d.focusAreas.length > 0 && (
                       <div className="space-y-1.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                          Jurisdiction & Focus Areas
+                          {isAm ? 'የትኩረት አቅጣጫዎች እና የስራ ዘርፍ' : 'Jurisdiction & Focus Areas'}
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {d.focusAreas.map((focus, idx) => (
@@ -2359,7 +2483,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#005BAC] hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Edit className="w-3.5 h-3.5" />
-                      <span>Edit Desk</span>
+                      <span>{isAm ? 'ዴስክ አርትዕ' : 'Edit Desk'}</span>
                     </button>
                     <button
                       type="button"
@@ -2367,7 +2491,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
+                      <span>{isAm ? 'ሰርዝ' : 'Delete'}</span>
                     </button>
                   </div>
                 </div>
@@ -3773,10 +3897,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Update Account Profile
+                    {isAm ? 'የተጠቃሚ መገለጫ ያዘምኑ' : 'Update Account Profile'}
                   </h3>
                   <p className="text-xs text-slate-500 font-mono">
-                    User ID: {editingUser.id} ({editingUser.role})
+                    {isAm ? 'የተጠቃሚ መለያ' : 'User ID'}: {editingUser.id} ({editingUser.role})
                   </p>
                 </div>
               </div>
@@ -3792,19 +3916,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {/* Full Name & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <ValidatedNameInput
-                  label="Full Name / Organization"
+                  label={isAm ? "ሙሉ ስም / ተቋም" : "Full Name / Organization"}
                   required
                   value={editFullName}
                   onChange={setEditFullName}
-                  placeholder="Enter full name"
+                  placeholder={isAm ? "ሙሉ ስም ያስገቡ" : "Enter full name"}
                 />
 
                 <FormalEmailInput
-                  label="Email Address"
+                  label={isAm ? "የኢሜይል አድራሻ" : "Email Address"}
                   required
                   value={editEmail}
                   onChange={setEditEmail}
-                  placeholder="Enter formal email address"
+                  placeholder={isAm ? "መደበኛ የኢሜይል አድራሻ ያስገቡ" : "Enter formal email address"}
                 />
               </div>
 
@@ -3814,22 +3938,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <InternationalPhoneInput
                     value={editPhone}
                     onChange={setEditPhone}
-                    label="Phone Number"
+                    label={isAm ? "የስልክ ቁጥር" : "Phone Number"}
                   />
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Account Status *
+                    {isAm ? 'የአካውንት ሁኔታ *' : 'Account Status *'}
                   </label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none font-bold text-xs"
                   >
-                    <option value="active">Active (Normal Access)</option>
-                    <option value="suspended">Suspended (Login Blocked with Appeal Form)</option>
-                    <option value="banned">Banned (Permanent Revocation)</option>
+                    <option value="active">{isAm ? 'ንቁ (መደበኛ መዳረሻ)' : 'Active (Normal Access)'}</option>
+                    <option value="suspended">{isAm ? 'የታገደ (የመግቢያ ፈቃድ ተዘግቷል)' : 'Suspended (Login Blocked with Appeal Form)'}</option>
+                    <option value="banned">{isAm ? 'የተሰረዘ / የታገደ (ቋሚ እገዳ)' : 'Banned (Permanent Revocation)'}</option>
                   </select>
                 </div>
               </div>
@@ -3837,17 +3961,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {/* Role */}
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  System Role *
+                  {isAm ? 'የስርዓት ሚና *' : 'System Role *'}
                 </label>
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value as UserRole)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none font-bold text-xs"
                 >
-                  <option value="ResponsiblePerson">AMECO Investigator / Field Officer</option>
-                  <option value="Citizen">Registered Citizen Whistleblower</option>
-                  <option value="Institution">Registered Institution / Agency</option>
-                  <option value="Administrator">System Administrator</option>
+                  <option value="ResponsiblePerson">{isAm ? 'የአሚኮ መርማሪ / የመስክ ባለሙያ' : 'AMECO Investigator / Field Officer'}</option>
+                  <option value="Citizen">{isAm ? 'የተመዘገበ ዜጋ ጥቆማ አቅራቢ' : 'Registered Citizen Whistleblower'}</option>
+                  <option value="Institution">{isAm ? 'የተመዘገበ የሚዲያ ተቋም / አሳታሚ' : 'Registered Institution / Agency'}</option>
+                  <option value="Administrator">{isAm ? 'የስርዓት አስተዳዳሪ (ዋና አርታዒ)' : 'System Administrator'}</option>
                 </select>
               </div>
 
@@ -3868,12 +3992,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {editRole === 'ResponsiblePerson' && (
                 <div className="space-y-3 p-3 bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/60">
                   <span className="font-bold text-[#005BAC] dark:text-blue-300 text-xs block">
-                    Investigator Officer Credentials
+                    {isAm ? 'የመርማሪ ባለሙያ መረጃዎች' : 'Investigator Officer Credentials'}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Department Desk
+                        {isAm ? 'የዲፓርትመንት ዴስክ' : 'Department Desk'}
                       </label>
                       <select
                         value={editDepartment}
@@ -3888,19 +4012,32 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           ))
                         ) : (
                           <>
-                            <option value="Anti-Corruption & Financial Crime Unit">Anti-Corruption & Financial Crime Unit</option>
-                            <option value="Public Health & Social Welfare Desk">Public Health & Social Welfare Desk</option>
-                            <option value="Infrastructure & Environmental Watch">Infrastructure & Environmental Watch</option>
-                            <option value="Human Rights & Legal Affairs Bureau">Human Rights & Legal Affairs Bureau</option>
-                            <option value="Breaking News & Crisis Response Desk">Breaking News & Crisis Response Desk</option>
+                            <option value="Anti-Corruption & Financial Crime Unit">{isAm ? 'የፀረ-ሙስና እና ፋይናንስ ወንጀል ዴስክ' : 'Anti-Corruption & Financial Crime Unit'}</option>
+                            <option value="Public Health & Social Welfare Desk">{isAm ? 'የህዝብ ጤና እና ማህበራዊ ደህንነት ዴስክ' : 'Public Health & Social Welfare Desk'}</option>
+                            <option value="Infrastructure & Environmental Watch">{isAm ? 'የመሰረተ-ልማት እና አካባቢ ጥበቃ ዴስክ' : 'Infrastructure & Environmental Watch'}</option>
+                            <option value="Human Rights & Legal Affairs Bureau">{isAm ? 'የሰብዓዊ መብቶች እና የህግ ጉዳዮች ቢሮ' : 'Human Rights & Legal Affairs Bureau'}</option>
+                            <option value="Breaking News & Crisis Response Desk">{isAm ? 'የሰበር ዜና እና ድንገተኛ ምላሽ ዴስክ' : 'Breaking News & Crisis Response Desk'}</option>
                           </>
                         )}
+                        <option value="Other">{isAm ? 'ሌላ (የራስዎን ዴስክ ይጻፉ...)' : 'Other / Specify Custom...'}</option>
                       </select>
+                      {editDepartment === 'Other' && (
+                        <div className="mt-2 animate-in fade-in">
+                          <input
+                            type="text"
+                            required
+                            value={editCustomDepartment}
+                            onChange={(e) => setEditCustomDepartment(e.target.value)}
+                            placeholder={isAm ? 'አዲስ ወይም ብጁ የዲፓርትመንት ዴስክ ስም...' : 'Enter custom department desk name...'}
+                            className="w-full px-3 py-2 rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Badge Number
+                        {isAm ? 'የባጅ / መለያ ቁጥር' : 'Badge Number'}
                       </label>
                       <input
                         type="text"
@@ -3914,13 +4051,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                   <div>
                     <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Clearance Level
+                      {isAm ? 'የፈቃድ / ሚስጥራዊነት ደረጃ' : 'Clearance Level'}
                     </label>
                     <input
                       type="text"
                       value={editClearanceLevel}
                       onChange={(e) => setEditClearanceLevel(e.target.value)}
-                      placeholder="Level 3 - Confidential Whistleblower Clearance"
+                      placeholder={isAm ? "ደረጃ 3 - ሚስጥራዊ የጥቆማ ፈቃድ" : "Level 3 - Confidential Whistleblower Clearance"}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
                     />
                   </div>
@@ -3930,31 +4067,31 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {editRole === 'Citizen' && (
                 <div className="space-y-3 p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900/60">
                   <span className="font-bold text-emerald-800 dark:text-emerald-300 text-xs block">
-                    Citizen Address & Verification
+                    {isAm ? 'የዜጋው አድራሻ እና ማረጋገጫ' : 'Citizen Address & Verification'}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Woreda
+                        {isAm ? 'ወረዳ' : 'Woreda'}
                       </label>
                       <input
                         type="text"
                         value={editWoreda}
                         onChange={(e) => setEditWoreda(e.target.value)}
-                        placeholder="e.g. Bahir Dar Zuria Woreda"
+                        placeholder={isAm ? "ለምሳሌ፡ ባህር ዳር ዙሪያ ወረዳ" : "e.g. Bahir Dar Zuria Woreda"}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
                       />
                     </div>
 
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Kebele Address
+                        {isAm ? 'የቀበሌ አድራሻ' : 'Kebele Address'}
                       </label>
                       <input
                         type="text"
                         value={editAddress}
                         onChange={(e) => setEditAddress(e.target.value)}
-                        placeholder="e.g. Kebele 14, Near Lake Tana"
+                        placeholder={isAm ? "ለምሳሌ፡ ቀበሌ 14፣ ጣና ሐይቅ አቅራቢያ" : "e.g. Kebele 14, Near Lake Tana"}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
                       />
                     </div>
@@ -3968,7 +4105,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         onChange={(e) => setEditVerified(e.target.checked)}
                         className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                       />
-                      <span>Verified Citizen Whistleblower Badge</span>
+                      <span>{isAm ? 'የተረጋገጠ ዜጋ ጥቆማ አቅራቢ ባጅ' : 'Verified Citizen Whistleblower Badge'}</span>
                     </label>
                   </div>
                 </div>
@@ -3977,25 +4114,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {editRole === 'Institution' && (
                 <div className="space-y-3 p-3 bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/60">
                   <span className="font-bold text-[#005BAC] dark:text-blue-300 text-xs block">
-                    Institution Details & Publishing License
+                    {isAm ? 'የተቋም ዝርዝር እና የህትመት ፈቃድ' : 'Institution Details & Publishing License'}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Institution Category
+                        {isAm ? 'የተቋም ዘርፍ / ምድብ' : 'Institution Category'}
                       </label>
                       <input
                         type="text"
                         value={editInstitutionCategory}
                         onChange={(e) => setEditInstitutionCategory(e.target.value)}
-                        placeholder="e.g. Public Media & Civil Agency"
+                        placeholder={isAm ? "ለምሳሌ፡ የህዝብ ሚዲያና ሲቪክ ኤጀንሲ" : "e.g. Public Media & Civil Agency"}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
                       />
                     </div>
 
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Registration Number
+                        {isAm ? 'የምዝገባ ቁጥር' : 'Registration Number'}
                       </label>
                       <input
                         type="text"
@@ -4015,7 +4152,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         onChange={(e) => setEditIsApprovedInstitution(e.target.checked)}
                         className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                       />
-                      <span>Approved Official Publisher (Allowed to broadcast news)</span>
+                      <span>{isAm ? 'የተፈቀደለት ኦፊሴላዊ አሳታሚ (ዜና የማሰራጨት ፈቃድ ያለው)' : 'Approved Official Publisher (Allowed to broadcast news)'}</span>
                     </label>
                   </div>
                 </div>
@@ -4028,14 +4165,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   onClick={() => setEditingUser(null)}
                   className="px-4 py-2 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl shadow-md cursor-pointer flex items-center space-x-1.5"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Save Profile Changes</span>
+                  <span>{isAm ? 'የመገለጫ ለውጦችን አስቀምጥ' : 'Save Profile Changes'}</span>
                 </button>
               </div>
             </form>
@@ -4055,35 +4192,37 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                  Permanently Delete User Account?
+                  {isAm ? 'የተጠቃሚ አካውንቱን በቋሚነት ይሰርዙ?' : 'Permanently Delete User Account?'}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  This action is permanent and cannot be reversed.
+                  {isAm ? 'ይህ እርምጃ ቋሚ ሲሆን ወደ ኋላ መመለስ አይቻልም።' : 'This action is permanent and cannot be reversed.'}
                 </p>
               </div>
             </div>
 
             <div className="bg-red-50 dark:bg-red-950/40 p-4 rounded-2xl border border-red-200/80 dark:border-red-900/60 text-xs space-y-2 text-red-900 dark:text-red-200">
               <div className="flex items-center justify-between font-mono">
-                <span className="text-red-700 dark:text-red-300 font-semibold">User:</span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">{isAm ? 'ተጠቃሚ፡' : 'User:'}</span>
                 <span className="font-bold">{deletingUser.fullName}</span>
               </div>
               <div className="flex items-center justify-between font-mono">
-                <span className="text-red-700 dark:text-red-300 font-semibold">Role:</span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">{isAm ? 'ሚና፡' : 'Role:'}</span>
                 <span className="font-bold">{deletingUser.role}</span>
               </div>
               <div className="flex items-center justify-between font-mono">
-                <span className="text-red-700 dark:text-red-300 font-semibold">Email:</span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">{isAm ? 'ኢሜይል፡' : 'Email:'}</span>
                 <span>{deletingUser.email}</span>
               </div>
               <div className="flex items-center justify-between font-mono">
-                <span className="text-red-700 dark:text-red-300 font-semibold">ID:</span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">{isAm ? 'መለያ፡' : 'ID:'}</span>
                 <span>{deletingUser.id}</span>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Deleting this account will permanently remove their credentials and authentication rights across the AMECO Whistleblower System.
+              {isAm 
+                ? 'ይህንን አካውንት መሰረዝ የተጠቃሚውን መረጃዎችና ፈቃዶች ከመላው የአሚኮ ጥቆማ መቀበያ ስርዓት በቋሚነት ያስወግዳል።'
+                : 'Deleting this account will permanently remove their credentials and authentication rights across the AMECO Whistleblower System.'}
             </p>
 
             <div className="pt-2 flex items-center justify-end space-x-2">
@@ -4092,7 +4231,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 onClick={() => setDeletingUser(null)}
                 className="px-4 py-2.5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
               >
-                Cancel
+                {isAm ? 'ሰርዝ' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -4100,7 +4239,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md cursor-pointer flex items-center space-x-1.5"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete Permanently</span>
+                <span>{isAm ? 'በቋሚነት ሰርዝ' : 'Delete Permanently'}</span>
               </button>
             </div>
           </div>
@@ -4116,12 +4255,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <UserPlus className="w-5 h-5 text-[#005BAC]" />
                 <span>
                   {role === 'ResponsiblePerson'
-                    ? 'Register New Investigator'
+                    ? (isAm ? 'አዲስ መርማሪ መዝግብ' : 'Register New Investigator')
                     : role === 'Institution'
-                    ? 'Register Media Agency / Newsroom Publisher'
+                    ? (isAm ? 'አዲስ የሚዲያ ተቋም / አሳታሚ መዝግብ' : 'Register Media Agency / Newsroom Publisher')
                     : role === 'Administrator'
-                    ? 'Register System Administrator'
-                    : 'Register User Account'}
+                    ? (isAm ? 'አዲስ የስርዓት አስተዳዳሪ መዝግብ' : 'Register System Administrator')
+                    : (isAm ? 'አዲስ ተጠቃሚ አካውንት መዝግብ' : 'Register User Account')}
                 </span>
               </h3>
               <button
@@ -4137,7 +4276,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                  <span>Account Role</span>
+                  <span>{isAm ? 'የአካውንት ሚና' : 'Account Role'}</span>
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -4150,28 +4289,28 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     }}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-xs outline-none focus:ring-2 focus:ring-[#005BAC]/30 transition-colors shadow-2xs cursor-pointer"
                   >
-                    <option value="ResponsiblePerson">AMECO Investigator / Field Officer</option>
-                    <option value="Institution">Official Media Outlet / Newsroom Publisher</option>
-                    <option value="Administrator">System Administrator (Root Editorial)</option>
+                    <option value="ResponsiblePerson">{isAm ? 'የአሚኮ መርማሪ / የመስክ ባለሙያ' : 'AMECO Investigator / Field Officer'}</option>
+                    <option value="Institution">{isAm ? 'ኦፊሴላዊ የሚዲያ ተቋም / አሳታሚ' : 'Official Media Outlet / Newsroom Publisher'}</option>
+                    <option value="Administrator">{isAm ? 'የስርዓት አስተዳዳሪ (ዋና አርታዒ)' : 'System Administrator (Root Editorial)'}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <ValidatedNameInput
-                  label={role === 'Institution' ? "Media Outlet / Organization Name" : "Full Name"}
+                  label={role === 'Institution' ? (isAm ? "የሚዲያ ተቋም / ድርጅት ስም" : "Media Outlet / Organization Name") : (isAm ? "ሙሉ ስም" : "Full Name")}
                   required
                   value={fullName}
                   onChange={setFullName}
-                  placeholder={role === 'Institution' ? "e.g. Walta Media, BDU Press, APHI" : "Enter full name"}
+                  placeholder={role === 'Institution' ? (isAm ? "ለምሳሌ፡ ዋልታ ሚዲያ፣ ቢዲዩ ፕሬስ" : "e.g. Walta Media, BDU Press, APHI") : (isAm ? "ሙሉ ስም ያስገቡ" : "Enter full name")}
                 />
 
                 <FormalEmailInput
-                  label={role === 'Institution' ? "Editorial / Contact Email Address" : "Email Address"}
+                  label={role === 'Institution' ? (isAm ? "የአርታዒያን / የመገናኛ ኢሜይል አድራሻ" : "Editorial / Contact Email Address") : (isAm ? "የኢሜይል አድራሻ" : "Email Address")}
                   required
                   value={email}
                   onChange={setEmail}
-                  placeholder={role === 'Institution' ? "e.g. news@walta.et or press@bdu.edu.et" : "Enter email (e.g. officer@ameco.et)"}
+                  placeholder={role === 'Institution' ? (isAm ? "ለምሳሌ፡ news@walta.et ወይም press@bdu.edu.et" : "e.g. news@walta.et or press@bdu.edu.et") : (isAm ? "ኢሜይል ያስገቡ (ለምሳሌ፡ officer@ameco.et)" : "Enter email (e.g. officer@ameco.et)")}
                 />
               </div>
 
@@ -4181,7 +4320,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     value={phone}
                     onChange={setPhone}
                     required
-                    label={role === 'Institution' ? "Media Desk Phone Number" : "Phone Number"}
+                    label={role === 'Institution' ? (isAm ? "የሚዲያ ዴስክ ስልክ ቁጥር" : "Media Desk Phone Number") : (isAm ? "የስልክ ቁጥር" : "Phone Number")}
                   />
                 </div>
 
@@ -4189,14 +4328,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <div>
                     <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
                       <UserCheck className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                      <span>Focal Person / Liaison Officer *</span>
+                      <span>{isAm ? 'ተጠሪ ሰው / ግንኙነት መኮንን *' : 'Focal Person / Liaison Officer *'}</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={focalPersonName}
                       onChange={(e) => setFocalPersonName(e.target.value)}
-                      placeholder="e.g. Senior Editor Solomon Worku"
+                      placeholder={isAm ? "ለምሳሌ፡ ዋና አርታዒ ሰለሞን ወርቁ" : "e.g. Senior Editor Solomon Worku"}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold text-xs outline-none focus:ring-2 focus:ring-[#005BAC]/30 transition-colors shadow-2xs"
                     />
                   </div>
@@ -4221,7 +4360,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
                     <Radio className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                    <span>Media Classification & Newsroom Sector</span>
+                    <span>{isAm ? 'የሚዲያ ምደባ እና የዜና ዘርፍ' : 'Media Classification & Newsroom Sector'}</span>
                     <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -4229,19 +4368,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     onChange={(e) => setOrganizationType(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold text-xs outline-none focus:ring-2 focus:ring-[#005BAC]/30 transition-colors shadow-2xs cursor-pointer"
                   >
-                    <option value="Public Broadcaster (TV & Radio)">Public Broadcaster (TV & Radio - ቴሌቪዥንና ሬዲዮ)</option>
-                    <option value="Digital Newsroom & Web Portal">Digital Newsroom & Web Portal (ድረ-ገጽና ማህበራዊ ሚዲያ)</option>
-                    <option value="University Press & Academic Desk">University Press & Academic Research (የዩኒቨርሲቲ ፕሬስ)</option>
-                    <option value="Regional Public Health Agency">Regional Public Health & Emergency Agency (የጤናና ድንገተኛ ተቋም)</option>
-                    <option value="Independent Press & Media House">Independent Press & Media House (ገለልተኛ የሚዲያ ተቋም)</option>
-                    <option value="Civic & Municipal Information Desk">Civic & Municipal Information Desk (የከተማና ማዘጋጃ ቤት ዴስክ)</option>
+                    <option value="Public Broadcaster (TV & Radio)">{isAm ? 'የህዝብ ብሮድካስተር (ቴሌቪዥንና ሬዲዮ)' : 'Public Broadcaster (TV & Radio - ቴሌቪዥንና ሬዲዮ)'}</option>
+                    <option value="Digital Newsroom & Web Portal">{isAm ? 'ዲጂታል የዜና ክፍልና ድረ-ገጽ' : 'Digital Newsroom & Web Portal (ድረ-ገጽና ማህበራዊ ሚዲያ)'}</option>
+                    <option value="University Press & Academic Desk">{isAm ? 'የዩኒቨርሲቲ ፕሬስና ጥናት' : 'University Press & Academic Research (የዩኒቨርሲቲ ፕሬስ)'}</option>
+                    <option value="Regional Public Health Agency">{isAm ? 'የክልል የህዝብ ጤናና ድንገተኛ ኤጀንሲ' : 'Regional Public Health & Emergency Agency (የጤናና ድንገተኛ ተቋም)'}</option>
+                    <option value="Independent Press & Media House">{isAm ? 'ገለልተኛ የህትመትና የሚዲያ ተቋም' : 'Independent Press & Media House (ገለልተኛ የሚዲያ ተቋም)'}</option>
+                    <option value="Civic & Municipal Information Desk">{isAm ? 'የማዘጋጃ ቤትና የከተማ መረጃ ዴስክ' : 'Civic & Municipal Information Desk (የከተማና ማዘጋጃ ቤት ዴስክ)'}</option>
                   </select>
                 </div>
               ) : role !== 'Citizen' ? (
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                    <span>AMECO Department Desk</span>
+                    <span>{isAm ? 'የአሚኮ ዲፓርትመንት ዴስክ' : 'AMECO Department Desk'}</span>
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -4258,36 +4397,49 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         ))
                       ) : (
                         <>
-                          <option value="Anti-Corruption & Financial Crime Unit">Anti-Corruption & Financial Crime Desk</option>
-                          <option value="Public Health & Social Welfare Desk">Public Health & Social Welfare Desk</option>
-                          <option value="Infrastructure & Environmental Watch">Infrastructure & Environmental Watch</option>
-                          <option value="Human Rights & Legal Affairs Bureau">Human Rights & Legal Affairs Bureau</option>
-                          <option value="Breaking News & Crisis Response Desk">Breaking News & Crisis Response Desk</option>
+                          <option value="Anti-Corruption & Financial Crime Unit">{isAm ? 'የፀረ-ሙስና እና ፋይናንስ ወንጀል ዴስክ' : 'Anti-Corruption & Financial Crime Desk'}</option>
+                          <option value="Public Health & Social Welfare Desk">{isAm ? 'የህዝብ ጤና እና ማህበራዊ ደህንነት ዴስክ' : 'Public Health & Social Welfare Desk'}</option>
+                          <option value="Infrastructure & Environmental Watch">{isAm ? 'የመሰረተ-ልማት እና አካባቢ ጥበቃ ዴስክ' : 'Infrastructure & Environmental Watch'}</option>
+                          <option value="Human Rights & Legal Affairs Bureau">{isAm ? 'የሰብዓዊ መብቶች እና የህግ ጉዳዮች ቢሮ' : 'Human Rights & Legal Affairs Bureau'}</option>
+                          <option value="Breaking News & Crisis Response Desk">{isAm ? 'የሰበር ዜና እና ድንገተኛ ምላሽ ዴስክ' : 'Breaking News & Crisis Response Desk'}</option>
                         </>
                       )}
+                      <option value="Other">{isAm ? 'ሌላ / የራስዎን ዴስክ ይጻፉ...' : 'Other / Specify Custom...'}</option>
                     </select>
+                    {department === 'Other' && (
+                      <div className="mt-2 animate-in fade-in">
+                        <input
+                          type="text"
+                          required
+                          value={customDepartment}
+                          onChange={(e) => setCustomDepartment(e.target.value)}
+                          placeholder={isAm ? 'አዲስ ወይም ብጁ የዲፓርትመንት ዴስክ ስም ያስገቡ...' : 'Enter custom department desk name...'}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold text-xs outline-none focus:ring-2 focus:ring-[#005BAC]/40"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Woreda</label>
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">{isAm ? 'ወረዳ' : 'Woreda'}</label>
                     <input
                       type="text"
                       value={woreda}
                       onChange={(e) => setWoreda(e.target.value)}
-                      placeholder="e.g. Bahir Dar Zuria Woreda"
+                      placeholder={isAm ? "ለምሳሌ፡ ባህር ዳር ዙሪያ ወረዳ" : "e.g. Bahir Dar Zuria Woreda"}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Kebele / Address</label>
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">{isAm ? 'ቀበሌ / አድራሻ' : 'Kebele / Address'}</label>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="e.g. Kebele 14, House #402"
+                      placeholder={isAm ? "ለምሳሌ፡ ቀበሌ 14፣ የቤት ቁጥር 402" : "e.g. Kebele 14, House #402"}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none"
                     />
                   </div>
@@ -4300,17 +4452,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <div className="flex items-center justify-between pb-1.5 border-b border-blue-100 dark:border-blue-900/50">
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-[#005BAC] dark:text-blue-400" />
-                      <span>Media Accreditation & Legal Registration Credentials</span>
+                      <span>{isAm ? 'የሚዲያ እውቅና እና ህጋዊ የምዝገባ ሰነዶች' : 'Media Accreditation & Legal Registration Credentials'}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-                      Verified Publisher Desk
+                      {isAm ? 'የተረጋገጠ አሳታሚ' : 'Verified Publisher Desk'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Media License / Registration No. *
+                        {isAm ? 'የሚዲያ ፈቃድ / ምዝገባ ቁጥር *' : 'Media License / Registration No. *'}
                       </label>
                       <input
                         type="text"
@@ -4324,7 +4476,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Official Website / Portal URL *
+                        {isAm ? 'ኦፊሴላዊ ድረ-ገጽ URL *' : 'Official Website / Portal URL *'}
                       </label>
                       <input
                         type="url"
@@ -4343,11 +4495,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                           <FileText className="w-3.5 h-3.5 text-[#005BAC]" />
-                          <span>Media Accreditation Document / Operating License (Optional)</span>
+                          <span>{isAm ? 'የሚዲያ እውቅና ሰነድ / የስራ ፈቃድ (አማራጭ)' : 'Media Accreditation Document / Operating License (Optional)'}</span>
                         </label>
                         {accreditationFile && (
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                            <Check className="w-3 h-3" /> Attached
+                            <Check className="w-3 h-3" /> {isAm ? 'ተያይዟል' : 'Attached'}
                           </span>
                         )}
                       </div>
@@ -4367,16 +4519,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             title="Delete attached file"
                           >
                             <Trash2 className="w-3 h-3" />
-                            <span>Delete</span>
+                            <span>{isAm ? 'ሰርዝ' : 'Delete'}</span>
                           </button>
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/50 cursor-pointer transition-colors text-center">
                           <Upload className="w-4 h-4 text-[#005BAC] mb-1" />
                           <span className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400">
-                            Upload Accreditation / License Certificate (PDF, JPG, PNG)
+                            {isAm ? 'የእውቅና / የፈቃድ ሰርተፍኬት ይጫኑ (PDF, JPG, PNG)' : 'Upload Accreditation / License Certificate (PDF, JPG, PNG)'}
                           </span>
-                          <span className="text-[9px] text-slate-400">Official license or registration certificate</span>
+                          <span className="text-[9px] text-slate-400">{isAm ? 'ኦፊሴላዊ የፈቃድ ወይም የምዝገባ ሰነድ' : 'Official license or registration certificate'}</span>
                           <input
                             type="file"
                             accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
@@ -4403,39 +4555,39 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <div className="flex items-center justify-between pb-1.5 border-b border-indigo-100 dark:border-indigo-900/50">
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                       <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      <span>Academic Qualifications & Verified Credentials *</span>
+                      <span>{isAm ? 'የትምህርት ማስረጃ እና የተረጋገጡ ሰነዶች *' : 'Academic Qualifications & Verified Credentials *'}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
-                      Mandatory Vetting
+                      {isAm ? 'ግዴታ ማጣሪያ' : 'Mandatory Vetting'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Qualification Level *
+                        {isAm ? 'የትምህርት ደረጃ *' : 'Qualification Level *'}
                       </label>
                       <select
                         value={qualificationLevel}
                         onChange={(e) => setQualificationLevel(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none font-semibold text-xs"
                       >
-                        <option value="Bachelor Degree (BSc/BA)">Bachelor Degree (BSc / BA)</option>
-                        <option value="Master Degree (MSc/MA)">Master Degree (MSc / MA)</option>
-                        <option value="Doctorate Degree (PhD)">Doctorate Degree (PhD)</option>
+                        <option value="Bachelor Degree (BSc/BA)">{isAm ? 'የመጀመሪያ ዲግሪ (BSc / BA)' : 'Bachelor Degree (BSc / BA)'}</option>
+                        <option value="Master Degree (MSc/MA)">{isAm ? 'ሁለተኛ ዲግሪ (MSc / MA)' : 'Master Degree (MSc / MA)'}</option>
+                        <option value="Doctorate Degree (PhD)">{isAm ? 'የዶክትሬት ዲግሪ (PhD)' : 'Doctorate Degree (PhD)'}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Field of Study / Discipline *
+                        {isAm ? 'የሙያ መስክ / የትምህርት ዓይነት *' : 'Field of Study / Discipline *'}
                       </label>
                       <input
                         type="text"
                         required
                         value={fieldOfStudy}
                         onChange={(e) => setFieldOfStudy(e.target.value)}
-                        placeholder="e.g. Law & Forensic Criminology"
+                        placeholder={isAm ? "ለምሳሌ፡ ህግ እና የወንጀል ምርመራ" : "e.g. Law & Forensic Criminology"}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none text-xs"
                       />
                     </div>
@@ -4448,11 +4600,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                           <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>Curriculum Vitae (CV) *</span>
+                          <span>{isAm ? 'ሲቪ / የህይወት ታሪክ (CV) *' : 'Curriculum Vitae (CV) *'}</span>
                         </label>
                         {cvFile && (
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                            <Check className="w-3 h-3" /> Attached
+                            <Check className="w-3 h-3" /> {isAm ? 'ተያይዟል' : 'Attached'}
                           </span>
                         )}
                       </div>
@@ -4472,16 +4624,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             title="Delete uploaded CV file"
                           >
                             <Trash2 className="w-3 h-3" />
-                            <span>Delete</span>
+                            <span>{isAm ? 'ሰርዝ' : 'Delete'}</span>
                           </button>
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50/50 cursor-pointer transition-colors text-center">
                           <Upload className="w-4 h-4 text-indigo-500 mb-1" />
                           <span className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400">
-                            Upload CV (PDF, DOCX)
+                            {isAm ? 'ሲቪ ይጫኑ (PDF, DOCX)' : 'Upload CV (PDF, DOCX)'}
                           </span>
-                          <span className="text-[9px] text-slate-400">Max 15MB file</span>
+                          <span className="text-[9px] text-slate-400">{isAm ? 'እስከ 15MB ፋይል' : 'Max 15MB file'}</span>
                           <input
                             type="file"
                             accept=".pdf,.doc,.docx"
@@ -4497,11 +4649,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                           <Award className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Degree / Masters / PhD Certificate *</span>
+                          <span>{isAm ? 'የዲግሪ / ማስተርስ / ፒኤችዲ ሰርተፍኬት *' : 'Degree / Masters / PhD Certificate *'}</span>
                         </label>
                         {certificateFile && (
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                            <Check className="w-3 h-3" /> Attached
+                            <Check className="w-3 h-3" /> {isAm ? 'ተያይዟል' : 'Attached'}
                           </span>
                         )}
                       </div>
@@ -4521,16 +4673,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             title="Delete uploaded Certificate file"
                           >
                             <Trash2 className="w-3 h-3" />
-                            <span>Delete</span>
+                            <span>{isAm ? 'ሰርዝ' : 'Delete'}</span>
                           </button>
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50/50 cursor-pointer transition-colors text-center">
                           <Award className="w-4 h-4 text-amber-500 mb-1" />
                           <span className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400">
-                            Upload Certificate (PDF, JPG)
+                            {isAm ? 'ሰርተፍኬት ይጫኑ (PDF, JPG)' : 'Upload Certificate (PDF, JPG)'}
                           </span>
-                          <span className="text-[9px] text-slate-400">Degree, Masters or PhD document</span>
+                          <span className="text-[9px] text-slate-400">{isAm ? 'የዲግሪ፣ ማስተርስ ወይም ፒኤችዲ ሰነድ' : 'Degree, Masters or PhD document'}</span>
                           <input
                             type="file"
                             accept=".pdf,.png,.jpg,.jpeg"
@@ -4556,7 +4708,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[#005BAC] dark:text-blue-400" />
-                    <span>System-Generated Default Password</span>
+                    <span>{isAm ? 'በስርዓቱ የተዘጋጀ መደበኛ የይለፍ ቃል' : 'System-Generated Default Password'}</span>
                   </span>
                   <button
                     type="button"
@@ -4564,13 +4716,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     className="text-[11px] font-bold text-[#005BAC] dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <RefreshCw className="w-3 h-3" />
-                    <span>Regenerate Password</span>
+                    <span>{isAm ? 'በድጋሚ አመንጭ' : 'Regenerate Password'}</span>
                   </button>
                 </div>
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
-                    Default Initial Password
+                    {isAm ? 'የመጀመሪያ መደበኛ የይለፍ ቃል' : 'Default Initial Password'}
                   </label>
                   <div className="relative">
                     <input
@@ -4592,7 +4744,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1.5 leading-snug">
                   <Info className="w-3.5 h-3.5 text-[#005BAC] shrink-0 mt-0.5" />
                   <span>
-                    The officer will sign in using their <strong>Email</strong> and this <strong>Default Password</strong>, and will be prompted to update their password upon login.
+                    {isAm
+                      ? 'ባለሙያው በኢሜይል አድራሻቸው እና በዚህ መደበኛ የይለፍ ቃል ይገባሉ፤ በመጀመሪያ መግቢያቸው ላይ የይለፍ ቃላቸውን እንዲቀይሩ ይጠየቃሉ።'
+                      : 'The officer will sign in using their Email and this Default Password, and will be prompted to update their password upon login.'}
                   </span>
                 </p>
               </div>
@@ -4603,13 +4757,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   onClick={() => setShowAddUserModal(false)}
                   className="px-4 py-2 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  Cancel
+                  {isAm ? 'ሰርዝ' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl shadow-md cursor-pointer"
                 >
-                  Provision Account
+                  {isAm ? 'አካውንቱን መዝግብ' : 'Provision Account'}
                 </button>
               </div>
             </form>
