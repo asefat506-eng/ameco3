@@ -37,15 +37,21 @@ export function detectNameScript(name?: string | null): 'english' | 'amharic' | 
 /**
  * Filter out numbers and disallowed special characters in real-time as user writes
  */
-export function filterLettersOnly(input: string): { cleaned: string; hadInvalidChar: boolean; invalidCharMessage?: string } {
+export function filterLettersOnly(
+  input: string,
+  language: 'en' | 'am' = 'en'
+): { cleaned: string; hadInvalidChar: boolean; invalidCharMessage?: string } {
   if (!input) return { cleaned: '', hadInvalidChar: false };
-  
+  const isAm = language === 'am';
+
   if (/\d/.test(input)) {
     const cleaned = input.replace(/\d/g, '');
     return {
       cleaned,
       hadInvalidChar: true,
-      invalidCharMessage: 'Numbers (0-9) are not allowed in names. Letters only.',
+      invalidCharMessage: isAm
+        ? 'በስም ውስጥ ቁጥሮች (0-9) አይፈቀዱም። ፊደላት ብቻ ይጠቀሙ።'
+        : 'Numbers (0-9) are not allowed in names. Letters only.',
     };
   }
 
@@ -56,30 +62,50 @@ export function filterLettersOnly(input: string): { cleaned: string; hadInvalidC
     cleaned,
     hadInvalidChar,
     invalidCharMessage: hadInvalidChar
-      ? 'Special symbols are not allowed in names. Please use letters only.'
+      ? isAm
+        ? 'ልዩ ምልክቶች በስም ውስጥ አይፈቀዱም። እባክዎ ፊደላትን ብቻ ይጠቀሙ።'
+        : 'Special symbols are not allowed in names. Please use letters only.'
       : undefined,
   };
 }
 
 /**
- * Validate that a first name, last name, or full name is text-only (Amharic or English)
- * and does not contain numbers or arbitrary punctuation.
+ * Validate that a first name, last name, or full name is text-only (Amharic or English),
+ * does not contain numbers or arbitrary punctuation, and starts with a capital letter when using English letters.
  */
-export function validateName(name?: string | null, fieldName: string = 'Name'): NameValidationResult {
+export function validateName(
+  name?: string | null,
+  fieldName: string = 'Name',
+  language: 'en' | 'am' = 'en'
+): NameValidationResult {
+  const isAm = language === 'am';
   const trimmed = typeof name === 'string' ? name.trim() : '';
 
   if (!trimmed) {
     return {
       isValid: false,
-      error: `${fieldName} is required.`,
+      error: isAm ? `${fieldName} ማስገባት ግዴታ ነው።` : `${fieldName} is required.`,
       detectedScript: 'none',
+    };
+  }
+
+  // Enforce starting with a capital letter when the first letter is English (Latin script)
+  if (/^[a-z]/.test(trimmed)) {
+    return {
+      isValid: false,
+      error: isAm
+        ? `${fieldName} በትልቅ ፊደል (Capital Letter) መጀመር አለበት (ለምሳሌ፡ Abebe)።`
+        : `${fieldName} must start with a capital letter (e.g., Abebe).`,
+      detectedScript: detectNameScript(trimmed),
     };
   }
 
   if (trimmed.length < 2) {
     return {
       isValid: false,
-      error: `${fieldName} must be at least 2 characters.`,
+      error: isAm
+        ? `${fieldName} ቢያንስ 2 ፊደላት መሆን አለበት።`
+        : `${fieldName} must be at least 2 characters.`,
       detectedScript: detectNameScript(trimmed),
     };
   }
@@ -88,7 +114,9 @@ export function validateName(name?: string | null, fieldName: string = 'Name'): 
   if (/\d/.test(trimmed)) {
     return {
       isValid: false,
-      error: `${fieldName} cannot contain numbers (0-9). Letters only.`,
+      error: isAm
+        ? `${fieldName} ቁጥሮችን (0-9) መያዝ አይችልም። ፊደላት ብቻ ይፈቀዳሉ።`
+        : `${fieldName} cannot contain numbers (0-9). Letters only.`,
       detectedScript: detectNameScript(trimmed),
     };
   }
@@ -97,7 +125,9 @@ export function validateName(name?: string | null, fieldName: string = 'Name'): 
   if (!VALID_NAME_REGEX.test(trimmed)) {
     return {
       isValid: false,
-      error: `${fieldName} contains invalid characters. Only standard letters (English/Amharic) are permitted.`,
+      error: isAm
+        ? `${fieldName} ትክክለኛ ያልሆኑ ምልክቶችን ይዟል። የእንግሊዝኛ ወይም የአማርኛ ፊደላትን ብቻ ይጠቀሙ።`
+        : `${fieldName} contains invalid characters. Only standard letters (English/Amharic) are permitted.`,
       detectedScript: detectNameScript(trimmed),
     };
   }

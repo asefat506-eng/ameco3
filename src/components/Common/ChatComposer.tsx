@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AudioLines, Mic, Paperclip, Send, Square, X } from 'lucide-react';
 import { EvidenceFile } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ChatComposerProps {
   onSend: (text: string, attachment?: EvidenceFile) => void;
@@ -32,12 +33,17 @@ const getAttachmentType = (file: File): EvidenceFile['type'] => {
 
 export const ChatComposer: React.FC<ChatComposerProps> = ({
   onSend,
-  placeholder = 'Type a message...',
+  placeholder,
   disabled = false,
   className = '',
-  sendLabel = 'Send',
+  sendLabel,
   children,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+  const effectivePlaceholder = placeholder ?? (isAm ? 'መልዕክት ይጻፉ...' : 'Type a message...');
+  const effectiveSendLabel = sendLabel ?? (isAm ? 'ላክ' : 'Send');
+
   const [text, setText] = useState('');
   const [attachment, setAttachment] = useState<EvidenceFile>();
   const [isRecording, setIsRecording] = useState(false);
@@ -53,7 +59,9 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
 
   const handleFile = (file: File) => {
     if (file.size > 50 * 1024 * 1024) {
-      setRecordingError('Files must be 50MB or smaller.');
+      setRecordingError(
+        isAm ? 'ፋይሎች ከ50MB ያነሱ ወይም እኩል መሆን አለባቸው።' : 'Files must be 50MB or smaller.'
+      );
       return;
     }
     setRecordingError('');
@@ -73,7 +81,11 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   const startRecording = async () => {
     setRecordingError('');
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setRecordingError('Voice recording is not supported in this browser.');
+      setRecordingError(
+        isAm
+          ? 'በዚህ ብሮውዘር የድምፅ ቀረጻ አይደገፍም።'
+          : 'Voice recording is not supported in this browser.'
+      );
       return;
     }
     try {
@@ -106,11 +118,23 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     } catch (err: unknown) {
       const errorObj = err as { name?: string; message?: string };
       if (errorObj?.name === 'NotAllowedError' || errorObj?.name === 'PermissionDeniedError') {
-        setRecordingError('የማይክሮፎን ፈቃድ ተከልክሏል (Microphone permission denied)። በብሮውዘሩ አድራሻ ማስገቢያ (URL bar) ላይ ያለውን 🔒 ወይም የፈቃድ ምልክት በመጫን ማይክሮፎን "Allow" ያድርጉ፤ ወይም ከስር 📎 በመጫን የድምፅ ፋይል (Audio file) ይምረጡ።');
+        setRecordingError(
+          isAm
+            ? 'የማይክሮፎን ፈቃድ ተከልክሏል። በብሮውዘሩ አድራሻ ማስገቢያ ላይ ያለውን 🔒 ወይም የፈቃድ ምልክት በመጫን ማይክሮፎን "Allow" ያድርጉ፤ ወይም 📎 በመጫን የድምፅ ፋይል ይምረጡ።'
+            : 'Microphone permission denied. Please allow microphone access in your browser address bar, or use 📎 to attach an audio file.'
+        );
       } else if (errorObj?.name === 'NotFoundError' || errorObj?.name === 'DevicesNotFoundError') {
-        setRecordingError('በመሳሪያዎ ላይ ማይክሮፎን አልተገኘም (No microphone detected)። እባክዎ ማይክሮፎን ያገናኙ ወይም በ 📎 በኩል የተቀዳ የድምፅ ፋይል ይላኩ።');
+        setRecordingError(
+          isAm
+            ? 'በመሳሪያዎ ላይ ማይክሮፎን አልተገኘም። እባክዎ ማይክሮፎን ያገናኙ ወይም በ 📎 በኩል የተቀዳ የድምፅ ፋይል ይላኩ።'
+            : 'No microphone detected on your device. Please connect a microphone or attach a recorded audio file via 📎.'
+        );
       } else {
-        setRecordingError('ማይክሮፎኑን ማስጀመር አልተቻለም (Microphone unavailable)። 📎 በመጠቀም የተቀዳ ድምፅ ፋይል መጫን ይችላሉ።');
+        setRecordingError(
+          isAm
+            ? 'ማይክሮፎኑን ማስጀመር አልተቻለም። 📎 በመጠቀም የተቀዳ ድምፅ ፋይል መጫን ይችላሉ።'
+            : 'Microphone unavailable. You can attach a recorded audio file using 📎.'
+        );
       }
     }
   };
@@ -138,7 +162,12 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
         <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs dark:border-blue-900 dark:bg-blue-950/40">
           {attachment.type === 'audio' ? <AudioLines className="h-4 w-4 text-blue-600" /> : <Paperclip className="h-4 w-4 text-blue-600" />}
           <span className="min-w-0 flex-1 truncate">{attachment.name} ({attachment.size})</span>
-          <button type="button" onClick={() => setAttachment(undefined)} className="text-slate-500 hover:text-red-600" title="Remove attachment">
+          <button
+            type="button"
+            onClick={() => setAttachment(undefined)}
+            className="text-slate-500 hover:text-red-600"
+            title={isAm ? 'አባሪ አስወግድ' : 'Remove attachment'}
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -156,14 +185,52 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
             event.target.value = '';
           }}
         />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={disabled || isRecording} className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" title="Attach a file">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || isRecording}
+          className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          title={isAm ? 'ፋይል አያይዝ' : 'Attach a file'}
+        >
           <Paperclip className="h-4 w-4" />
         </button>
-        <button type="button" onClick={isRecording ? stopRecording : startRecording} disabled={disabled} className={`rounded-xl border p-2.5 disabled:opacity-50 ${isRecording ? 'border-red-500 bg-red-500 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`} title={isRecording ? 'Stop recording' : 'Record a voice message'}>
+        <button
+          type="button"
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={disabled}
+          className={`rounded-xl border p-2.5 disabled:opacity-50 ${isRecording ? 'border-red-500 bg-red-500 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+          title={
+            isRecording
+              ? isAm
+                ? 'ቀረጻ አቁም'
+                : 'Stop recording'
+              : isAm
+              ? 'የድምፅ መልዕክት ቅዳ'
+              : 'Record a voice message'
+          }
+        >
           {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </button>
-        <input type="text" value={text} onChange={(event) => setText(event.target.value)} placeholder={isRecording ? 'Recording voice message...' : placeholder} disabled={disabled || isRecording} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-[#005BAC] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
-        <button type="submit" disabled={disabled || isRecording || (!text.trim() && !attachment)} className="rounded-xl bg-[#005BAC] p-2.5 text-white shadow disabled:opacity-50" title={sendLabel}>
+        <input
+          type="text"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder={
+            isRecording
+              ? isAm
+                ? 'የድምፅ መልዕክት በመቅዳት ላይ...'
+                : 'Recording voice message...'
+              : effectivePlaceholder
+          }
+          disabled={disabled || isRecording}
+          className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-[#005BAC] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        />
+        <button
+          type="submit"
+          disabled={disabled || isRecording || (!text.trim() && !attachment)}
+          className="rounded-xl bg-[#005BAC] p-2.5 text-white shadow disabled:opacity-50"
+          title={effectiveSendLabel}
+        >
           <Send className="h-4 w-4" />
         </button>
       </div>

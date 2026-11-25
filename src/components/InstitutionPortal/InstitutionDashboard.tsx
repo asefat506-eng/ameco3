@@ -1264,7 +1264,11 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                         handleAutoFetchBanner(sourceUrl);
                       }
                     }}
-                    placeholder={isAm ? 'https://youtube.com/watch?v=... ወይም https://t.me/... ወይም https://facebook.com/...' : 'https://youtube.com/watch?v=... or https://t.me/... or https://facebook.com/...'}
+                    placeholder={
+                      isAm
+                        ? 'https://www.youtube.com/@AmharaMediaCorporation ወይም https://t.me/AmharaMassMedia'
+                        : 'https://www.youtube.com/@AmharaMediaCorporation or https://t.me/AmharaMassMedia'
+                    }
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#005BAC] text-xs font-mono"
                   />
                   {sourceUrl && (
@@ -1307,28 +1311,40 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({
                   : 'When citizens click on this news card or the "Watch / Open on Social Media" button, they will be navigated directly to your social media post.'}
               </p>
 
-              {/* Preset quick buttons */}
+              {/* Official AMECO channel quick buttons */}
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                <span className="text-[10px] text-slate-400 font-bold">
-                  {isAm ? 'ፈጣን ምሳሌዎች፦' : 'Quick Examples:'}
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                  {isAm ? 'የአሚኮ ይፋዊ ቻናሎች (ፈጣን ምሳሌ)፦' : 'Official AMECO Channels (Quick Examples):'}
                 </span>
                 {[
-                  { label: 'YouTube', domain: 'https://youtube.com/watch?v=' },
-                  { label: 'Telegram', domain: 'https://t.me/' },
-                  { label: 'Facebook', domain: 'https://facebook.com/' },
-                  { label: 'TikTok', domain: 'https://tiktok.com/@' },
-                  { label: 'X', domain: 'https://x.com/' },
+                  { label: 'YouTube', url: 'https://www.youtube.com/@AmharaMediaCorporation' },
+                  { label: 'Telegram', url: 'https://t.me/AmharaMassMedia' },
+                  { label: 'Facebook', url: 'https://www.facebook.com/AmharaMediaCorporation' },
+                  { label: 'TikTok', url: 'https://www.tiktok.com/@ameco.et' },
+                  { label: 'X', url: 'https://x.com/AMECOONLINE' },
                 ].map((p) => (
-                  <button
+                  <div
                     key={p.label}
-                    type="button"
-                    onClick={() => {
-                      if (!sourceUrl) setSourceUrl(p.domain);
-                    }}
-                    className="px-2 py-0.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md text-[10px] font-medium hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
+                    className="inline-flex items-center bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md overflow-hidden shadow-2xs"
                   >
-                    {p.label}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSourceUrl(p.url)}
+                      title={isAm ? `የአሚኮ ${p.label} ቻናል አድራሻ አስገባ` : `Insert official AMECO ${p.label} URL`}
+                      className="px-2 py-0.5 text-slate-700 dark:text-slate-200 text-[10px] font-medium hover:bg-blue-50 dark:hover:bg-slate-600 hover:text-[#005BAC] dark:hover:text-blue-300 transition-colors cursor-pointer"
+                    >
+                      {p.label}
+                    </button>
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={isAm ? `የአሚኮ ${p.label} ገጽ ክፈት` : `Open official AMECO ${p.label} channel`}
+                      className="px-1.5 py-0.5 text-slate-400 hover:text-[#005BAC] dark:hover:text-blue-300 border-l border-slate-200 dark:border-slate-600 transition-colors"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
                 ))}
               </div>
 

@@ -573,6 +573,14 @@ async function startServer() {
             : 'Name must contain valid text characters (English or Amharic / ፊደል).',
         });
       }
+      const nameParts = trimmedName.split(/\s+/).filter(Boolean);
+      if (nameParts.some((part: string) => /^[a-z]/.test(part))) {
+        return res.status(400).json({
+          error: isAm
+            ? 'የመጀመሪያ ስም እና የአባት ስም በትልቅ ፊደል (Capital Letter) መጀመር አለባቸው (ለምሳሌ፡ Abebe Kebede)።'
+            : 'First Name and Last Name must start with a capital letter (e.g., Abebe Kebede).',
+        });
+      }
 
       const normalizedEmail = email.trim().toLowerCase();
       const generatedUsername = normalizedEmail.split('@')[0].toLowerCase();
@@ -698,19 +706,10 @@ async function startServer() {
 
       const cleanInput = identifier.trim().toLowerCase();
       const cleanInputDigits = cleanInput.replace(/\D/g, '');
+      const isEmailInput = cleanInput.includes('@');
       const allUsers = await getAllUsers();
 
-      // Find user matching by email, username, email prefix, ID, full name, or phone number
-      const matchedUser = allUsers.find((u) => {
-        const uName = (u.fullName || '').trim().toLowerCase();
-        const uId = (u.id || '').trim().toLowerCase();
-        const uUserId = (u.userId || '').trim().toLowerCase();
-        const uUsername = (u.username || '').trim().toLowerCase();
-        const uEmail = (u.email || '').trim().toLowerCase();
-        const emailPrefix = uEmail.includes('@') ? uEmail.split('@')[0].toLowerCase() : '';
-        const rawPhone = (u.phone || u.phoneNumber || '').trim();
-        const uPhoneDigits = rawPhone.replace(/\D/g, '');
-
+      const matchesRoleAlias = (u: UserProfile) => {
         if (cleanInput === 'admin' || cleanInput === 'administrator' || cleanInput === 'admin@ameco.et') {
           return u.role === 'Administrator';
         }
@@ -743,32 +742,24 @@ async function startServer() {
         ) {
           return u.role === 'Citizen' && (u.id === 'CZN-2026-00125' || (u.email || '').toLowerCase().includes('abebe'));
         }
+        return false;
+      };
 
-        // 1. Direct identifier match
-        if (uUsername === cleanInput || uId === cleanInput || uUserId === cleanInput || uEmail === cleanInput) {
+      // Pass 1: Exact identifier / alias / exact phone match across ALL users first
+      let matchedUser = allUsers.find((u) => {
+        if (matchesRoleAlias(u)) return true;
+
+        const uId = (u.id || '').trim().toLowerCase();
+        const uUserId = (u.userId || '').trim().toLowerCase();
+        const uUsername = (u.username || '').trim().toLowerCase();
+        const uEmail = (u.email || '').trim().toLowerCase();
+        const uPhoneDigits = (u.phone || u.phoneNumber || '').trim().replace(/\D/g, '');
+
+        if (uEmail === cleanInput || uUsername === cleanInput || uId === cleanInput || uUserId === cleanInput) {
           return true;
         }
 
-        const inputPrefix = cleanInput.includes('@') ? cleanInput.split('@')[0] : cleanInput;
-
-        // 2. Email prefix match (e.g. tigist matches tigist.worku@gmail.com or tigist@gmail.com)
-        if (emailPrefix && (emailPrefix === cleanInput || emailPrefix === inputPrefix || emailPrefix.startsWith(inputPrefix) || inputPrefix.startsWith(emailPrefix))) {
-          return true;
-        }
-
-        // 3. Full name match or name prefix
-        if (uName === cleanInput || uName.replace(/\s+/g, '') === cleanInput.replace(/\s+/g, '') || uName.startsWith(inputPrefix)) {
-          return true;
-        }
-
-        // 4. First name match
-        const nameParts = uName.split(/\s+/).filter(Boolean);
-        if (nameParts.length > 0 && (nameParts[0] === cleanInput || nameParts[0] === inputPrefix)) {
-          return true;
-        }
-
-        // 5. Phone number match
-        if (cleanInputDigits.length >= 7 && uPhoneDigits.length >= 7) {
+        if (!isEmailInput && cleanInputDigits.length >= 7 && uPhoneDigits.length >= 7) {
           if (
             uPhoneDigits === cleanInputDigits ||
             uPhoneDigits.endsWith(cleanInputDigits) ||
@@ -780,6 +771,27 @@ async function startServer() {
 
         return false;
       });
+
+      // Pass 2: Non-email username/full-name fallback (never hijack an email address via prefix!)
+      if (!matchedUser && !isEmailInput) {
+        matchedUser = allUsers.find((u) => {
+          const uName = (u.fullName || '').trim().toLowerCase();
+          const uEmail = (u.email || '').trim().toLowerCase();
+          const emailPrefix = uEmail.includes('@') ? uEmail.split('@')[0].toLowerCase() : '';
+
+          if (emailPrefix && emailPrefix === cleanInput) {
+            return true;
+          }
+          if (uName === cleanInput || uName.replace(/\s+/g, '') === cleanInput.replace(/\s+/g, '')) {
+            return true;
+          }
+          const nameParts = uName.split(/\s+/).filter(Boolean);
+          if (nameParts.length > 0 && nameParts[0] === cleanInput) {
+            return true;
+          }
+          return false;
+        });
+      }
 
       if (!matchedUser) {
         return res.status(404).json({
@@ -1030,15 +1042,26 @@ async function startServer() {
 
       const allUsers = await getAllUsers();
       const cleanId = String(identifier).trim().toLowerCase();
-      const inputPrefix = cleanId.includes('@') ? cleanId.split('@')[0] : cleanId;
-      const user = allUsers.find(
-        (u) =>
-          (u.email && (u.email.toLowerCase() === cleanId || u.email.toLowerCase().startsWith(inputPrefix))) ||
-          (u.username && u.username.toLowerCase() === cleanId) ||
-          (u.fullName && (u.fullName.toLowerCase() === cleanId || u.fullName.toLowerCase().startsWith(inputPrefix))) ||
-          (u.id && u.id.toLowerCase() === cleanId) ||
-          (u.phone && u.phone.replace(/[^0-9]/g, '') === cleanId.replace(/[^0-9]/g, ''))
-      );
+      const cleanIdDigits = cleanId.replace(/\D/g, '');
+      const isEmailId = cleanId.includes('@');
+      const user =
+        allUsers.find(
+          (u) =>
+            (u.email && u.email.toLowerCase() === cleanId) ||
+            (u.username && u.username.toLowerCase() === cleanId) ||
+            (u.id && u.id.toLowerCase() === cleanId) ||
+            (u.userId && u.userId.toLowerCase() === cleanId) ||
+            (!isEmailId &&
+              cleanIdDigits.length >= 7 &&
+              ((u.phone || u.phoneNumber || '').replace(/\D/g, '') === cleanIdDigits))
+        ) ||
+        (!isEmailId
+          ? allUsers.find(
+              (u) =>
+                (u.email && u.email.split('@')[0].toLowerCase() === cleanId) ||
+                (u.fullName && u.fullName.toLowerCase() === cleanId)
+            )
+          : undefined);
 
       if (!user) {
         return res.status(404).json({

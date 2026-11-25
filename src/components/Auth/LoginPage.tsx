@@ -221,16 +221,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       // If API error is credential rejection, try matching against current in-memory user list as fallback
       const cleanLower = cleanInput.toLowerCase();
       const cleanInputDigits = cleanLower.replace(/\D/g, '');
-      const matchedUser = users.find((u) => {
-        const uName = (u.fullName || '').trim().toLowerCase();
-        const uId = (u.id || '').trim().toLowerCase();
-        const uUserId = (u.userId || '').trim().toLowerCase();
-        const uUsername = (u.username || '').trim().toLowerCase();
-        const uEmail = (u.email || '').trim().toLowerCase();
-        const emailPrefix = uEmail.includes('@') ? uEmail.split('@')[0].toLowerCase() : '';
-        const rawPhone = (u.phone || u.phoneNumber || '').trim();
-        const uPhoneDigits = rawPhone.replace(/\D/g, '');
+      const isEmailInput = cleanLower.includes('@');
 
+      const matchesRoleAlias = (u: UserProfile) => {
         if (cleanLower === 'admin' || cleanLower === 'administrator' || cleanLower === 'admin@ameco.et') {
           return u.role === 'Administrator';
         }
@@ -263,32 +256,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         ) {
           return u.role === 'Citizen' && (u.id === 'CZN-2026-00125' || (u.email || '').toLowerCase().includes('abebe'));
         }
+        return false;
+      };
 
-        // 1. Direct match (username, ID, email, userId)
+      // Pass 1: Exact identifier / alias / phone match across all users first
+      let matchedUser = users.find((u) => {
+        if (matchesRoleAlias(u)) return true;
+
+        const uId = (u.id || '').trim().toLowerCase();
+        const uUserId = (u.userId || '').trim().toLowerCase();
+        const uUsername = (u.username || '').trim().toLowerCase();
+        const uEmail = (u.email || '').trim().toLowerCase();
+        const uPhoneDigits = (u.phone || u.phoneNumber || '').trim().replace(/\D/g, '');
+
         if (uUsername === cleanLower || uId === cleanLower || uUserId === cleanLower || uEmail === cleanLower) {
           return true;
         }
 
-        const inputPrefix = cleanLower.includes('@') ? cleanLower.split('@')[0] : cleanLower;
-
-        // 2. Email prefix match (e.g. tigist matches tigist.worku or tigist.worku@gmail.com)
-        if (emailPrefix && (emailPrefix === cleanLower || emailPrefix === inputPrefix || emailPrefix.startsWith(inputPrefix) || inputPrefix.startsWith(emailPrefix))) {
-          return true;
-        }
-
-        // 3. Full name match or prefix match
-        if (uName === cleanLower || uName.replace(/\s+/g, '') === cleanLower.replace(/\s+/g, '') || uName.startsWith(inputPrefix)) {
-          return true;
-        }
-
-        // 4. First name match
-        const nameParts = uName.split(/\s+/).filter(Boolean);
-        if (nameParts.length > 0 && (nameParts[0] === cleanLower || nameParts[0] === inputPrefix)) {
-          return true;
-        }
-
-        // 5. Phone match
-        if (cleanInputDigits.length >= 7 && uPhoneDigits.length >= 7) {
+        if (!isEmailInput && cleanInputDigits.length >= 7 && uPhoneDigits.length >= 7) {
           if (
             uPhoneDigits === cleanInputDigits ||
             uPhoneDigits.endsWith(cleanInputDigits) ||
@@ -300,6 +285,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
         return false;
       });
+
+      // Pass 2: Non-email username/full-name fallback (never hijack an email address via prefix!)
+      if (!matchedUser && !isEmailInput) {
+        matchedUser = users.find((u) => {
+          const uName = (u.fullName || '').trim().toLowerCase();
+          const uEmail = (u.email || '').trim().toLowerCase();
+          const emailPrefix = uEmail.includes('@') ? uEmail.split('@')[0].toLowerCase() : '';
+
+          if (emailPrefix && emailPrefix === cleanLower) {
+            return true;
+          }
+          if (uName === cleanLower || uName.replace(/\s+/g, '') === cleanLower.replace(/\s+/g, '')) {
+            return true;
+          }
+          const nameParts = uName.split(/\s+/).filter(Boolean);
+          if (nameParts.length > 0 && nameParts[0] === cleanLower) {
+            return true;
+          }
+          return false;
+        });
+      }
 
       if (matchedUser) {
         // Check password matching securely using bcrypt compare and legacy fallback
@@ -333,7 +339,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         }
 
         if (!isPassValid) {
-          setLoginError('Invalid password. Please check your credentials and try again.');
+          setLoginError(
+            isAm
+              ? 'ትክክለኛ ያልሆነ የይለፍ ቃል። እባክዎ ያረጋግጡና በድጋሚ ይሞክሩ።'
+              : 'Invalid password. Please check your credentials and try again.'
+          );
           setIsLoggingIn(false);
           return;
         }
@@ -350,7 +360,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       }
 
       setLoginError(
-        err.message || 'User account not found. Please check your email/username and password, or register.'
+        err.message ||
+          (isAm
+            ? 'የተጠቃሚ መለያ አልተገኘም። እባክዎ ኢሜይል/የተጠቃሚ ስም እና የይለፍ ቃልዎን ያረጋግጡ ወይም ይመዝገቡ።'
+            : 'User account not found. Please check your email/username and password, or register.')
       );
     } finally {
       setIsLoggingIn(false);
@@ -407,17 +420,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       return;
     }
 
-    // Validate First Name (Amharic or English text - letters only)
-    const firstNameValidation = validateName(regFirstName, isAm ? 'የመጀመሪያ ስም' : 'First Name');
+    // Validate First Name (Amharic or English text - letters only, starts with capital letter in English)
+    const firstNameValidation = validateName(regFirstName, isAm ? 'የመጀመሪያ ስም' : 'First Name', language);
     if (!firstNameValidation.isValid) {
-      setRegError(firstNameValidation.error || (isAm ? 'ስም ፊደላትን ብቻ መያዝ አለበት። ቁጥሮችና ምልክቶች አይፈቀዱም።' : 'First Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.'));
+      setRegError(firstNameValidation.error || (isAm ? 'ስም ፊደላትን ብቻ መያዝ እና በትልቅ ፊደል መጀመር አለበት።' : 'First Name must contain letter characters only and start with a capital letter.'));
       return;
     }
 
-    // Validate Last Name (Amharic or English text - letters only)
-    const lastNameValidation = validateName(regLastName, isAm ? 'የአባት ስም' : 'Last Name');
+    // Validate Last Name (Amharic or English text - letters only, starts with capital letter in English)
+    const lastNameValidation = validateName(regLastName, isAm ? 'የአባት ስም' : 'Last Name', language);
     if (!lastNameValidation.isValid) {
-      setRegError(lastNameValidation.error || (isAm ? 'የአባት ስም ፊደላትን ብቻ መያዝ አለበት። ቁጥሮችና ምልክቶች አይፈቀዱም።' : 'Last Name must contain letter characters only (English or Amharic). Numbers and symbols are not permitted.'));
+      setRegError(lastNameValidation.error || (isAm ? 'የአባት ስም ፊደላትን ብቻ መያዝ እና በትልቅ ፊደል መጀመር አለበት።' : 'Last Name must contain letter characters only and start with a capital letter.'));
       return;
     }
 

@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, ReportItem, Message } from '../../types';
-import { EvidenceFile } from '../../types';
+import { UserProfile, ReportItem, Message, EvidenceFile } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import { ChatComposer } from '../Common/ChatComposer';
 import { MessageAttachment } from '../Common/MessageAttachment';
 import {
   MessageSquare,
-  Send,
   Lock,
-  Shield,
   Search,
   CheckCircle2,
-  Clock,
-  User,
-  Building2,
-  Calendar,
   Sparkles,
-  ChevronRight,
-  AlertCircle,
 } from 'lucide-react';
 
 interface CitizenMessagesProps {
@@ -36,6 +28,9 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
   initialSelectedReportId,
   onOpenSubmitModal,
 }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   const citizenReports = reports.filter(
     (r) => r.citizenId === currentUser.id || r.assignedPublisherId === currentUser.id
   );
@@ -43,7 +38,6 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
   const [selectedReportId, setSelectedReportId] = useState<string | null>(
     initialSelectedReportId || (citizenReports.length > 0 ? citizenReports[0].id : null)
   );
-  const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -52,7 +46,7 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
     } else if (!selectedReportId && citizenReports.length > 0) {
       setSelectedReportId(citizenReports[0].id);
     }
-  }, [initialSelectedReportId, citizenReports]);
+  }, [initialSelectedReportId, citizenReports, selectedReportId]);
 
   const activeReport = citizenReports.find((r) => r.id === selectedReportId) || citizenReports[0];
   const activeMessages = messages.filter((m) => m.reportId === activeReport?.id);
@@ -70,15 +64,33 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
   const isAssigned = Boolean(
     activeReport?.assignedTo?.department ||
     activeReport?.assignedTo?.responsiblePersonId ||
-    (activeReport && ['Assigned', 'Investigation in Progress', 'Waiting for Citizen Response', 'Investigation Completed', 'Published'].includes(activeReport.status))
+    (activeReport &&
+      [
+        'Assigned',
+        'Investigation in Progress',
+        'Waiting for Citizen Response',
+        'Investigation Completed',
+        'Published',
+      ].includes(activeReport.status))
   );
 
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim() || !activeReport || !isAssigned) return;
-    onSendMessage(activeReport.id, inputText.trim());
-    setInputText('');
+  const getStatusLabel = (status: string) => {
+    if (!isAm) return status;
+    const map: Record<string, string> = {
+      'Pending Review': 'በግምገማ ላይ',
+      'AI Triaged': 'በAI የተተነተነ',
+      Assigned: 'ተመድቧል',
+      'Investigation in Progress': 'በምርመራ ላይ',
+      'Waiting for Citizen Response': 'የዜጋ ምላሽ በመጠበቅ ላይ',
+      'Investigation Completed': 'ምርመራ ተጠናቋል',
+      Published: 'ታትሟል',
+      Closed: 'ተዘግቷል',
+    };
+    return map[status] || status;
   };
+
+  const isPublisherOrInstitution =
+    currentUser.role === 'Publisher' || currentUser.role === 'Institution';
 
   return (
     <div className="space-y-6 pb-16">
@@ -90,23 +102,41 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
               <MessageSquare className="w-5 h-5" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {currentUser.role === 'Publisher' || currentUser.role === 'Institution'
-                ? 'Case & Editorial Messages'
+              {isPublisherOrInstitution
+                ? isAm
+                  ? 'የጉዳይ እና የአርትዖት መልዕክቶች'
+                  : 'Case & Editorial Messages'
+                : isAm
+                ? 'የመርማሪ መልዕክቶች'
                 : 'Investigator Messages'}
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-            Encrypted, direct communication channel between you and assigned AMECO regional editors and investigators. Your identity remains protected behind {currentUser.role === 'Citizen' ? 'Citizen ID' : 'Account ID'}{' '}
-            <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[#005BAC] dark:text-blue-300 font-bold">
-              {currentUser.id}
-            </code>
-            .
+            {isAm ? (
+              <>
+                በእርስዎ እና በተመደቡ የአሚኮ ክልላዊ አርታኢዎችና መርማሪዎች መካከል የተመሰጠረ ቀጥተኛ የመገናኛ መስመር። ማንነትዎ{' '}
+                {currentUser.role === 'Citizen' ? 'በዜጋ መለያ' : 'በመለያ ቁጥር'}{' '}
+                <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[#005BAC] dark:text-blue-300 font-bold">
+                  {currentUser.id}
+                </code>{' '}
+                ስር እንደተጠበቀ ይቆያል።
+              </>
+            ) : (
+              <>
+                Encrypted, direct communication channel between you and assigned AMECO regional editors and investigators. Your identity remains protected behind{' '}
+                {currentUser.role === 'Citizen' ? 'Citizen ID' : 'Account ID'}{' '}
+                <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[#005BAC] dark:text-blue-300 font-bold">
+                  {currentUser.id}
+                </code>
+                .
+              </>
+            )}
           </p>
         </div>
 
         <div className="flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-3.5 py-2 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs font-semibold shrink-0">
           <Lock className="w-4 h-4 text-emerald-600" />
-          <span>256-Bit SSL Encrypted Channel</span>
+          <span>{isAm ? '256-Bit SSL የተመሰጠረ መስመር' : '256-Bit SSL Encrypted Channel'}</span>
         </div>
       </div>
 
@@ -114,13 +144,21 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
         <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
           <MessageSquare className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-            {currentUser.role === 'Publisher' || currentUser.role === 'Institution'
-              ? 'No Assigned Case Reports Yet'
+            {isPublisherOrInstitution
+              ? isAm
+                ? 'እስካሁን የተመደቡ የጉዳይ ሪፖርቶች የሉም'
+                : 'No Assigned Case Reports Yet'
+              : isAm
+              ? 'ምንም ንቁ የጉዳይ መልዕክቶች የሉም'
               : 'No Active Case Messages'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-            {currentUser.role === 'Publisher' || currentUser.role === 'Institution'
-              ? 'When Central Administration assigns verified investigative findings to your newsroom desk, you can communicate directly here or through the Direct Line Admin Communications tab.'
+            {isPublisherOrInstitution
+              ? isAm
+                ? 'ማዕከላዊ አስተዳደር የተረጋገጡ የምርመራ ግኝቶችን ለዜና ክፍልዎ ሲመድብ በቀጥታ እዚህ ወይም በአስተዳደር ቀጥታ መስመር ትር መገናኘት ይችላሉ።'
+                : 'When Central Administration assigns verified investigative findings to your newsroom desk, you can communicate directly here or through the Direct Line Admin Communications tab.'
+              : isAm
+              ? 'የክስተት ሪፖርት ወይም ጥቆማ ካቀረቡ በኋላ በዚህ የተመሰጠረ የሥራ መስመር አማካኝነት ከተመደቡ የአሚኮ መርማሪዎች ጋር በቀጥታ መገናኘት ይችላሉ።'
               : 'Once you submit an incident report or tip-off, you can communicate directly with assigned AMECO investigators through this encrypted workbench.'}
           </p>
           {onOpenSubmitModal && currentUser.role === 'Citizen' && (
@@ -129,7 +167,7 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
               className="px-4 py-2 bg-[#005BAC] hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow transition-transform active:scale-95 inline-flex items-center space-x-1.5 cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Submit First Report</span>
+              <span>{isAm ? 'የመጀመሪያ ሪፖርት ያቅርቡ' : 'Submit First Report'}</span>
             </button>
           )}
         </div>
@@ -139,9 +177,11 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
           <div className="lg:col-span-5 space-y-3">
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                My Cases ({filteredReports.length})
+                {isAm ? `ጉዳዮቼ (${filteredReports.length})` : `My Cases (${filteredReports.length})`}
               </span>
-              <span className="text-[11px] text-slate-400">Select case to chat</span>
+              <span className="text-[11px] text-slate-400">
+                {isAm ? 'ለመወያየት ጉዳይ ይምረጡ' : 'Select case to chat'}
+              </span>
             </div>
 
             {/* Search */}
@@ -151,7 +191,7 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search case title or ID..."
+                placeholder={isAm ? 'በጉዳይ ርዕስ ወይም መለያ ይፈልጉ...' : 'Search case title or ID...'}
                 className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#005BAC]"
               />
             </div>
@@ -178,7 +218,7 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                         {item.id}
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {item.status}
+                        {getStatusLabel(item.status)}
                       </span>
                     </div>
 
@@ -192,13 +232,19 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                       </p>
                     ) : (
                       <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
-                        No messages yet. Click to start discussion.
+                        {isAm
+                          ? 'እስካሁን መልዕክት የለም። ውይይት ለመጀመር ይጫኑ።'
+                          : 'No messages yet. Click to start discussion.'}
                       </p>
                     )}
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span>{item.assignedTo?.department || 'Editorial Desk'}</span>
-                      <span>{caseMsgs.length} message(s)</span>
+                      <span>
+                        {item.assignedTo?.department || (isAm ? 'የአርትዖት ክፍል' : 'Editorial Desk')}
+                      </span>
+                      <span>
+                        {isAm ? `${caseMsgs.length} መልዕክት(ቶች)` : `${caseMsgs.length} message(s)`}
+                      </span>
                     </div>
                   </div>
                 );
@@ -217,7 +263,11 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                       {activeReport.id}
                     </span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {activeReport.assignedTo ? activeReport.assignedTo.department : 'General Editorial Desk'}
+                      {activeReport.assignedTo
+                        ? activeReport.assignedTo.department
+                        : isAm
+                        ? 'አጠቃላይ የአርትዖት ክፍል'
+                        : 'General Editorial Desk'}
                     </span>
                   </div>
                   <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
@@ -229,15 +279,17 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                   {isAssigned ? (
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center justify-end space-x-1 font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Investigator Active</span>
+                      <span>{isAm ? 'መርማሪ ተመድቧል' : 'Investigator Active'}</span>
                     </span>
                   ) : (
                     <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 flex items-center justify-end space-x-1 font-bold">
                       <Lock className="w-3.5 h-3.5" />
-                      <span>Pending Assignment</span>
+                      <span>{isAm ? 'ምደባ በመጠበቅ ላይ' : 'Pending Assignment'}</span>
                     </span>
                   )}
-                  <span className="text-[10px] text-slate-400 font-mono">Citizen {currentUser.id}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {isAm ? `ዜጋ ${currentUser.id}` : `Citizen ${currentUser.id}`}
+                  </span>
                 </div>
               </div>
 
@@ -247,11 +299,21 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2">
                     <MessageSquare className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                     <h4 className="font-bold text-xs text-slate-700 dark:text-slate-300">
-                      {isAssigned ? 'Start the Discussion' : 'Chat Awaiting Assignment'}
+                      {isAssigned
+                        ? isAm
+                          ? 'ውይይቱን ይጀምሩ'
+                          : 'Start the Discussion'
+                        : isAm
+                        ? 'ውይይት ምደባ በመጠበቅ ላይ ነው'
+                        : 'Chat Awaiting Assignment'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
                       {isAssigned
-                        ? 'Send a message or extra information to the assigned AMECO journalist. Your name and phone remain protected.'
+                        ? isAm
+                          ? 'ለተመደበው የአሚኮ ጋዜጠኛ መልዕክት ወይም ተጨማሪ መረጃ ይላኩ። ስምዎ እና ስልክዎ እንደተጠበቁ ይቆያሉ።'
+                          : 'Send a message or extra information to the assigned AMECO journalist. Your name and phone remain protected.'
+                        : isAm
+                        ? 'ይህ ጉዳይ በአሁኑ ጊዜ በመጀመሪያ ደረጃ የአርትዖት ግምገማ ላይ ነው። አስተዳዳሪ መርማሪ ሲመድብ ቀጥታ የውይይት መስመሩ በራስ-ሰር ይከፈታል።'
                         : 'This case is currently under initial editorial triage. The direct chat channel will automatically open once an administrator assigns an investigator.'}
                     </p>
                   </div>
@@ -284,14 +346,26 @@ export const CitizenMessages: React.FC<CitizenMessagesProps> = ({
               {isAssigned ? (
                 <ChatComposer
                   onSend={(text, attachment) => onSendMessage(activeReport.id, text, attachment)}
-                  placeholder="Type an encrypted message or clarification..."
+                  placeholder={
+                    isAm
+                      ? 'የተመሰጠረ መልዕክት ወይም ማብራሪያ ይጻፉ...'
+                      : 'Type an encrypted message or clarification...'
+                  }
                   className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
                 />
               ) : (
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-amber-50/60 dark:bg-amber-950/30 flex items-center space-x-3 text-xs text-amber-900 dark:text-amber-200">
                   <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <p className="text-[11px] leading-relaxed">
-                    <strong>Direct chat locked:</strong> This channel will be opened once the administrator reviews and assigns an investigator or editorial unit to this report.
+                    {isAm ? (
+                      <>
+                        <strong>ቀጥታ ውይይት ተቆልፏል፦</strong> አስተዳዳሪው ይህን ሪፖርት ገምግሞ መርማሪ ወይም የአርትዖት ክፍል ሲመድብ ይህ መስመር ይከፈታል።
+                      </>
+                    ) : (
+                      <>
+                        <strong>Direct chat locked:</strong> This channel will be opened once the administrator reviews and assigns an investigator or editorial unit to this report.
+                      </>
+                    )}
                   </p>
                 </div>
               )}

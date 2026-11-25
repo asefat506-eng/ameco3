@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   HelpCircle,
   ShieldCheck,
@@ -16,10 +17,7 @@ import {
   Mail,
   Globe,
   ShieldAlert,
-  ArrowRight,
-  UserCheck,
   FileSearch,
-  Radio,
   FileUp,
 } from 'lucide-react';
 
@@ -38,6 +36,9 @@ interface FaqItem {
 }
 
 export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateTab }) => {
+  const { language } = useLanguage();
+  const isAm = language === 'am';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [openFaqIds, setOpenFaqIds] = useState<string[]>(['faq-1', 'faq-2']);
@@ -48,85 +49,158 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
     );
   };
 
-  const faqData: FaqItem[] = [
-    {
-      id: 'faq-1',
-      category: 'submission',
-      question: 'How do I submit an incident report or news tip-off to AMECO?',
-      answer:
-        'Submitting a report is simple and secure. Click the gold "+ Submit Incident" button anywhere in the portal to open the guided submission modal.',
-      bullets: [
-        'Select Report Classification: Choose between Verified News Report (credited to your Citizen profile) or Confidential Whistleblower Tip-Off (100% identity protected).',
-        'Provide Headline & Details: Enter a descriptive title, incident date, and factual description of the occurrence.',
-        'Specify Regional Location: Select your Zone (e.g. Central Gondar, South Wollo, North Shewa) and specific Kebele or landmark.',
-        'Upload Supporting Evidence: Attach photos, audio clips, video recordings, or PDF documents as verification.',
-        'Review & Submit: Your report is immediately processed by Gemini AI for triaging and assigned to a regional editor.',
-      ],
-    },
-    {
-      id: 'faq-2',
-      category: 'privacy',
-      question: 'How does AMECO protect my privacy and anonymity as a Whistleblower?',
-      answer:
-        'Privacy is our highest priority. The portal employs enterprise-grade cryptographic security to shield your identity.',
-      bullets: [
-        '256-Bit SSL Encryption: All transmitted data, messages, and uploaded files are encrypted end-to-end.',
-        'Masked Citizen IDs: Your real name is hidden behind a randomized ID (e.g., CTZ-4892 or GUEST-1024) across all investigator workbenches.',
-        'EXIF Metadata Stripping: All uploaded images and media files have GPS geolocation tags, camera serial numbers, and device metadata automatically removed before storage.',
-        'Zero IP Logging on Tip-Offs: Confidential whistleblower tip-offs do not store your IP address or browser fingerprints.',
-      ],
-      importantNote:
-        'If you select "Confidential Tip-Off", even AMECO staff cannot view your real name or personal contact details.',
-    },
-    {
-      id: 'faq-3',
-      category: 'submission',
-      question: 'Can I submit a report as a Guest without creating an account?',
-      answer:
-        'Yes! You can select "Guest Access" on the portal login screen. You will be assigned a temporary guest session ID (e.g. GUEST-9102) and can submit urgent incidents immediately without providing a name, email, or phone number.',
-    },
-    {
-      id: 'faq-4',
-      category: 'verification',
-      question: 'What happens after I submit a report? How is it verified?',
-      answer:
-        'Once submitted, every report enters the official AMECO Editorial & Verification Workflow:',
-      bullets: [
-        '1. Gemini AI Automated Triaging: Analyzes text content, assesses urgency/priority, and tags key entities and regional keywords.',
-        '2. Department Allocation: Routed to the relevant regional department (e.g., Regional News, Crime & Corruption, Infrastructure, Public Safety).',
-        '3. Field Investigator Verification: An assigned AMECO Responsible Person verifies the facts, cross-references evidence, and initiates field investigations.',
-        '4. Editorial Review & Media Publication: Verified reports are approved by Chief Editors and published to the public AMECO news stream.',
-      ],
-    },
-    {
-      id: 'faq-5',
-      category: 'verification',
-      question: 'How can I track the progress of my report or talk to the investigator?',
-      answer:
-        'Go to the "Track My Submissions" tab in the navigation menu. There you can view live milestone progress bars (Submitted → AI Triaged → Under Investigation → Fact-Checked → Published). You can also send 256-bit encrypted messages directly to the assigned investigator.',
-    },
-    {
-      id: 'faq-6',
-      category: 'whistleblower',
-      question: 'What types of evidence files can I upload?',
-      answer:
-        'We support JPEG/PNG photos, MP4/MOV videos, MP3/WAV audio recordings, and PDF documents. Maximum upload size per file is 50MB. Multiple files can be attached to a single report.',
-    },
-    {
-      id: 'faq-7',
-      category: 'whistleblower',
-      question: 'What if I face threats or safety risks related to my report?',
-      answer:
-        'AMECO operates in strict accordance with Press Freedom laws and Whistleblower Protection standards in Ethiopia. If you suspect any safety risks, immediately mark your submission as "Confidential Tip-Off" and contact our Emergency Protection Hotline.',
-    },
-  ];
+  const faqData: FaqItem[] = isAm
+    ? [
+        {
+          id: 'faq-1',
+          category: 'submission',
+          question: 'የክስተት ሪፖርት ወይም የዜና ጥቆማ ወደ አሚኮ እንዴት ማቅረብ እችላለሁ?',
+          answer:
+            'ሪፖርት ማቅረብ ቀላል እና ደህንነቱ የተጠበቀ ነው። በፖርታሉ ውስጥ የትም ቦታ የሚገኘውን «+ ክስተት አቅርብ» የሚለውን ወርቃማ ቁልፍ በመጫን የማስገቢያ ቅጹን ይክፈቱ።',
+          bullets: [
+            'የሪፖርት አይነት ይምረጡ፦ በዜጋ መገለጫዎ ስም የሚመዘገብ «የተረጋገጠ የዜና ሪፖርት» ወይም ማንነትዎ 100% የሚጠበቅበት «ሚስጥራዊ የጥቆማ መልዕክት» ይምረጡ።',
+            'ርዕስ እና ዝርዝር መረጃ ያስገቡ፦ ግልጽ ርዕስ፣ ክስተቱ የተፈጸመበትን ቀን እና ተጨባጭ መግለጫ ያስገቡ።',
+            'ክልላዊ አካባቢን ይምረጡ፦ ዞንዎን (ለምሳሌ ማዕከላዊ ጎንደር፣ ደቡብ ወሎ፣ ሰሜን ሸዋ) እና ልዩ ቦታውን ወይም ቀበሌውን ይጥቀሱ።',
+            'ደጋፊ ማስረጃዎችን ይጫኑ፦ ፎቶዎችን፣ የድምፅ ቅጂዎችን፣ ቪዲዮዎችን ወይም የPDF ሰነዶችን ለማረጋገጫ ያያይዙ።',
+            'ይገምግሙ እና ይላኩ፦ ሪፖርትዎ ወዲያውኑ በGemini AI ተተንትኖ ለሚመለከተው የክልል አርታኢ ይመደባል።',
+          ],
+        },
+        {
+          id: 'faq-2',
+          category: 'privacy',
+          question: 'አሚኮ የጠቋሚዎችን ግላዊነት እና ስውር ማንነት እንዴት ይጠብቃል?',
+          answer:
+            'ግላዊነትዎ ቀዳሚው ትኩረታችን ነው። ፖርታሉ ማንነትዎን ለመከለል ከፍተኛ ደረጃ ያለው የክሪፕቶግራፊክ ደህንነት ይጠቀማል።',
+          bullets: [
+            '256-Bit SSL ምስጠራ (Encryption)፦ የሚተላለፉ መረጃዎች፣ መልዕክቶች እና የተጫኑ ፋይሎች በሙሉ ከጫፍ እስከ ጫፍ የተመሰጠሩ ናቸው።',
+            'የተሸፈነ የዜጋ መለያ (Masked IDs)፦ ትክክለኛ ስምዎ በሁሉም የመርማሪ ገጾች ላይ በዘፈቀደ በተሰጠ መለያ (ለምሳሌ CTZ-4892 ወይም GUEST-1024) ይተካል።',
+            'የEXIF መረጃ ማጽዳት፦ የተጫኑ ፎቶዎችና የሚዲያ ፋይሎች ከመቀመጣቸው በፊት የGPS መገኛ ቦታ፣ የካሜራ ሴሪያል ቁጥር እና የመሳሪያ መረጃ በራስ-ሰር ይጸዳሉ።',
+            'በጥቆማዎች ላይ የIP አድራሻ አለመመዝገብ፦ ሚስጥራዊ የጥቆማ መልዕክቶች የIP አድራሻዎን ወይም የብሮውዘር መረጃዎን አያስቀምጡም።',
+          ],
+          importantNote:
+            '«ሚስጥራዊ ጥቆማ» ከመረጡ የአሚኮ ሰራተኞች እንኳን ትክክለኛ ስምዎን ወይም የግል አድራሻዎን ማየት አይችሉም።',
+        },
+        {
+          id: 'faq-3',
+          category: 'submission',
+          question: 'መለያ ሳልፈጥር እንደ እንግዳ (Guest) ሪፖርት ማቅረብ እችላለሁ?',
+          answer:
+            'አዎ! በመግቢያ ገጹ ላይ «የእንግዳ መግቢያ» የሚለውን መምረጥ ይችላሉ። ጊዜያዊ የእንግዳ መለያ (ለምሳሌ GUEST-9102) ተሰጥቶዎት ስም፣ ኢሜይል ወይም ስልክ ቁጥር ሳያስገቡ አስቸኳይ ክስተቶችን ወዲያውኑ ማቅረብ ይችላሉ።',
+        },
+        {
+          id: 'faq-4',
+          category: 'verification',
+          question: 'ሪፖርት ካቀረብኩ በኋላ ምን ይሆናል? እንዴት ይረጋገጣል?',
+          answer:
+            'ሪፖርትዎ እንደገባ ወደ አሚኮ ይፋዊ የአርትዖት እና የማረጋገጫ የሥራ ፍሰት ይገባል፦',
+          bullets: [
+            '1. የGemini AI ራስ-ሰር ትንተና፦ የጽሑፉን ይዘት፣ አስቸኳይነት ደረጃ እና ቁልፍ ቃላትን ከክልላዊ መረጃዎች ጋር ይለያል።',
+            '2. የክፍል ምደባ፦ ጉዳዩ ወደሚመለከተው ክፍል (ለምሳሌ ክልላዊ ዜና፣ ወንጀልና ሙስና፣ መሠረተ ልማት፣ የሕዝብ ደህንነት) ይመራል።',
+            '3. የመስክ መርማሪ ማረጋገጫ፦ የተመደበው የአሚኮ ኃላፊ እውነታውን ያረጋግጣል፣ ማስረጃዎችን ያመሳክራል እንዲሁም የመስክ ምርመራ ያካሂዳል።',
+            '4. የአርትዖት ግምገማ እና ሕትመት፦ የተረጋገጡ ሪፖርቶች በዋና አርታኢዎች ጸድቀው በአሚኮ ይፋዊ የዜና መድረኮች ይታተማሉ።',
+          ],
+        },
+        {
+          id: 'faq-5',
+          category: 'verification',
+          question: 'የሪፖርቴን ሂደት እንዴት መከታተል ወይም ከመርማሪው ጋር መነጋገር እችላለሁ?',
+          answer:
+            'በአሰሳ ምናሌው ውስጥ ወደ «የላኩትን መከታተያ» ትር ይሂዱ። እዚያ የቀጥታ የሂደት ደረጃዎችን (ቀርቧል → AI ተንትኗል → በምርመራ ላይ → ተረጋግጧል → ታትሟል) ማየት እና በ256-bit የተመሰጠረ መልዕክት በቀጥታ ለተመደበው መርማሪ መላክ ይችላሉ።',
+        },
+        {
+          id: 'faq-6',
+          category: 'whistleblower',
+          question: 'ምን ዓይነት የማስረጃ ፋይሎችን መጫን እችላለሁ?',
+          answer:
+            'የJPEG/PNG ፎቶዎችን፣ MP4/MOV ቪዲዮዎችን፣ MP3/WAV የድምፅ ቅጂዎችን እና PDF ሰነዶችን እንደግፋለን። የአንድ ፋይል ከፍተኛ መጠን 50MB ነው። ለአንድ ሪፖርት ብዙ ፋይሎችን ማያያዝ ይችላሉ።',
+        },
+        {
+          id: 'faq-7',
+          category: 'whistleblower',
+          question: 'ከሪፖርቴ ጋር በተያያዘ ዛቻ ወይም የደህንነት ስጋት ቢገጥመኝ ምን ማድረግ አለብኝ?',
+          answer:
+            'አሚኮ በኢትዮጵያ የፕሬስ ነጻነት ሕጎች እና የጠቋሚዎች ጥበቃ መስፈርቶች መሠረት ይሠራል። ማንኛውም የደህንነት ስጋት ከተሰማዎት ወዲያውኑ ሪፖርትዎን «ሚስጥራዊ ጥቆማ» ብለው ምልክት ያድርጉ እና የአስቸኳይ ጊዜ ጥበቃ የስልክ መስመራችንን ያግኙ።',
+        },
+      ]
+    : [
+        {
+          id: 'faq-1',
+          category: 'submission',
+          question: 'How do I submit an incident report or news tip-off to AMECO?',
+          answer:
+            'Submitting a report is simple and secure. Click the gold "+ Submit Incident" button anywhere in the portal to open the guided submission modal.',
+          bullets: [
+            'Select Report Classification: Choose between Verified News Report (credited to your Citizen profile) or Confidential Whistleblower Tip-Off (100% identity protected).',
+            'Provide Headline & Details: Enter a descriptive title, incident date, and factual description of the occurrence.',
+            'Specify Regional Location: Select your Zone (e.g. Central Gondar, South Wollo, North Shewa) and specific Kebele or landmark.',
+            'Upload Supporting Evidence: Attach photos, audio clips, video recordings, or PDF documents as verification.',
+            'Review & Submit: Your report is immediately processed by Gemini AI for triaging and assigned to a regional editor.',
+          ],
+        },
+        {
+          id: 'faq-2',
+          category: 'privacy',
+          question: 'How does AMECO protect my privacy and anonymity as a Whistleblower?',
+          answer:
+            'Privacy is our highest priority. The portal employs enterprise-grade cryptographic security to shield your identity.',
+          bullets: [
+            '256-Bit SSL Encryption: All transmitted data, messages, and uploaded files are encrypted end-to-end.',
+            'Masked Citizen IDs: Your real name is hidden behind a randomized ID (e.g., CTZ-4892 or GUEST-1024) across all investigator workbenches.',
+            'EXIF Metadata Stripping: All uploaded images and media files have GPS geolocation tags, camera serial numbers, and device metadata automatically removed before storage.',
+            'Zero IP Logging on Tip-Offs: Confidential whistleblower tip-offs do not store your IP address or browser fingerprints.',
+          ],
+          importantNote:
+            'If you select "Confidential Tip-Off", even AMECO staff cannot view your real name or personal contact details.',
+        },
+        {
+          id: 'faq-3',
+          category: 'submission',
+          question: 'Can I submit a report as a Guest without creating an account?',
+          answer:
+            'Yes! You can select "Guest Access" on the portal login screen. You will be assigned a temporary guest session ID (e.g. GUEST-9102) and can submit urgent incidents immediately without providing a name, email, or phone number.',
+        },
+        {
+          id: 'faq-4',
+          category: 'verification',
+          question: 'What happens after I submit a report? How is it verified?',
+          answer:
+            'Once submitted, every report enters the official AMECO Editorial & Verification Workflow:',
+          bullets: [
+            '1. Gemini AI Automated Triaging: Analyzes text content, assesses urgency/priority, and tags key entities and regional keywords.',
+            '2. Department Allocation: Routed to the relevant regional department (e.g., Regional News, Crime & Corruption, Infrastructure, Public Safety).',
+            '3. Field Investigator Verification: An assigned AMECO Responsible Person verifies the facts, cross-references evidence, and initiates field investigations.',
+            '4. Editorial Review & Media Publication: Verified reports are approved by Chief Editors and published to the public AMECO news stream.',
+          ],
+        },
+        {
+          id: 'faq-5',
+          category: 'verification',
+          question: 'How can I track the progress of my report or talk to the investigator?',
+          answer:
+            'Go to the "Track My Submissions" tab in the navigation menu. There you can view live milestone progress bars (Submitted → AI Triaged → Under Investigation → Fact-Checked → Published). You can also send 256-bit encrypted messages directly to the assigned investigator.',
+        },
+        {
+          id: 'faq-6',
+          category: 'whistleblower',
+          question: 'What types of evidence files can I upload?',
+          answer:
+            'We support JPEG/PNG photos, MP4/MOV videos, MP3/WAV audio recordings, and PDF documents. Maximum upload size per file is 50MB. Multiple files can be attached to a single report.',
+        },
+        {
+          id: 'faq-7',
+          category: 'whistleblower',
+          question: 'What if I face threats or safety risks related to my report?',
+          answer:
+            'AMECO operates in strict accordance with Press Freedom laws and Whistleblower Protection standards in Ethiopia. If you suspect any safety risks, immediately mark your submission as "Confidential Tip-Off" and contact our Emergency Protection Hotline.',
+        },
+      ];
 
   const categories = [
-    { id: 'all', label: 'All Topics', icon: HelpCircle },
-    { id: 'submission', label: 'How to Submit', icon: FileUp },
-    { id: 'privacy', label: 'Privacy & Security', icon: Lock },
-    { id: 'verification', label: 'Verification Workflow', icon: CheckCircle2 },
-    { id: 'whistleblower', label: 'Whistleblower Rights', icon: ShieldAlert },
+    { id: 'all', label: isAm ? 'ሁሉም ርዕሶች' : 'All Topics', icon: HelpCircle },
+    { id: 'submission', label: isAm ? 'ሪፖርት አቀራረብ' : 'How to Submit', icon: FileUp },
+    { id: 'privacy', label: isAm ? 'ግላዊነት እና ደህንነት' : 'Privacy & Security', icon: Lock },
+    { id: 'verification', label: isAm ? 'የማረጋገጫ ሂደት' : 'Verification Workflow', icon: CheckCircle2 },
+    { id: 'whistleblower', label: isAm ? 'የጠቋሚዎች መብት' : 'Whistleblower Rights', icon: ShieldAlert },
   ];
 
   const filteredFaqs = faqData.filter((faq) => {
@@ -146,15 +220,23 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold">
             <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span>Citizen Knowledgebase & Whistleblower Guide</span>
+            <span>
+              {isAm
+                ? 'የዜጎች መረጃ ማዕከል እና የጠቋሚዎች መመሪያ'
+                : 'Citizen Knowledgebase & Whistleblower Guide'}
+            </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            How Can We Help You Report News & Protect Your Identity?
+            {isAm
+              ? 'ዜና እንዲያቀርቡ እና ማንነትዎን እንዲጠብቁ እንዴት ልንረዳዎ እንችላለን?'
+              : 'How Can We Help You Report News & Protect Your Identity?'}
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-            Find step-by-step instructions on submitting verified citizen journalism, understanding our Gemini AI triaging, and learning how AMECO safeguards whistleblower privacy with 256-bit encryption.
+            {isAm
+              ? 'የተረጋገጠ የዜጎች ጋዜጠኝነት ሪፖርት ስለማቅረብ፣ ስለ Gemini AI ትንተና እና አሚኮ የጠቋሚዎችን ግላዊነት በ256-bit ምስጠራ እንዴት እንደሚጠብቅ ደረጃ በደረጃ መመሪያ ያግኙ።'
+              : 'Find step-by-step instructions on submitting verified citizen journalism, understanding our Gemini AI triaging, and learning how AMECO safeguards whistleblower privacy with 256-bit encryption.'}
           </p>
 
           {/* Search Bar */}
@@ -164,7 +246,11 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search help topics, keywords, or privacy questions..."
+              placeholder={
+                isAm
+                  ? 'የእገዛ ርዕሶችን፣ ቁልፍ ቃላትን ወይም የግላዊነት ጥያቄዎችን ይፈልጉ...'
+                  : 'Search help topics, keywords, or privacy questions...'
+              }
               className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white shadow-xs"
             />
           </div>
@@ -177,18 +263,24 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
               <FileSearch className="w-5 h-5 text-[#005BAC] dark:text-blue-400" />
-              <span>Simple 4-Step Incident Reporting Process</span>
+              <span>
+                {isAm
+                  ? 'ቀላል ባለ 4-ደረጃ የክስተት ሪፖርት አቀራረብ ሂደት'
+                  : 'Simple 4-Step Incident Reporting Process'}
+              </span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              From your initial report submission to publication on Amhara Media Corporation channels.
+              {isAm
+                ? 'ከመጀመሪያው የሪፖርት አቀራረብዎ ጀምሮ በአማራ ሚዲያ ኮርፖሬሽን ቻናሎች እስከሚታተም ድረስ።'
+                : 'From your initial report submission to publication on Amhara Media Corporation channels.'}
             </p>
           </div>
           <button
             onClick={() => onOpenSubmitModal('tipoff')}
-            className="hidden sm:flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-black text-xs shadow-md transition-all transform hover:-translate-y-0.5"
+            className="hidden sm:flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-black text-xs shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer"
           >
             <Send className="w-4 h-4 text-slate-950" />
-            <span>Submit Report Now</span>
+            <span>{isAm ? 'ሪፖርት አሁን ያቅርቡ' : 'Submit Report Now'}</span>
           </button>
         </div>
 
@@ -197,9 +289,19 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#005BAC] dark:text-blue-400 font-mono font-black text-xs flex items-center justify-center border border-blue-200 dark:border-blue-900">
               01
             </div>
-            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">1. Choose Report Type</h3>
+            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">
+              {isAm ? '1. የሪፖርት አይነት ይምረጡ' : '1. Choose Report Type'}
+            </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Select standard <strong>Verified News</strong> or <strong>Confidential Tip-Off</strong> depending on your anonymity needs.
+              {isAm ? (
+                <>
+                  እንደ ስውርነት ፍላጎትዎ መደበኛ <strong>የተረጋገጠ ዜና</strong> ወይም <strong>ሚስጥራዊ ጥቆማ</strong> ይምረጡ።
+                </>
+              ) : (
+                <>
+                  Select standard <strong>Verified News</strong> or <strong>Confidential Tip-Off</strong> depending on your anonymity needs.
+                </>
+              )}
             </p>
           </div>
 
@@ -207,9 +309,13 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 font-mono font-black text-xs flex items-center justify-center border border-amber-200 dark:border-amber-900">
               02
             </div>
-            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">2. Attach Evidence</h3>
+            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">
+              {isAm ? '2. ማስረጃ ያያይዙ' : '2. Attach Evidence'}
+            </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Upload supporting images, video clips, or document files. Geolocation metadata is stripped automatically.
+              {isAm
+                ? 'ደጋፊ ምስሎችን፣ ቪዲዮዎችን ወይም ሰነዶችን ይጫኑ። የመገኛ ቦታ ሜታዳታ በራስ-ሰር ይጸዳል።'
+                : 'Upload supporting images, video clips, or document files. Geolocation metadata is stripped automatically.'}
             </p>
           </div>
 
@@ -217,9 +323,13 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
             <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-mono font-black text-xs flex items-center justify-center border border-purple-200 dark:border-purple-900">
               03
             </div>
-            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">3. AI Triaging & Allocation</h3>
+            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">
+              {isAm ? '3. AI ትንተና እና ምደባ' : '3. AI Triaging & Allocation'}
+            </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Gemini AI categorizes your submission and routes it to the designated regional AMECO department.
+              {isAm
+                ? 'Gemini AI ሪፖርትዎን በመመደብ ወደ ተወሰነው ክልላዊ የአሚኮ ክፍል ይመራዋል።'
+                : 'Gemini AI categorizes your submission and routes it to the designated regional AMECO department.'}
             </p>
           </div>
 
@@ -227,9 +337,13 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs flex items-center justify-center border border-emerald-200 dark:border-emerald-900">
               04
             </div>
-            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">4. Live Progress Tracking</h3>
+            <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100">
+              {isAm ? '4. የቀጥታ ሂደት ክትትል' : '4. Live Progress Tracking'}
+            </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Track live investigation milestones and send encrypted messages to the assigned investigator.
+              {isAm
+                ? 'የምርመራ ደረጃዎችን በቀጥታ ይከታተሉ እና ለተመደበው መርማሪ የተመሰጠረ መልዕክት ይላኩ።'
+                : 'Track live investigation milestones and send encrypted messages to the assigned investigator.'}
             </p>
           </div>
         </div>
@@ -246,7 +360,7 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 whitespace-nowrap shrink-0 ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 whitespace-nowrap shrink-0 cursor-pointer ${
                   isSelected
                     ? 'bg-[#005BAC] text-white shadow-md'
                     : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -264,9 +378,13 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
           {filteredFaqs.length === 0 ? (
             <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
               <HelpCircle className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Matching Questions Found</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {isAm ? 'ተዛማጅ ጥያቄዎች አልተገኙም' : 'No Matching Questions Found'}
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                Try adjusting your search keywords or switching category filters.
+                {isAm
+                  ? 'እባክዎ የፍለጋ ቃላትዎን ያስተካክሉ ወይም የምድብ ማጣሪያውን ይቀይሩ።'
+                  : 'Try adjusting your search keywords or switching category filters.'}
               </p>
             </div>
           ) : (
@@ -279,7 +397,7 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
                 >
                   <button
                     onClick={() => toggleFaq(faq.id)}
-                    className="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-start space-x-3">
                       <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#005BAC] dark:text-blue-400 shrink-0 mt-0.5">
@@ -315,7 +433,10 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
                         <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-amber-900 dark:text-amber-200 text-xs flex items-start space-x-2.5">
                           <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                           <span>
-                            <strong className="font-bold">Important Protection Note:</strong> {faq.importantNote}
+                            <strong className="font-bold">
+                              {isAm ? 'ጠቃሚ የጥበቃ ማሳሰቢያ፦' : 'Important Protection Note:'}
+                            </strong>{' '}
+                            {faq.importantNote}
                           </span>
                         </div>
                       )}
@@ -335,11 +456,15 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
             <div className="flex items-center space-x-2">
               <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                AMECO Citizen Protection & Whistleblower Shield
+                {isAm
+                  ? 'የአሚኮ የዜጎች ጥበቃ እና የጠቋሚዎች ከለላ'
+                  : 'AMECO Citizen Protection & Whistleblower Shield'}
               </h3>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Under AMECO editorial charters and digital security protocols, citizen whistleblowers submitting tip-offs are protected with 256-bit encrypted data channels. Your personal info is never sold, disclosed, or shared with external third parties.
+              {isAm
+                ? 'በአሚኮ የአርትዖት መተዳደሪያ ደንብ እና ዲጂታል ደህንነት ፕሮቶኮል መሠረት ጥቆማ የሚያቀርቡ ዜጎች በ256-bit የተመሰጠረ የመረጃ መስመር ይጠበቃሉ። የግል መረጃዎ በፍጹም አይሸጥም፣ አይገለጽም ወይም ለሶስተኛ ወገን አይተላለፍም።'
+                : 'Under AMECO editorial charters and digital security protocols, citizen whistleblowers submitting tip-offs are protected with 256-bit encrypted data channels. Your personal info is never sold, disclosed, or shared with external third parties.'}
             </p>
           </div>
 
@@ -349,14 +474,14 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md flex items-center justify-center space-x-2 transition-transform transform hover:-translate-y-0.5 cursor-pointer"
             >
               <FileText className="w-4 h-4 text-slate-950" />
-              <span>Submit Report & Tip-Off</span>
+              <span>{isAm ? 'ሪፖርት እና ጥቆማ አቅርብ' : 'Submit Report & Tip-Off'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('track')}
               className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
             >
               <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Track My Submissions</span>
+              <span>{isAm ? 'የላኩትን መከታተያ' : 'Track My Submissions'}</span>
             </button>
           </div>
         </div>
@@ -367,28 +492,36 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
         <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
           <div className="flex items-center space-x-2 text-[#005BAC] dark:text-blue-400 font-bold">
             <PhoneCall className="w-4 h-4" />
-            <span>Emergency Editorial Hotline</span>
+            <span>{isAm ? 'የአስቸኳይ ጊዜ የአርትዖት ስልክ መስመር' : 'Emergency Editorial Hotline'}</span>
           </div>
           <p className="text-slate-600 dark:text-slate-400">
-            For urgent breaking news, safety incidents, or physical threats requiring immediate media attention:
+            {isAm
+              ? 'አስቸኳይ ሰበር ዜናዎች፣ የደህንነት ክስተቶች ወይም አፋጣኝ የሚዲያ ትኩረት ለሚሹ ስጋቶች፦'
+              : 'For urgent breaking news, safety incidents, or physical threats requiring immediate media attention:'}
           </p>
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>+251 58 220 0000 / 991</span>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-mono">Toll-Free 24/7</span>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-mono">
+              {isAm ? 'ነጻ መስመር 24/7' : 'Toll-Free 24/7'}
+            </span>
           </div>
         </div>
 
         <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
           <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold">
             <Mail className="w-4 h-4" />
-            <span>Encrypted Whistleblower Email</span>
+            <span>{isAm ? 'የተመሰጠረ የጠቋሚዎች ኢሜይል' : 'Encrypted Whistleblower Email'}</span>
           </div>
           <p className="text-slate-600 dark:text-slate-400">
-            Send confidential documentation or high-resolution evidence directly to our investigative unit:
+            {isAm
+              ? 'ሚስጥራዊ ሰነዶችን ወይም ከፍተኛ ጥራት ያላቸውን ማስረጃዎች በቀጥታ ወደ ምርመራ ክፍላችን ይላኩ፦'
+              : 'Send confidential documentation or high-resolution evidence directly to our investigative unit:'}
           </p>
           <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>tip-off@ameco.et</span>
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-mono">PGP Key Verified</span>
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-mono">
+              {isAm ? 'በPGP ቁልፍ የተረጋገጠ' : 'PGP Key Verified'}
+            </span>
           </div>
         </div>
       </div>
@@ -399,10 +532,16 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
           <div>
             <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
               <Globe className="w-4 h-4 text-slate-700 dark:text-amber-400" />
-              <span>Official Amhara Media Corporation Social Channels</span>
+              <span>
+                {isAm
+                  ? 'የአማራ ሚዲያ ኮርፖሬሽን ይፋዊ የማህበራዊ ሚዲያ ቻናሎች'
+                  : 'Official Amhara Media Corporation Social Channels'}
+              </span>
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Follow and reach out to AMECO across our verified official social media accounts:
+              {isAm
+                ? 'አሚኮን በተረጋገጡ ይፋዊ የማህበራዊ ሚዲያ ገጾቻችን ይከተሉ እና ያግኙን፦'
+                : 'Follow and reach out to AMECO across our verified official social media accounts:'}
             </p>
           </div>
         </div>
@@ -421,7 +560,9 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               </svg>
             </div>
             <div>
-              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300">Facebook</div>
+              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300">
+                {isAm ? 'ፌስቡክ (Facebook)' : 'Facebook'}
+              </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[150px]">@AmharaMediaCorporation</div>
             </div>
           </a>
@@ -439,14 +580,16 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               </svg>
             </div>
             <div>
-              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-300">Instagram</div>
+              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-300">
+                {isAm ? 'ኢንስታግራም (Instagram)' : 'Instagram'}
+              </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[150px]">@ameco.et</div>
             </div>
           </a>
 
           {/* YouTube */}
           <a
-            href="https://youtube.com/@amharamediacorporation?si=87Asj2M4IWZa9C0h"
+            href="https://www.youtube.com/@AmharaMediaCorporation"
             target="_blank"
             rel="noopener noreferrer"
             className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-red-950/80 border border-slate-200 dark:border-slate-800 hover:border-red-600/60 transition-all flex items-center space-x-3 group shadow-xs cursor-pointer"
@@ -457,8 +600,10 @@ export const HelpFaq: React.FC<HelpFaqProps> = ({ onOpenSubmitModal, onNavigateT
               </svg>
             </div>
             <div>
-              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-300">YouTube</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[150px]">@amharamediacorporation</div>
+              <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-300">
+                {isAm ? 'ዩቲዩብ (YouTube)' : 'YouTube'}
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[150px]">@AmharaMediaCorporation</div>
             </div>
           </a>
         </div>

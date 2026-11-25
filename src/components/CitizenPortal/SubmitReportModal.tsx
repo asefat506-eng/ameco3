@@ -508,32 +508,19 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Anonymous Toggle Callout */}
-          <div className="p-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Shield className="w-5 h-5 text-[#005BAC] dark:text-blue-400" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {isGuestUser ? t('submit.anonymousGuestNotice', 'Anonymous Guest Whistleblower Mode Active') : t('submit.confidentialNotice', 'Confidential Anonymous Submission')}
-                </span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {t('submit.anonymousHint', 'Generates unique Tracking Code & Secret Access Code for secure follow-up.')}
-                </p>
-              </div>
+          {/* Security Callout */}
+          <div className="p-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
+              <Shield className="w-5 h-5 text-[#005BAC] dark:text-blue-400" />
             </div>
-            {!isGuestUser && (
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="rounded text-[#005BAC] focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{t('submit.submitAnonymously', 'Submit Anonymously')}</span>
-              </label>
-            )}
+            <div>
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {isGuestUser ? t('submit.anonymousGuestNotice', 'Anonymous Guest Whistleblower Mode Active') : t('submit.confidentialNotice', 'Confidential Anonymous Submission')}
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {t('submit.anonymousHint', 'Generates unique Tracking Code & Secret Access Code for secure follow-up.')}
+              </p>
+            </div>
           </div>
 
           {/* Step 1: Submission Mode & Category */}
@@ -542,17 +529,12 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 {t('submit.submissionMode', 'Submission Mode')} <span className="text-red-500">*</span>
               </label>
-              <div className="w-full py-2.5 px-3.5 text-xs font-bold rounded-xl border bg-blue-50 dark:bg-blue-950/40 text-[#005BAC] dark:text-blue-300 border-blue-200 dark:border-blue-800 flex items-center justify-between shadow-xs">
-                <div className="flex items-center space-x-2">
-                  <div className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-[#005BAC] dark:text-blue-400">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <span className="font-extrabold text-slate-900 dark:text-slate-100">
-                    {t('submit.unifiedMode', 'News Report & Tip-Off')}
-                  </span>
+              <div className="w-full py-2.5 px-3.5 text-xs font-bold rounded-xl border bg-blue-50 dark:bg-blue-950/40 text-[#005BAC] dark:text-blue-300 border-blue-200 dark:border-blue-800 flex items-center space-x-2 shadow-xs">
+                <div className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-[#005BAC] dark:text-blue-400">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#005BAC] text-white">
-                  {language === 'am' ? 'የተዋሃደ ሁነታ' : 'Unified Mode'}
+                <span className="font-extrabold text-slate-900 dark:text-slate-100">
+                  {t('submit.unifiedMode', 'News Report & Tip-Off')}
                 </span>
               </div>
             </div>
